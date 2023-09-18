@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Black">
+    <option name="enabledOnSave" value="true" />
+    <option name="executionMode" value="BINARY" />
+    <option name="pathToExecutable" value="$USER_HOME$/opt/anaconda3/bin/black" />
+    <option name="sdkUUID" value="b2ab2fcd-538a-4176-ac23-9bdafddeff86" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (interactive-gym)" project-jdk-type="Python SDK" />
+</project>
