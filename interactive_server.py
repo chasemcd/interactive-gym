@@ -88,14 +88,15 @@ def on_create_join(data):
 @socketio.on("action")
 def on_action(data):
     subject_socket_id = flask.request.sid
-    action = data["action"]
-    step = data["step"]
     game = GAMES[subject_socket_id]
-    print("Action {} for {}".format(action, step))
-    if not game:
+    action = data["action"]
+    if not game or action not in CONFIG.action_mapping:
         return
 
+    step = data["step"]
+
     game.pending_actions.put(CONFIG.action_mapping[action])
+    print("Action {} for {}".format(action, step))
 
 
 def play_game(game: remote_game.RemoteGame):
