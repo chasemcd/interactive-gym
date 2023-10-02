@@ -7,6 +7,7 @@ class RemoteConfig:
         self.env_name: str | None = None
         self.seed: int = 42
 
+        # hosting
         self.host = None
         self.port = 8000
 
@@ -25,8 +26,8 @@ class RemoteConfig:
         # user_experience
         self.redirect_url: str | None = None  # send user here after experiment.
         self.screen_size: int | None = None
-        self.game_header_text: str | None = None
-        self.start_page_text: str | None = None
+        self.game_header_text: str = "Game Header Text"
+        self.start_page_text: str = "Start Page Text"
         self.fps: int = 10
 
     def environment(
@@ -46,7 +47,7 @@ class RemoteConfig:
 
         return self
 
-    def hosting(self, host: str | None = None, port: str | None = None):
+    def hosting(self, host: str | None = None, port: int | None = None):
         if host is not None:
             self.host = host
 
