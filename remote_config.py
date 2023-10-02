@@ -7,6 +7,7 @@ class RemoteConfig:
         self.env_name: str | None = None
         self.seed: int = 42
 
+        # hosting
         self.host = None
         self.port = 8000
 
@@ -46,7 +47,7 @@ class RemoteConfig:
 
         return self
 
-    def hosting(self, host: str | None = None, port: str | None = None):
+    def hosting(self, host: str | None = None, port: int | None = None):
         if host is not None:
             self.host = host
 
