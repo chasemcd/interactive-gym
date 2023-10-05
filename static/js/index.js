@@ -47,48 +47,13 @@ const E_ = 69;
 const SPACE = 32;
 
 function handleKeyStroke(event) {
-    //console.log(event.keyCode);
-    // console.log(event.key)
     action = event.key
-    let action = null;
-    switch (event.keyCode) {
-        case LEFT: {
-            action = "left";
-            break;
-        }
-        case RIGHT: {
-            action = "right";
-            break;
-        }
-        case UP: {
-            action = "up";
-            break;
-        }
-        case Q_: {
-            action = "q";
-            break;
-        }
-        case W_: {
-            action = "w";
-            break;
-        }
-        case E_: {
-            action = "e";
-            break;
-        }
-        case SPACE: {
-            action = "space";
-            break;
-        }
-        default:
-            action = null;
-    }
-    if (action != null) {
-        console.log(`Sending action: ${action}`)
-        socket.emit("action", {action: action, step: CURRENT_STEP_COUNT});
-    }
+    socket.emit("action", {action: action, step: CURRENT_STEP_COUNT});
 }
 
+document.addEventListener('keyup', () => {
+  action = null; // Reset action to null when the key is released
+});
 
 let EPISODE_COUNTER = 0;
 socket.on('game_episode_start', function (data) {
