@@ -1,44 +1,11 @@
 // Define configs
 
-const game_config = {
-    type: Phaser.AUTO,
-    width: 800,
-    height: 600,
-    partialRenderTileSize : 32,
-    scene: EnvironmentRGBScene,
-};
-
-
-// Functions for instantiating/tearing down/updating graphics
-var graphics;
-
-// Invoked at every state update from server
-function drawState(image) {
-    // Try catch necessary because state pongs can arrive before graphics manager has finished initializing
-    try {
-        graphics.update_image(image);
-    } catch {
-        console.log("error updating state");
-    }
-};
-
-// Invoked at 'start_game' event
-function graphics_start(graphics_config) {
-    graphics = new GraphicsManager(game_config, scene_config);
-};
-
-// Invoked at 'end_game' event
-function graphics_end() {
-    graphics.game.renderer.destroy();
-    graphics.game.loop.stop();
-    graphics.game.destroy();
-}
 
 
 class GraphicsManager {
-    constructor(game_config, scene_config) {
-        game_config.scene = new EnvironmentRGBScene(scene_config);
-        game_config.parent = graphics_config.container_id;
+    constructor(game_config, graphics_config) {
+        game_config.scene = new EnvironmentRGBScene(graphics_config);
+        // game_config.parent = graphics_config.container_id;
         this.game = new Phaser.Game(game_config);
     }
 
@@ -139,4 +106,41 @@ class EnvironmentRGBScene extends Phaser.Scene {
         return false;
     }
 }
+
+
+const game_config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    partialRenderTileSize : 32,
+    scene: EnvironmentRGBScene,
+};
+
+
+// Functions for instantiating/tearing down/updating graphics
+var graphics;
+
+// Invoked at every state update from server
+function drawState(image) {
+    // Try catch necessary because state pongs can arrive before graphics manager has finished initializing
+    try {
+        graphics.update_image(image);
+    } catch {
+        console.log("error updating state");
+    }
+};
+
+// Invoked at 'start_game' event
+function graphics_start(graphics_config) {
+    graphics = new GraphicsManager(game_config, graphics_config);
+};
+
+// Invoked at 'end_game' event
+function graphics_end() {
+    graphics.game.renderer.destroy();
+    graphics.game.loop.stop();
+    graphics.game.destroy();
+}
+
+
 

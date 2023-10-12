@@ -103,7 +103,8 @@ def play_game(game: remote_game.RemoteGame):
     clock = pygame.time.Clock()
     episodes_done = 0
     game.reset(game.seed)
-    socketio.emit("game_episode_start")
+    socketio.emit("start_game")
+    print("start_game")
     while not episodes_done == CONFIG.num_episodes:
 
         clock.tick(CONFIG.fps)
@@ -158,7 +159,7 @@ def render_game_image(image: np.ndarray, game: remote_game.RemoteGame):
     base64str = im_b64.decode("utf-8")
 
     socketio.emit(
-        "game_board_update",
+        "state_update",
         {"state": base64str, "rewards": game.cumulative_reward, "step": game.t,},
         room=game.id,
     )
