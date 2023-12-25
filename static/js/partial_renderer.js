@@ -1,110 +1,125 @@
-// Define configs
-
-
-
 class GraphicsManager {
     constructor(game_config, graphics_config) {
-        game_config.scene = new EnvironmentRGBScene(graphics_config);
-        // game_config.parent = graphics_config.container_id;
+        game_config.scene = new RGBScene(graphics_config);
         this.game = new Phaser.Game(game_config);
     }
 
     set_state(state) {
-        this.game.scene.getScene('PlayGame').set_state(state);
+        // console.log("setting state")
+        this.game.scene.getScene('RGBScene').set_state(state);
     }
 }
 
-
-class EnvironmentRGBScene extends Phaser.Scene {
+class RGBScene extends Phaser.Scene {
     constructor(config) {
-        super({ key: 'EnvironmentScene' });
-        this.prevImageData = null;
+        super({ key: 'RGBScene' });
+        this.prevState = null;
+        this.state = null;
         this.partialRenderTileSize = config.partialRenderTileSize;
-        this.height = config.heigh;
+        this.height = config.height;
         this.width = config.width;
     }
 
+    set_state(state) {
+        console.log("in set_state: ", state)
+        this.prevState = this.state;
+        this.state = state;
+        this.image = this.add.image(400, 300, 'data:image/png;base64,' + state.state);
+
+        var blob = this.base64ToBlob(state.state, 'image/png');
+        var url = URL.createObjectURL(blob);
+
+        this.load.image('gameState', url);
+        this.load.once('complete', () => {
+            this.gameImage.setTexture('gameState');
+            URL.revokeObjectURL(url); // Clean up the URL object
+        }, this);
+        this.load.start();
+    }
+
+    preload() {
+
+        this.load.image('bird', './static/assets/bird.png');
+
+        // this.image = this.add.image(400, 300, 'data:image/png;base64,' + data.state);
+        // this.cameras.main.setBackgroundColor('#6c53e6')
+        // this.socket = io.connect('http://localhost:8000');
+        //
+        // // Listen for environment state updates from the server
+        // this.socket.on('environment_state', function (data) {
+        //     // Create a sprite with the updated environment state
+        //     if (this.image) {
+        //         this.image.destroy();  // Destroy the previous image if it exists
+        //     }
+        //     this.image = this.add.image(400, 300, 'data:image/png;base64,' + data.state);
+        // }, this);
+
+    }
+
     create() {
-        // Create a blank texture to hold the image data
-        this.texture = this.textures.createCanvas('envImage', this.height, this.width);
-        this.add.image(400, 300, 'envImage');
+        // console.log("adding image")
+        // this.image = this.add.image(400, 300, "bird");
 
-        // // Connect to the server
-        // this.socket = new WebSocket('ws://localhost:12345');
-        // this.socket.binaryType = 'arraybuffer';
-        // this.socket.onmessage = (event) => {
-        //     this.updateImage(event.data);
-        // };
+        this.socket = io();
+        this.gameImage = this.add.image(400, 300, 'gameImage');
+
+        // this.socket.on('environment_state', (data) => {
+        //     console.log("environment_state")
+        //     this.load.image('gameState', 'data:image/png;base64,' + data.state);
+        //     this.load.once('complete', () => {
+        //         this.gameImage.setTexture('gameState');
+        //     }, this);
+        //     this.load.start();
+        // });
+
     }
 
-    updateImage(imageData) {
-        // Convert the ArrayBuffer to a Blob
-        let blob = new Blob([new Uint8Array(imageData)], { type: 'image/png' });
+    update() {
+        // this.socket.on('environment_state', (data) => {
+        //     console.log("environment_state")
+        //     this.load.image('gameState', 'data:image/png;base64,' + data.state);
+        //     this.load.once('complete', () => {
+        //         this.gameImage.setTexture('gameState');
+        //     }, this);
+        //     this.load.start();
+        // });
 
-        // Create a URL for the Blob and update the texture
-        let url = URL.createObjectURL(blob);
-        let img = new Image();
+        //         // Listen for environment state updates from the server
+        // this.socket.on('environment_state', function (data) {
+        //     // Create a sprite with the updated environment state
+        //     if (this.image) {
+        //         this.image.destroy();  // Destroy the previous image if it exists
+        //     }
+        //     this.image = this.add.image(400, 300, 'data:image/png;base64,' + data.state);
+        // }, this);
+        //
+        // console.log("logging this.state before updating this.image", this.state)
+        // this.image = this.add.image(400, 300, 'data:image/png;base64,' + this.state.state)
 
-        img.onload = () => {
-            URL.revokeObjectURL(url);  // Revoke the URL once the texture is loaded
+        // this.socket.emit('request_state_update');
+        //
+        // // Listen for image data from the server
+        // this.socket.on('process_state_update', function (data) {
+        //     console.log(typeof(data))
+        //     if (typeof(data) !== 'undefined') {
+        //         console.log("updating image")
+        //         this.image.setTexture('data:image/png;base64,' + data.state);
+        //         this.prevState = this.state;
+        //         this.state = data;
+        //     }
+        // }, this);
 
-            // Draw the image to a temporary canvas to get image data
-            let tempCanvas = document.createElement('canvas');
-            tempCanvas.width = img.width;
-            tempCanvas.height = img.height;
-            let tempCtx = tempCanvas.getContext('2d');
-            tempCtx.drawImage(img, 0, 0);
+        // if (typeof(this.state) !== 'undefined') {
+        //     console.log("updating image")
+        // }
 
-            let currImageData = tempCtx.getImageData(0, 0, img.width, img.height);
-
-            // Assume that this is the first frame if prevImageData is null
-            if (!this.prevImageData) {
-                this.texture.context.drawImage(img, 0, 0);
-                this.texture.refresh();
-                this.prevImageData = currImageData;
-                return;
-            }
-
-            // Compare previous image data to current image data to find changed tiles
-            let changedTiles = [];
-            for (let y = 0; y < img.height; y += this.tileSize) {
-                for (let x = 0; x < img.width; x += this.tileSize) {
-                    let tileChanged = this.isTileChanged(x, y, currImageData, this.prevImageData);
-                    if (tileChanged) {
-                        changedTiles.push({ x, y });
-                    }
-                }
-            }
-
-            // Update only the changed tiles
-            for (let tile of changedTiles) {
-                this.texture.context.drawImage(tempCanvas, tile.x, tile.y, this.tileSize, this.tileSize, tile.x, tile.y, this.tileSize, this.tileSize);
-            }
-            this.texture.refresh();
-
-            this.prevImageData = currImageData;
-        };
-
-        img.src = url;
     }
 
-    isTileChanged(x, y, currImageData, prevImageData) {
-        // Compare the image data of the tile at (x, y) to see if it has changed
-        for (let ty = 0; ty < this.tileSize; ty++) {
-            for (let tx = 0; tx < this.tileSize; tx++) {
-                let index = ((y + ty) * currImageData.width + (x + tx)) * 4;
-                if (
-                    currImageData.data[index] !== prevImageData.data[index] ||
-                    currImageData.data[index + 1] !== prevImageData.data[index + 1] ||
-                    currImageData.data[index + 2] !== prevImageData.data[index + 2] ||
-                    currImageData.data[index + 3] !== prevImageData.data[index + 3]
-                ) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+    // updateState(updateData) {
+    //     // this.image.setTexture("data:image/png;base64," + imageData);
+    //     // this.game.add.image(400, 300, 'data:image/png;base64,' + this.state);
+    // }
+
 }
 
 
@@ -113,7 +128,7 @@ const game_config = {
     width: 800,
     height: 600,
     partialRenderTileSize : 32,
-    scene: EnvironmentRGBScene,
+    scene: RGBScene,
 };
 
 
@@ -121,10 +136,10 @@ const game_config = {
 var graphics;
 
 // Invoked at every state update from server
-function drawState(image) {
+function updateState(state_data) {
     // Try catch necessary because state pongs can arrive before graphics manager has finished initializing
     try {
-        graphics.update_image(image);
+        graphics.set_state(state_data);
     } catch {
         console.log("error updating state");
     }
@@ -137,6 +152,7 @@ function graphics_start(graphics_config) {
 
 // Invoked at 'end_game' event
 function graphics_end() {
+    console.log("graphics end")
     graphics.game.renderer.destroy();
     graphics.game.loop.stop();
     graphics.game.destroy();

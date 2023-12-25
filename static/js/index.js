@@ -8,17 +8,13 @@ function startGame() {
 
     let graphics_config = {}; // Should be defined by game attributes
     graphics_start(graphics_config);
+    socket.emit("create_join", {})
 }
 
-// socket.on('start_game', (data) => {
-//     // graphics_config = some function of data
-//     console.log("on start game! starting graphics");
-//     graphics_config = {};
-// });
-
-socket.on('state_update', function(data) {
+socket.on('environment_state', function(data) {
+    // console.log("updating state")
     // Draw state update
-    drawState(data['state']);
+    updateState(data);
 });
 
 socket.on('end_game', function(data) {

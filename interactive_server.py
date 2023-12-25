@@ -8,6 +8,9 @@ import flask
 import flask_socketio
 import pygame
 import numpy as np
+from flask_cors import CORS
+
+
 
 from interactive_framework import remote_game, policy_wrapper
 import remote_config
@@ -21,6 +24,7 @@ SUBJECTS = {}
 GAMES = {}
 
 app = flask.Flask(__name__, template_folder=os.path.join("static", "templates"))
+CORS(app)
 app.config["SECRET_KEY"] = "secret!"
 
 app.config["DEBUG"] = os.getenv("FLASK_ENV", "production") == "development"
@@ -28,6 +32,7 @@ socketio = flask_socketio.SocketIO(
     app, cors_allowed_origins="*", logger=app.config["DEBUG"]
 )
 
+cur_state = None
 
 @app.route("/<subject_name>")
 def index(subject_name):
@@ -42,7 +47,6 @@ def index(subject_name):
 
 @socketio.on("connect")
 def on_connect():
-    print("on connect")
     subject_socket_id = flask.request.sid
 
     if subject_socket_id in SUBJECTS:
@@ -147,23 +151,56 @@ def play_game(game: remote_game.RemoteGame):
                 game.reset(game.seed)
                 socketio.emit("game_episode_start")
 
+
     socketio.emit("game_ended", {"url": CONFIG.redirect_url})
 
 
 def render_game_image(image: np.ndarray, game: remote_game.RemoteGame):
-    png_img = Image.fromarray(image, "RGB")
-    im_file = io.BytesIO()
-    png_img.save(im_file, format="png")
-    im_bytes = im_file.getvalue()  # im_bytes: image in binary format.
-    im_b64 = base64.b64encode(im_bytes)
-    base64str = im_b64.decode("utf-8")
+    # png_img = Image.fromarray(image, "RGB")
+    # image_stream = io.BytesIO()
+    # png_img.save(image_stream, format="PNG")
+    # image_stream.seek(0)
+
+    """ Get the rendered image from the environment and convert it to a format suitable for sending over SocketIO """
+    # Convert state (numpy array) to a PIL Image, then to bytes
+    image = Image.fromarray(image.astype('uint8'), 'RGB')
+    img_byte_arr = io.BytesIO()
+    image.save(img_byte_arr, format='PNG')
+    img_byte_arr = img_byte_arr.getvalue()
+    # return img_byte_arr
+
+    # socketio.ge
+    # im_bytes = im_file.getvalue()  # im_bytes: image in binary format.
+    # im_b64 = base64.b64encode(im_bytes)
+    # base64str = im_b64.decode("utf-8")
+    #
+    # image = Image.fromarray(numpy_array)
+    #
+    # # Save the image to a BytesIO object
+    # image_stream = BytesIO()
+    # image.save(image_stream, format='PNG')
+    # image_stream.seek(0)
+
+    # Emit the image data to the connected clients
+    # socketio.emit('image_data', {'image': image_stream.read().decode('base64')})
+    # image_data_base64 = base64.b64encode(image_stream.read()).decode('utf-8')
 
     socketio.emit(
-        "state_update",
-        {"state": base64str, "rewards": game.cumulative_reward, "step": game.t,},
+        "environment_state",
+        {"state": img_byte_arr, "rewards": game.cumulative_reward, "step": game.t,},
         room=game.id,
     )
 
+
+# @socketio.on('request_state_update')
+# def process_state_request():
+#     global cur_state
+#     socketio.emit(
+#         "process_state_update",
+#         cur_state,
+#         room=cur_state["room"] if cur_state is not None else None,
+#     )
+#     cur_state = None
 
 def run(config):
     global CONFIG

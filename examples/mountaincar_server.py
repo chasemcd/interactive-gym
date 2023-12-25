@@ -33,7 +33,7 @@ config = (
     .gameplay(
         human_id="agent-0", default_action=NOOP_ACTION, action_mapping=action_mapping
     )
-    .user_experience(fps=20)
+    .user_experience(fps=1)
     .hosting(port=8000)
 )
 

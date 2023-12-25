@@ -26,6 +26,7 @@ document.querySelector("canvas").onblur = function () {
 }
 
 function startGame() {
+    console.log("startgamae")
     document.getElementById("startBtn").style.display = "none";
     document.getElementById("headerButton").style.display = "none";
     document.getElementById("headerText").style.display = "box";
