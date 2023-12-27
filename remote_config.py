@@ -23,11 +23,18 @@ class RemoteConfig:
         self.human_id: str | int | None = None
         self.default_action: int | str | None = None
 
+        # rendering
+        self.env_to_state_fn: typing.Callable | None = None
+        self.game_width: int | None = None
+        self.game_height: int | None = None
+
         # user_experience
         self.redirect_url: str | None = None  # send user here after experiment.
         self.screen_size: int | None = None
-        self.game_header_text: str = "Game Header Text"
+        self.game_header_text: str = "Game Page Header"
+        self.start_header_text: str = "Start Page Header"
         self.start_page_text: str = "Start Page Text"
+        self.game_page_text: str = "Game Page Text"
         self.fps: int = 10
 
     def environment(
@@ -44,6 +51,12 @@ class RemoteConfig:
 
         if seed is not None:
             self.seed = seed
+
+        return self
+
+    def rendering(self, env_to_state_fn: typing.Callable | None = None):
+        if env_to_state_fn is not None:
+            self.env_to_state_fn = env_to_state_fn
 
         return self
 
@@ -105,7 +118,9 @@ class RemoteConfig:
         self,
         redirect_url: str | None = None,
         screen_size: int | None = None,
+        start_header_text: str | None = None,
         game_header_text: str | None = None,
+        game_page_text: str | None = None,
         start_page_text: str | None = None,
         fps: int | None = None,
     ):
@@ -115,11 +130,17 @@ class RemoteConfig:
         if screen_size is not None:
             self.screen_size = screen_size
 
+        if start_header_text is not None:
+            self.start_header_text = start_header_text
+
         if game_header_text is not None:
             self.game_header_text = game_header_text
 
         if start_page_text is not None:
             self.start_page_text = start_page_text
+
+        if game_page_text is not None:
+            self.game_page_text = game_page_text
 
         if fps is not None:
             self.fps = fps

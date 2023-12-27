@@ -2,6 +2,9 @@ import gymnasium as gym
 
 import interactive_server
 import remote_config
+from examples.mountaincar import mountaincar_utils
+
+from gymnasium.envs import classic_control
 
 """
 This is an example script for running MountainCar-v0 in
@@ -30,10 +33,11 @@ action_mapping = {"ArrowLeft": LEFT_ACCELERATION, "ArrowRight": RIGHT_ACCELERATI
 config = (
     remote_config.RemoteConfig()
     .environment(env_creator=env_creator, env_name="MountainCar-v0")
+    # .rendering(env_to_state_fn=mountaincar_utils.mountaincar_to_render_state)
     .gameplay(
-        human_id="agent-0", default_action=NOOP_ACTION, action_mapping=action_mapping
+        human_id="agent-0", default_action=NOOP_ACTION, action_mapping=action_mapping,
     )
-    .user_experience(fps=1)
+    .user_experience(fps=14)
     .hosting(port=8000)
 )
 

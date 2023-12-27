@@ -1,5 +1,6 @@
 import base64
 import io
+import logging
 import os
 import threading
 
@@ -10,6 +11,15 @@ import pygame
 import numpy as np
 from flask_cors import CORS
 
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+    logging.warn(
+        "cv2 not installed. This is required if you're not "
+        "defining a rendering function and want to (inefficiently) "
+        "have the canvas display whatever is returned from `env.render()`."
+    )
 
 
 from interactive_framework import remote_game, policy_wrapper
@@ -34,14 +44,17 @@ socketio = flask_socketio.SocketIO(
 
 cur_state = None
 
+
 @app.route("/<subject_name>")
 def index(subject_name):
     print("index")
     return flask.render_template(
         "index.html",
         async_mode=socketio.async_mode,
-        header_text=CONFIG.game_header_text,
-        header_text_start=CONFIG.start_page_text,
+        start_header_text=CONFIG.start_header_text,
+        start_page_text=CONFIG.start_page_text,
+        game_header_text=CONFIG.game_header_text,
+        game_page_text=CONFIG.game_page_text,
     )
 
 
@@ -89,18 +102,25 @@ def on_create_join(data):
         socketio.start_background_task(play_game, game)
 
 
-@socketio.on("action")
+@socketio.on("send_pressed_keys")
 def on_action(data):
     subject_socket_id = flask.request.sid
     game = GAMES[subject_socket_id]
-    action = data["action"]
-    if not game or action not in CONFIG.action_mapping:
+
+    pressed_keys = data["pressed_keys"]
+
+    if not game or not any([k in CONFIG.action_mapping for k in pressed_keys]):
         return
 
-    step = data["step"]
+    action = None
+    for k in pressed_keys:
+        if k in CONFIG.action_mapping:
+            action = k
+            break
+
+    assert action is not None
 
     game.pending_actions.put(CONFIG.action_mapping[action])
-    print("Action {} for {}".format(action, step))
 
 
 def play_game(game: remote_game.RemoteGame):
@@ -110,6 +130,8 @@ def play_game(game: remote_game.RemoteGame):
     socketio.emit("start_game")
     print("start_game")
     while not episodes_done == CONFIG.num_episodes:
+        # Tell the server that we want to receive actions at the next update.
+        socketio.emit("request_pressed_keys", {"data": "Server requests key data"})
 
         clock.tick(CONFIG.fps)
 
@@ -141,9 +163,9 @@ def play_game(game: remote_game.RemoteGame):
         else:
             actions = human_action
 
-        game_render = game.step(actions)
-        if game_render is not None:
-            render_game_image(game_render, game=game)
+        game.step(actions)
+        if not game.is_done:
+            render_game(game=game)
         else:
             # end of episode
             episodes_done = episodes_done + 1
@@ -151,56 +173,34 @@ def play_game(game: remote_game.RemoteGame):
                 game.reset(game.seed)
                 socketio.emit("game_episode_start")
 
-
     socketio.emit("game_ended", {"url": CONFIG.redirect_url})
 
 
-def render_game_image(image: np.ndarray, game: remote_game.RemoteGame):
-    # png_img = Image.fromarray(image, "RGB")
-    # image_stream = io.BytesIO()
-    # png_img.save(image_stream, format="PNG")
-    # image_stream.seek(0)
+def render_game(game: remote_game.RemoteGame):
 
-    """ Get the rendered image from the environment and convert it to a format suitable for sending over SocketIO """
-    # Convert state (numpy array) to a PIL Image, then to bytes
-    image = Image.fromarray(image.astype('uint8'), 'RGB')
-    img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='PNG')
-    img_byte_arr = img_byte_arr.getvalue()
-    # return img_byte_arr
+    state = None
+    encoded_image = None
+    if CONFIG.env_to_state_fn is not None:
+        state = CONFIG.env_to_state_fn(game.env)
+    else:
+        assert cv2 is not None, "Must install cv2 to use default image rendering!"
+        game_image = game.env.render()
+        _, encoded_image = cv2.imencode(".png", game_image)
 
-    # socketio.ge
-    # im_bytes = im_file.getvalue()  # im_bytes: image in binary format.
-    # im_b64 = base64.b64encode(im_bytes)
-    # base64str = im_b64.decode("utf-8")
-    #
-    # image = Image.fromarray(numpy_array)
-    #
-    # # Save the image to a BytesIO object
-    # image_stream = BytesIO()
-    # image.save(image_stream, format='PNG')
-    # image_stream.seek(0)
-
-    # Emit the image data to the connected clients
-    # socketio.emit('image_data', {'image': image_stream.read().decode('base64')})
-    # image_data_base64 = base64.b64encode(image_stream.read()).decode('utf-8')
+        # Convert the encoded image to Base64 string
+        encoded_image = base64.b64encode(encoded_image).decode()
 
     socketio.emit(
         "environment_state",
-        {"state": img_byte_arr, "rewards": game.cumulative_reward, "step": game.t,},
+        {
+            "state": state,
+            "game_image_base64": encoded_image,
+            "rewards": game.cumulative_reward,
+            "step": game.t,
+        },
         room=game.id,
     )
 
-
-# @socketio.on('request_state_update')
-# def process_state_request():
-#     global cur_state
-#     socketio.emit(
-#         "process_state_update",
-#         cur_state,
-#         room=cur_state["room"] if cur_state is not None else None,
-#     )
-#     cur_state = None
 
 def run(config):
     global CONFIG

@@ -23,6 +23,7 @@ class RemoteGame:
         self.pending_actions = queue.Queue(maxsize=1)
         self.id = 0  # this will be set as the subjects socket id
         self.t = 0
+        self.is_done = False
 
         self.is_multiagent: bool = hasattr(env, "_agent_ids")
         self.agent_ids = env._agent_ids if self.is_multiagent else [None]
@@ -42,14 +43,13 @@ class RemoteGame:
 
         if terminateds or truncateds:
             print("Terminated!" if terminateds else "Truncated!")
+            self.is_done = True
             self.closed = True
-            self.reset(self.seed)
             self.t = 0
         else:
             self.t += 1
-            return self.env.render()
 
     def reset(self, seed):
         self.obs, _ = self.env.reset(seed=seed)
         self.cumulative_reward = 0
-        self.env.render()
+        self.is_done = False
