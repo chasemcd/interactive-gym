@@ -48,12 +48,37 @@ class Line:
     uuid: str
     color: str
     width: int
-    points: list[tuple[int, int]]
+    points: list[tuple[float, float]]
     object_type: str = "line"
     fill_below: bool = False
     fill_above: bool = False
-    fill_right: bool = False
-    fill_left: bool = False
+    depth: int = -1
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class Circle:
+    uuid: str
+    color: str
+    x: float
+    y: float
+    radius: int
+    alpha: float = 1
+    object_type: str = "circle"
+    depth: int = -1
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class Polygon:
+    uuid: str
+    color: str
+    points: list[tuple[float, float]]
+    object_type: str = "polygon"
     depth: int = -1
 
     def as_dict(self) -> dict[str, typing.Any]:

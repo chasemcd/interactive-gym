@@ -80,7 +80,6 @@ def on_disconnect():
 
 @socketio.on("create_join")
 def on_create_join(data):
-    print("on create join")
     subject_socket_id = flask.request.sid
     with SUBJECTS[subject_socket_id]:
         flask_socketio.join_room(subject_socket_id)

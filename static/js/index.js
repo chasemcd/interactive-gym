@@ -49,16 +49,16 @@ socket.on('request_pressed_keys', function(data) {
 });
 
 $(document).on('keydown', function(event) {
-    if (pressedKeys[event.code]) {
+    if (pressedKeys[event.key]) {
         return; // Key is already pressed, so exit the function
     }
 
-    pressedKeys[event.code] = true; // Add key to pressedKeys when it is pressed
+    pressedKeys[event.key] = true; // Add key to pressedKeys when it is pressed
     // shouldSendPressedKeys = true;
 });
 
 $(document).on('keyup', function(event) {
-    delete pressedKeys[event.code]; // Remove key from pressedKeys when it is released
+    delete pressedKeys[event.key]; // Remove key from pressedKeys when it is released
     // shouldSendPressedKeys = true;
 });
 

@@ -132,8 +132,6 @@ class GymScene extends Phaser.Scene {
         this.state = state;
     }
 
-
-
     drawState() {
         /*
         Iterate over the objects defined in the state and
@@ -142,9 +140,12 @@ class GymScene extends Phaser.Scene {
 
         // Retrieve the list of object contexts
         let game_state_objects = this.state.state;
+        let game_state_image = this.state.game_image_base64;
 
         // If we don't have any object contexts, we render the image from `env.render()`
-        if (game_state_objects == null) {
+        // NOTE: This approach is very inefficient and not good practice! It's oriented
+        //  to testing or local experiments.
+        if (game_state_objects == null && !(game_state_image == null)) {
             // Remove the current image
             let oldImage;
 
@@ -177,23 +178,20 @@ class GymScene extends Phaser.Scene {
             this.textures.addBase64(`curStateImage_${this.state.step}`, base64String);
 
 
-        } else {
+        } else if (!(game_state_objects == null)) {
+            // If we have game state objects, we'll render and update each object as necessary.
             game_state_objects.forEach((game_obj) => {
-                let uuid = game_obj.uuid;
 
-                // Check if we need to add a new Sprite
-                if (!this.object_map.hasOwnProperty(uuid)) {
+                // Check if we need to add a new object
+                if (!this.object_map.hasOwnProperty(game_obj.uuid)) {
                     this._addObject(game_obj);
                 }
+
 
                 this._updateObject(game_obj);
             })
 
         }
-
-
-
-
     };
 
     _addObject(object_config) {
@@ -323,7 +321,18 @@ class GymScene extends Phaser.Scene {
     }
 
     _addCircle(circle_config) {
-        // TODO
+        var graphics = this.add.graphics();
+        graphics.setDepth(circle_config.depth);
+
+        // Set the fill style (color and alpha)
+        graphics.fillStyle(this._strToHex(circle_config.color), circle_config.alpha); // Red color, fully opaque
+
+        // Draw a filled circle (x, y, radius)
+        this.object_map[circle_config.uuid] = graphics.fillCircle(
+            circle_config.x * this.width,
+            circle_config.y * this.height,
+            circle_config.radius,
+        );
     }
 
     _updateCircle(circle_config) {
@@ -339,7 +348,20 @@ class GymScene extends Phaser.Scene {
     }
 
     _addPolygon(polygon_config) {
-        // TODO
+        let graphics = this.add.graphics();
+        var points = polygon_config.points.map((point) => new Phaser.Math.Vector2(point[0] * this.width, point[1] * this.height))
+
+        graphics.setDepth(polygon_config.depth);
+
+
+        // Set the fill style (color and alpha)
+        graphics.fillStyle(this._strToHex(polygon_config.color), polygon_config.alpha); // Green color, fully opaque
+
+        // Draw the filled polygon
+        graphics.fillPoints(points, true); // 'true' to close the polygon
+
+        this.object_map[polygon_config.uuid] = graphics;
+
     }
 
     _updatePolygon(polygon_config) {
