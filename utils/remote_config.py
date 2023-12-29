@@ -44,6 +44,8 @@ class RemoteConfig:
         self.start_header_text: str = "Start Page Header"
         self.start_page_text: str = "Start Page Text"
         self.game_page_text: str = "Game Page Text"
+        self.between_episode_header: str = "Between Episode Page Header"
+        self.between_episode_text: str = "Between Episode Page Text"
 
     def environment(
         self,
@@ -173,6 +175,8 @@ class RemoteConfig:
         game_header_text: str | None = None,
         game_page_text: str | None = None,
         start_page_text: str | None = None,
+        between_episode_header: str | None = None,
+        between_episode_text: str | None = None,
     ):
         if redirect_url is not None:
             self.redirect_url = redirect_url
@@ -191,6 +195,12 @@ class RemoteConfig:
 
         if game_page_text is not None:
             self.game_page_text = game_page_text
+
+        if between_episode_header is not None:
+            self.between_episode_header = between_episode_header
+
+        if between_episode_text is not None:
+            self.between_episode_text = between_episode_text
 
         return self
 
