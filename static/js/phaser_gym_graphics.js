@@ -6,16 +6,6 @@ var game_config = {
     }
 };
 
-var scene_config = {
-    width: 600,
-    height: 400,
-    background: "#FFFFFF",
-    assets_dir : "./static/assets/",
-    state_init: [],
-    assets_to_preload: [],
-    animation_configs: [],
-};
-
 var game_graphics;
 
 function updateState(state_data) {
@@ -26,22 +16,25 @@ function updateState(state_data) {
     }
 }
 
+
 function graphics_start(graphics_config) {
     // TODO: pass scene config as an argument here.
-    game_graphics = new GraphicsManager(game_config, scene_config, graphics_config);
+    game_graphics = new GraphicsManager(game_config, graphics_config);
 }
 
 class GraphicsManager {
-    constructor(game_config, scene_config, graphics_config) {
-        game_config.scene = new GymScene(scene_config);
-        game_config.width = scene_config.width;
-        game_config.height = scene_config.height;
-        game_config.background = scene_config.background;
-        game_config.state_init = scene_config.state_init;
-        game_config.assets_dir = scene_config.assets_dir;
-        game_config.assets_to_preload = scene_config.assets_to_preload;
-        game_config.animation_configs = scene_config.animation_configs;
+    constructor(game_config, graphics_config) {
+        game_config.scene = new GymScene(graphics_config);
+        game_config.location_representation = graphics_config.location_representation;
+        game_config.width = graphics_config.width;
+        game_config.height = graphics_config.height;
+        game_config.background = graphics_config.background;
+        game_config.state_init = graphics_config.state_init;
+        game_config.assets_dir = graphics_config.assets_dir;
+        game_config.assets_to_preload = graphics_config.assets_to_preload;
+        game_config.animation_configs = graphics_config.animation_configs;
         game_config.parent = graphics_config.parent;
+        game_config.fps = graphics_config.fps;
         this.game = new Phaser.Game(game_config);
     }
 
@@ -52,6 +45,8 @@ class GraphicsManager {
         this.game.scale.pageAlignVertically = true;
         this.game.scale.refresh();
     }
+
+    set_config
 }
 
 
@@ -207,6 +202,8 @@ class GymScene extends Phaser.Scene {
             this._addRectangle(object_config)
         } else if (object_config.object_type === "polygon") {
             this._addPolygon(object_config)
+        } else if (object_config.object_type === "text") {
+            this._addText(object_config)
         } else {
             console.warn("Unrecognized object type in _addObject:", object_config.object_type)
         }
@@ -223,8 +220,10 @@ class GymScene extends Phaser.Scene {
             this._updateRectangle(object_config)
         } else if (object_config.object_type === "polygon") {
             this._updatePolygon(object_config)
-        }else {
-            console.warn("Unrecognized object type in _addObject:", object_config.object_type)
+        } else if (object_config.object_type === "text") {
+            this._updateText(object_config)
+        } else {
+            console.warn("Unrecognized object type in _updateObject:", object_config.object_type)
         }
     }
 
@@ -366,6 +365,25 @@ class GymScene extends Phaser.Scene {
 
     _updatePolygon(polygon_config) {
         // TODO
+    }
+
+    _addText(text_config) {
+        this.object_map[text_config.uuid] = this.add.text(
+            text_config.x * this.width,
+            text_config.y * this.height,
+            text_config.text,
+            { fontFamily: text_config.font, fontSize: text_config.size, color: "#000"}
+        );
+        this.object_map[text_config.uuid].setDepth(1)
+        console.log(this.object_map[text_config.uuid])
+
+    }
+
+    _updateText(text_config) {
+        let text = this.object_map[text_config.uuid];
+        text.x = text_config.x * this.width;
+        text.y = text_config.y * this.height;
+        text.setText(text_config.text);
     }
 
     _checkIfHex(string_to_test) {

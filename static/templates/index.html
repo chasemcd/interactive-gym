@@ -6,14 +6,24 @@
         @import url('https://fonts.googleapis.com/css?family=Press Start 2P');
 
         /* General page styling */
-        body {
+        body, html {
             {#font-family: 'Press Start 2P', cursive; /* Retro, pixelated font */#}
             font-family: 'Press Start 2P', cursive;
-            font-size: 22px;
+            font-size: 18px;
             background-color: #fff; /* white background */
             color: #000; /* black text */
             text-align: center; /* Center aligning everything */
             padding-top: 50px; /* Spacing from the top */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .text-container {
+            max-width: 700px; /* Maximum width */
+            font-family: 'Press Start 2P', cursive;
+            font-size: 18px;
+            text-align: center; /* Center aligning everything */
         }
 
         /* Style for the start button */
@@ -30,12 +40,13 @@
             margin: 4px 2px;
             cursor: pointer;
             border-radius: 8px;
+            margin-top: 20px;
         }
 
         /* Style for the game container */
         #gameContainer {
             display: none; /* Initially hide the game container */
-            max-width: 800px; /* Maximum width */
+            max-width: 1000px; /* Maximum width */
             margin: auto; /* Centering */
             border: 2px solid #fff; /* White border */
         }
@@ -43,25 +54,26 @@
 </head>
 <body>
 
-    <!-- Texts for start -->
-    <h1 id="startHeaderText">{{ header_text }}</h1>
-    <h3 id="startPageText">{{ start_page_text }}</h3>
+    <div class="text-container">
+        <!-- Texts for start -->
+        <h1 id="startHeaderText">{{ start_header_text }}</h1>
+        <p id="startPageText"><small>{{ start_page_text }}</small></p>
 
-    <!-- Texts for game, initially hidden -->
-    <h1 id="gameHeaderText" style="display: none;">{{ game_header_text }}</h1>
-    <h3 id="gamePageText" style="display: none;">{{ game_page_text }}</h3>
+        <!-- Texts for game, initially hidden -->
+        <h1 id="gameHeaderText" style="display: none;">{{ game_header_text }}</h1>
+        <p id="gamePageText" style="display: none;"><small>{{ game_page_text }}</small></p>
 
-    <!-- Start button -->
-    <button id="startButton">Start</button>
+        <!-- Start button -->
+        <button id="startButton">Start</button>
 
-    <!-- Game container -->
-    <div id="gameContainer"></div>
 
-{#    <!-- Phaser library -->#}
-{#    <script src="path/to/phaser.js"></script>#}
-{##}
-{#    <!-- Your game script -->#}
-{#    <script src="path/to/yourGameScript.js"></script>#}
+        <!-- Game container -->
+        <div id="gameContainer"></div>
+    </div>
+
+
+
+
 
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>

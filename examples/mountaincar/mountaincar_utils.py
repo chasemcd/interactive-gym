@@ -12,7 +12,7 @@ prev_x = None
 
 
 def mountaincar_to_render_state(env: gym.Env) -> list[dict]:
-    global ball_rotation, prev_x
+    global ball_rotation, prev_x, step
     y_offset = 0.05
     min_pos, max_pos = env.unwrapped.min_position, env.unwrapped.max_position
     env_ = env.unwrapped
@@ -67,9 +67,15 @@ def mountaincar_to_render_state(env: gym.Env) -> list[dict]:
         uuid="ground_line", color="#964B00", points=xys, width=1, fill_below=True
     )
 
+    prop_done = int((env._elapsed_steps / env._max_episode_steps) * 100)
+    time = object_contexts.Text(
+        uuid="time_left", text=f"{prop_done}% complete", x=0.05, y=0.05, size=12,
+    )
+
     return [
         car_sprite.as_dict(),
         line.as_dict(),
         flag_pole.as_dict(),
         flag.as_dict(),
+        time.as_dict(),
     ]

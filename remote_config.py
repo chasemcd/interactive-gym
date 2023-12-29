@@ -1,4 +1,6 @@
 import typing
+import copy
+import json
 
 
 class RemoteConfig:
@@ -12,21 +14,28 @@ class RemoteConfig:
         self.port = 8000
 
         # policies
-        self.policy_mapping: dict[str, typing.Any] = {}
-        self.available_policies: dict[str, typing.Any] = {}
-        self.policy_configs: dict[str, typing.Any] = {}
+        self.policy_mapping: dict[str, typing.Any] = dict()
+        self.available_policies: dict[str, typing.Any] = dict()
+        self.policy_configs: dict[str, typing.Any] = dict()
         self.frame_skip: int = 4
 
         # gameplay
         self.num_episodes: int = 1
-        self.action_mapping: dict[str, int] = {}
+        self.action_mapping: dict[str, int] = dict()
         self.human_id: str | int | None = None
         self.default_action: int | str | None = None
 
         # rendering
         self.env_to_state_fn: typing.Callable | None = None
-        self.game_width: int | None = None
-        self.game_height: int | None = None
+        self.location_representation: str = "relative"  # "relative" or "pixels"
+        self.game_width: int | None = 600
+        self.game_height: int | None = 400
+        self.fps: int = 10
+        self.background: str = "#FFFFFF"  # white background default
+        self.state_init: list = []
+        self.assets_dir: str = "./static/assets/"
+        self.assets_to_preload: list[str] = []
+        self.animation_configs: list = []
 
         # user_experience
         self.redirect_url: str | None = None  # send user here after experiment.
@@ -35,7 +44,6 @@ class RemoteConfig:
         self.start_header_text: str = "Start Page Header"
         self.start_page_text: str = "Start Page Text"
         self.game_page_text: str = "Game Page Text"
-        self.fps: int = 10
 
     def environment(
         self,
@@ -54,9 +62,52 @@ class RemoteConfig:
 
         return self
 
-    def rendering(self, env_to_state_fn: typing.Callable | None = None):
+    def rendering(
+        self,
+        fps: int | None = None,
+        env_to_state_fn: typing.Callable | None = None,
+        location_representation: str | None = None,
+        game_width: int | None = None,
+        game_height: int | None = None,
+        background: str | None = None,
+        state_init: list | None = None,
+        assets_dir: str | None = None,
+        assets_to_preload: list[str] | None = None,
+        animation_configs: list | None = None,
+    ):
         if env_to_state_fn is not None:
             self.env_to_state_fn = env_to_state_fn
+
+        if location_representation is not None:
+            assert location_representation in [
+                "relative",
+                "pixels",
+            ], "Must pass either relative or pixel location!"
+            self.location_representation = location_representation
+
+        if fps is not None:
+            self.fps = fps
+
+        if game_width is not None:
+            self.game_width = game_width
+
+        if game_height is not None:
+            self.game_height = game_height
+
+        if background is not None:
+            self.background = background
+
+        if state_init is not None:
+            self.state_init = state_init
+
+        if assets_dir is not None:
+            self.assets_dir = assets_dir
+
+        if assets_to_preload is not None:
+            self.assets_to_preload = assets_to_preload
+
+        if animation_configs is not None:
+            self.animation_configs = animation_configs
 
         return self
 
@@ -122,7 +173,6 @@ class RemoteConfig:
         game_header_text: str | None = None,
         game_page_text: str | None = None,
         start_page_text: str | None = None,
-        fps: int | None = None,
     ):
         if redirect_url is not None:
             self.redirect_url = redirect_url
@@ -142,7 +192,47 @@ class RemoteConfig:
         if game_page_text is not None:
             self.game_page_text = game_page_text
 
-        if fps is not None:
-            self.fps = fps
-
         return self
+
+    def to_dict(self, serializable=False):
+        config = copy.deepcopy(vars(self))
+        if serializable:
+            config = serialize_dict(config)
+        return config
+
+
+def serialize_dict(data):
+    """
+    Serialize a dictionary to JSON, removing unserializable keys recursively.
+
+    :param data: Dictionary to serialize.
+    :return: Serialized object with unserializable elements removed.
+    """
+    if isinstance(data, dict):
+        # Use dictionary comprehension to process each key-value pair
+        return {
+            key: serialize_dict(value)
+            for key, value in data.items()
+            if is_json_serializable(value)
+        }
+    elif isinstance(data, list):
+        # Use list comprehension to process each item
+        return [serialize_dict(item) for item in data if is_json_serializable(item)]
+    elif is_json_serializable(data):
+        return data
+    else:
+        return None  # or some other default value
+
+
+def is_json_serializable(value):
+    """
+    Check if a value is JSON serializable.
+
+    :param value: The value to check.
+    :return: True if the value is JSON serializable, False otherwise.
+    """
+    try:
+        json.dumps(value)
+        return True
+    except (TypeError, OverflowError):
+        return False

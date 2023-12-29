@@ -16,11 +16,31 @@ function startGame() {
     document.getElementById('gameHeaderText').style.display = 'block';
     document.getElementById('gamePageText').style.display = 'block';
 
+    socket.emit('request_config')
+}
+
+socket.on('send_config', function(data) {
+    let config = JSON.parse(data.config);
+
     // Initialize game
-    let graphics_config = {"parent": "gameContainer"}; // Should be defined by game attributes
+    let graphics_config = {
+        'parent': 'gameContainer',
+        'fps': {
+            'target': config.fps,
+            'forceSetTimeOut': true
+        },
+        'height': config.game_height,
+        'width': config.game_width,
+        'background': config.background,
+        'state_init': config.state_init,
+        'assets_dir': config.assets_dir,
+        'assets_to_preload': config.assets_to_preload,
+        'animation_configs': config.animation_configs,
+    };
+
     graphics_start(graphics_config);
     socket.emit("create_join", {})
-}
+})
 
 // Add event listener to the start button
 document.getElementById('startButton').addEventListener('click', startGame);

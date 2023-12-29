@@ -83,3 +83,19 @@ class Polygon:
 
     def as_dict(self) -> dict[str, typing.Any]:
         return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class Text:
+    uuid: str
+    text: str
+    x: float | int
+    y: float | int
+    size: int = 16
+    color: str = "#000000"
+    font: str = "Arial"
+    depth: int = -1
+    object_type: str = "text"
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)

@@ -3,6 +3,7 @@ import io
 import logging
 import os
 import threading
+import json
 
 from PIL import Image
 import flask
@@ -78,6 +79,12 @@ def on_disconnect():
         del GAMES[subject_socket_id]
 
 
+@socketio.on("request_config")
+def send_config(*args):
+    config = CONFIG.to_dict(serializable=True)
+    socketio.emit("send_config", {"config": json.dumps(config)})
+
+
 @socketio.on("create_join")
 def on_create_join(data):
     subject_socket_id = flask.request.sid
@@ -127,7 +134,6 @@ def play_game(game: remote_game.RemoteGame):
     episodes_done = 0
     game.reset(game.seed)
     socketio.emit("start_game")
-    print("start_game")
     while not episodes_done == CONFIG.num_episodes:
         # Tell the server that we want to receive actions at the next update.
         socketio.emit("request_pressed_keys", {"data": "Server requests key data"})
