@@ -1,14 +1,11 @@
-import gymnasium
-
 import gymnasium as gym
-import pygame
-import math
-from gymnasium.envs.classic_control import mountain_car
 import numpy as np
-from utils import object_contexts
+
+from configurations import object_contexts
 
 ball_rotation = 0
 prev_x = None
+FPS = 30
 
 
 def mountaincar_to_render_state(env: gym.Env) -> list[dict]:
@@ -67,9 +64,13 @@ def mountaincar_to_render_state(env: gym.Env) -> list[dict]:
         uuid="ground_line", color="#964B00", points=xys, width=1, fill_below=True
     )
 
-    prop_done = int((env._elapsed_steps / env._max_episode_steps) * 100)
+    seconds_left = (env._max_episode_steps - env._elapsed_steps) / FPS
     time = object_contexts.Text(
-        uuid="time_left", text=f"{prop_done}% complete", x=0.05, y=0.05, size=12,
+        uuid="time_left",
+        text=f"{np.round(seconds_left, 1):.1f}s remaining",
+        x=0.05,
+        y=0.05,
+        size=12,
     )
 
     return [

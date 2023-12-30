@@ -1,10 +1,8 @@
 import gymnasium as gym
 
 import interactive_server
-import remote_config
 from examples.mountaincar import mountaincar_utils
-
-from gymnasium.envs import classic_control
+from configurations import remote_config
 
 """
 This is an example script for running MountainCar-v0 in
@@ -22,9 +20,9 @@ NOOP_ACTION = 1
 RIGHT_ACCELERATION = 2
 
 
-def env_creator(render_mode: str = "rgb_array", *args, **kwargs):
+def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
-    return gym.make("MountainCar-v0", render_mode=render_mode)
+    return gym.make("MountainCar-v0", render_mode="rgb_array")
 
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
@@ -33,16 +31,22 @@ action_mapping = {"ArrowLeft": LEFT_ACCELERATION, "ArrowRight": RIGHT_ACCELERATI
 config = (
     remote_config.RemoteConfig()
     .environment(env_creator=env_creator, env_name="MountainCar-v0")
-    .rendering(fps=20, env_to_state_fn=mountaincar_utils.mountaincar_to_render_state)
+    .rendering(fps=30, env_to_state_fn=mountaincar_utils.mountaincar_to_render_state)
     .gameplay(
         human_id="agent-0", default_action=NOOP_ACTION, action_mapping=action_mapping,
     )
     .hosting(port=8000)
     .user_experience(
+        page_title="Interactive MountainCar-v0",
         start_header_text="Interactive MountainCar-v0",
         start_page_text="This is an interactive adaptation of the MountainCar-v0 environment. "
         "Use the left and right arrow keys to move the ball left and right."
-        "The goal is to get the ball to the green flag before time runs out.",
+        "The goal is to get the ball to the flag before time runs out.",
+        game_header_text="Interactive MountainCar-v0",
+        game_page_text="Use the left and right arrows to move the ball up the hill!",
+        final_page_header_text="Interactive MountainCar-v0",
+        final_page_text="Thanks for playing, you will be redirected shortly...",
+        redirect_url="https://www.cmu.edu/dietrich/sds/ddmlab",
     )
 )
 

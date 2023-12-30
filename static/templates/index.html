@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Phaser Game</title>
+    <title>{{ page_title }}</title>
     <style>
         @import url('https://fonts.googleapis.com/css?family=Press Start 2P');
 
         /* General page styling */
         body, html {
-            {#font-family: 'Press Start 2P', cursive; /* Retro, pixelated font */#}
             font-family: 'Press Start 2P', cursive;
             font-size: 18px;
             background-color: #fff; /* white background */
@@ -20,7 +19,7 @@
         }
 
         .text-container {
-            max-width: 700px; /* Maximum width */
+            max-width: 800px; /* Maximum width */
             font-family: 'Press Start 2P', cursive;
             font-size: 18px;
             text-align: center; /* Center aligning everything */
@@ -43,6 +42,10 @@
             margin-top: 20px;
         }
 
+        #gamePageText, #startPageText {
+            font-size: 10px;
+        }
+
         /* Style for the game container */
         #gameContainer {
             display: none; /* Initially hide the game container */
@@ -57,29 +60,34 @@
     <div class="text-container">
         <!-- Texts for start -->
         <h1 id="startHeaderText">{{ start_header_text }}</h1>
-        <p id="startPageText"><small>{{ start_page_text }}</small></p>
+        <p id="startPageText">{{ start_page_text }}</p>
 
         <!-- Texts for game, initially hidden -->
         <h1 id="gameHeaderText" style="display: none;">{{ game_header_text }}</h1>
-        <p id="gamePageText" style="display: none;"><small>{{ game_page_text }}</small></p>
+        <p id="gamePageText" style="display: none;">{{ game_page_text }}</p>
+
+        <!-- Texts for between episodes, initially hidden -->
+        <h1 id="betweenEpisodeHeaderText" style="display: none;">{{ between_episode_header_text }}</h1>
+        <p id="betweenEpisodePageText" style="display: none;">{{ between_episode_page_text }}</p>
+
+
+        <!-- Texts for final page, initially hidden -->
+        <h1 id="finalPageHeaderText" style="display: none;">{{ final_page_header_text }}</h1>
+        <p id="finalPageText" style="display: none;">{{ final_page_text }}</p>
+
 
         <!-- Start button -->
         <button id="startButton">Start</button>
-
 
         <!-- Game container -->
         <div id="gameContainer"></div>
     </div>
 
 
-
-
-
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js" integrity="sha512-zoJXRvW2gC8Z0Xo3lBbao5+AS3g6YWr5ztKqaicua11xHo+AvE1b0lT9ODgrHTmNUxeCw0Ry4BGRYZfXu70weg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><script src="static/js/index.js", type="text/javascript"></script>
     <script src="static/js/phaser_gym_graphics.js", type="text/javascript"></script>
-    <script src="static/lib/jquery-min.js" type="text/javascript"> </script>
-
+    <script src=”https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js”></script>
 </body>
 </html>

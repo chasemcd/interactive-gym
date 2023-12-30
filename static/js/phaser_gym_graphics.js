@@ -22,6 +22,11 @@ function graphics_start(graphics_config) {
     game_graphics = new GraphicsManager(game_config, graphics_config);
 }
 
+// Invoked at 'end_game' event
+function graphics_end() {
+    game_graphics.game.destroy({removeCanvas: true});
+}
+
 class GraphicsManager {
     constructor(game_config, graphics_config) {
         game_config.scene = new GymScene(graphics_config);
@@ -103,6 +108,7 @@ class GymScene extends Phaser.Scene {
     create() {
         // Store the canvas, width, and height for easy access
         this.canvas = this.sys.game.canvas;
+        this.canvas.id = "phaser-canvas";
         this.height = this.canvas.height;
         this.width = this.canvas.width;
 

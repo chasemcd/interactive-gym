@@ -16,8 +16,8 @@
 #                 format: anim = {key, frames, frameRate, repeat, hideOnComplete}
 #     }
 #  */
-import typing
 import dataclasses
+import typing
 
 
 @dataclasses.dataclass

@@ -1,12 +1,13 @@
-import typing
 import copy
 import json
+import typing
 
 
 class RemoteConfig:
     def __init__(self):
         self.env_creator: typing.Callable | None = None
         self.env_name: str | None = None
+        self.env_config: dict[str, typing.Any] = {}
         self.seed: int = 42
 
         # hosting
@@ -14,6 +15,8 @@ class RemoteConfig:
         self.port = 8000
 
         # policies
+        self.load_policy_fn: typing.Callable | None = None
+        self.policy_inference_fn: typing.Callable | None = None
         self.policy_mapping: dict[str, typing.Any] = dict()
         self.available_policies: dict[str, typing.Any] = dict()
         self.policy_configs: dict[str, typing.Any] = dict()
@@ -39,18 +42,21 @@ class RemoteConfig:
 
         # user_experience
         self.redirect_url: str | None = None  # send user here after experiment.
-        self.screen_size: int | None = None
+        self.page_title: str = "interactive-gym"
         self.game_header_text: str = "Game Page Header"
         self.start_header_text: str = "Start Page Header"
         self.start_page_text: str = "Start Page Text"
         self.game_page_text: str = "Game Page Text"
         self.between_episode_header: str = "Between Episode Page Header"
         self.between_episode_text: str = "Between Episode Page Text"
+        self.final_page_text: str = "Final page text"
+        self.final_page_header_text: str = "Final Page Header"
 
     def environment(
         self,
         env_creator: typing.Callable | None = None,
         env_name: str | None = None,
+        env_config: dict[str, typing.Any] | None = None,
         seed: int | None = None,
     ):
         if env_creator is not None:
@@ -58,6 +64,9 @@ class RemoteConfig:
 
         if env_name is not None:
             self.env_name = env_name
+
+        if env_config is not None:
+            self.env_config = env_config
 
         if seed is not None:
             self.seed = seed
@@ -126,11 +135,19 @@ class RemoteConfig:
         self,
         policy_mapping: dict | None = None,
         available_policies: dict | None = None,
+        load_policy_fn: typing.Callable | None = None,
+        policy_inference_fn: typing.Callable | None = None,
         policy_configs: dict | None = None,
         frame_skip: int | None = None,
     ):
         if policy_mapping is not None:
             self.policy_mapping = policy_mapping
+
+        if load_policy_fn is not None:
+            self.load_policy_fn = load_policy_fn
+
+        if policy_inference_fn is not None:
+            self.policy_inference_fn = policy_inference_fn
 
         if available_policies is not None:
             self.available_policies = available_policies
@@ -169,20 +186,19 @@ class RemoteConfig:
 
     def user_experience(
         self,
+        page_title: str | None = None,
         redirect_url: str | None = None,
-        screen_size: int | None = None,
         start_header_text: str | None = None,
         game_header_text: str | None = None,
         game_page_text: str | None = None,
         start_page_text: str | None = None,
         between_episode_header: str | None = None,
         between_episode_text: str | None = None,
+        final_page_header_text: str | None = None,
+        final_page_text: str | None = None,
     ):
         if redirect_url is not None:
             self.redirect_url = redirect_url
-
-        if screen_size is not None:
-            self.screen_size = screen_size
 
         if start_header_text is not None:
             self.start_header_text = start_header_text
@@ -201,6 +217,15 @@ class RemoteConfig:
 
         if between_episode_text is not None:
             self.between_episode_text = between_episode_text
+
+        if final_page_text is not None:
+            self.final_page_text = final_page_text
+
+        if final_page_header_text is not None:
+            self.final_page_header_text = final_page_header_text
+
+        if page_title is not None:
+            self.page_title = page_title
 
         return self
 

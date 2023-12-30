@@ -12,12 +12,51 @@ function startGame() {
     document.getElementById('startHeaderText').style.display = 'none';
     document.getElementById('startPageText').style.display = 'none';
 
+    // Hide between episode texts
+    document.getElementById('betweenEpisodeHeaderText').style.display = 'none';
+    document.getElementById('betweenEpisodePageText').style.display = 'none';
+
     // Show the game texts
     document.getElementById('gameHeaderText').style.display = 'block';
     document.getElementById('gamePageText').style.display = 'block';
 
     socket.emit('request_config')
 }
+
+
+// TODO(chase): Rather than destroy the canvas at episode end, we can simply hide and show
+//  it which whill prevent us from having to reload all of the assets at each episode. We'll
+//  also need to reset object_map and clean up lingering objects from one episode to another.
+function hideGameCanvas() {
+    var canvas = document.getElementById('phaser-canvas');
+    if (canvas) {
+        canvas.style.display = 'none'; // Hide the canvas
+    }
+}
+
+function showGameCanvas() {
+    var canvas = document.getElementById('phaser-canvas');
+    if (canvas) {
+        canvas.style.display = 'block'; // Show the canvas
+    }
+}
+
+
+socket.on('episode_complete', function(data) {
+    // Destroy the game canvas
+    graphics_end() // TODO: change to pause and only destroy if necessary
+
+    // Remove game texts
+    document.getElementById('gameHeaderText').style.display = 'none';
+    document.getElementById('gamePageText').style.display = 'none';
+
+    // Add between episode texts
+    document.getElementById('betweenEpisodeHeaderText').style.display = 'block';
+    document.getElementById('betweenEpisodePageText').style.display = 'block';
+
+    // Show start button again
+    document.getElementById('startButton').style.display = 'block';
+})
 
 socket.on('send_config', function(data) {
     let config = JSON.parse(data.config);
@@ -39,7 +78,7 @@ socket.on('send_config', function(data) {
     };
 
     graphics_start(graphics_config);
-    socket.emit("create_join", {})
+    socket.emit("play_single_episode", {})
 })
 
 // Add event listener to the start button
