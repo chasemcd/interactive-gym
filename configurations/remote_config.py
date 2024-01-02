@@ -42,15 +42,25 @@ class RemoteConfig:
 
         # user_experience
         self.redirect_url: str | None = None  # send user here after experiment.
+        self.redirect_timeout: int = 5_000  # 5k ms = 5 seconds default
         self.page_title: str = "interactive-gym"
         self.game_header_text: str = "Game Page Header"
-        self.start_header_text: str = "Start Page Header"
-        self.start_page_text: str = "Start Page Text"
+        self.welcome_header_text: str = "Start Page Header"
+        self.welcome_text: str = "Start Page Text"
         self.game_page_text: str = "Game Page Text"
         self.between_episode_header: str = "Between Episode Page Header"
         self.between_episode_text: str = "Between Episode Page Text"
         self.final_page_text: str = "Final page text"
         self.final_page_header_text: str = "Final Page Header"
+        self.instructions: str = "Game Instructions"  # can pass html
+        self.reset_timeout: int = 3000
+
+        # logging
+        self.logfile: str = "./log"
+
+    def logging(self, logfile: str | None = None):
+        if logfile is not None:
+            self.logfile = logfile
 
     def environment(
         self,
@@ -134,10 +144,8 @@ class RemoteConfig:
     def policies(
         self,
         policy_mapping: dict | None = None,
-        available_policies: dict | None = None,
         load_policy_fn: typing.Callable | None = None,
         policy_inference_fn: typing.Callable | None = None,
-        policy_configs: dict | None = None,
         frame_skip: int | None = None,
     ):
         if policy_mapping is not None:
@@ -148,12 +156,6 @@ class RemoteConfig:
 
         if policy_inference_fn is not None:
             self.policy_inference_fn = policy_inference_fn
-
-        if available_policies is not None:
-            self.available_policies = available_policies
-
-        if policy_configs is not None:
-            self.policy_configs = policy_configs
 
         if frame_skip is not None:
             self.frame_skip = frame_skip
@@ -175,7 +177,7 @@ class RemoteConfig:
 
         if num_episodes is not None:
             assert (
-                type(num_episodes) == 1 and num_episodes >= 1
+                type(num_episodes) == int and num_episodes >= 1
             ), "Must pass an int >=1 to num episodes."
             self.num_episodes = num_episodes
 
@@ -188,35 +190,35 @@ class RemoteConfig:
         self,
         page_title: str | None = None,
         redirect_url: str | None = None,
-        start_header_text: str | None = None,
+        redirect_timeout: int | None = None,
+        welcome_header_text: str | None = None,
         game_header_text: str | None = None,
         game_page_text: str | None = None,
-        start_page_text: str | None = None,
-        between_episode_header: str | None = None,
-        between_episode_text: str | None = None,
+        welcome_text: str | None = None,
         final_page_header_text: str | None = None,
         final_page_text: str | None = None,
+        instructions: str | None = None,
     ):
         if redirect_url is not None:
             self.redirect_url = redirect_url
 
-        if start_header_text is not None:
-            self.start_header_text = start_header_text
+        if redirect_timeout is not None:
+            self.redirect_timeout = redirect_timeout
+
+        if welcome_header_text is not None:
+            self.welcome_header_text = welcome_header_text
 
         if game_header_text is not None:
             self.game_header_text = game_header_text
 
-        if start_page_text is not None:
-            self.start_page_text = start_page_text
+        if instructions is not None:
+            self.instructions = instructions
+
+        if welcome_text is not None:
+            self.welcome_text = welcome_text
 
         if game_page_text is not None:
             self.game_page_text = game_page_text
-
-        if between_episode_header is not None:
-            self.between_episode_header = between_episode_header
-
-        if between_episode_text is not None:
-            self.between_episode_text = between_episode_text
 
         if final_page_text is not None:
             self.final_page_text = final_page_text

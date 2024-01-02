@@ -1,6 +1,6 @@
 import gymnasium as gym
 
-import interactive_server
+from server import server_app
 from examples.mountaincar import mountaincar_utils
 from configurations import remote_config
 
@@ -30,16 +30,20 @@ action_mapping = {"ArrowLeft": LEFT_ACCELERATION, "ArrowRight": RIGHT_ACCELERATI
 
 config = (
     remote_config.RemoteConfig()
+    .policies(policy_mapping={"human": "human"})
     .environment(env_creator=env_creator, env_name="MountainCar-v0")
     .rendering(fps=30, env_to_state_fn=mountaincar_utils.mountaincar_to_render_state)
     .gameplay(
-        human_id="agent-0", default_action=NOOP_ACTION, action_mapping=action_mapping,
+        human_id="agent-0",
+        default_action=NOOP_ACTION,
+        action_mapping=action_mapping,
+        num_episodes=5,
     )
     .hosting(port=8000)
     .user_experience(
         page_title="Interactive MountainCar-v0",
-        start_header_text="Interactive MountainCar-v0",
-        start_page_text="This is an interactive adaptation of the MountainCar-v0 environment. "
+        welcome_header_text="Interactive MountainCar-v0",
+        welcome_text="This is an interactive adaptation of the MountainCar-v0 environment. "
         "Use the left and right arrow keys to move the ball left and right."
         "The goal is to get the ball to the flag before time runs out.",
         game_header_text="Interactive MountainCar-v0",
@@ -52,4 +56,4 @@ config = (
 
 
 if __name__ == "__main__":
-    interactive_server.run(config)
+    server_app.run(config)

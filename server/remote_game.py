@@ -39,12 +39,13 @@ class RemoteGame:
         # Game environment
         self.env = None
         self.obs = None
-        self.game_id = game_id  # this will be set as the subjects socket id
+        self.game_id = game_id
         self.tick_num = 0
         self.episode_num = 0
 
-    def tick(self):
-        return self.status
+        self.is_done = False
+
+        self.build()
 
     def _build_env(self) -> None:
         self.env = self.config.env_creator(**self.config.env_config)
@@ -64,7 +65,11 @@ class RemoteGame:
 
     def get_available_human_player_ids(self) -> list[str]:
         """List the available human player IDs"""
-        return [pid for pid, player in self.human_players if player is utils.Available]
+        return [
+            pid
+            for pid, player in self.human_players.items()
+            if player is utils.Available
+        ]
 
     def is_at_player_capacity(self) -> bool:
         """Check if there are any available human player IDs."""
@@ -102,6 +107,7 @@ class RemoteGame:
             q.queue.clear()
 
     def enqueue_action(self, subject_id, action):
+
         if self.status != GameStatus.Active:
             return
 
@@ -121,66 +127,46 @@ class RemoteGame:
 
         self.human_players[player_id] = identifier
 
-    def step(self, actions: dict[str, int] | int):
-        self.obs, rewards, terminateds, truncateds, _ = self.env.step(actions)
-        print(f"step={self.tick_num}, actions={actions}, rewards={rewards}")
+    def tick(self):
+        # Player actions
+        player_actions = {
+            pid: self.pending_actions[sid].get(block=False)
+            if self.pending_actions[sid].qsize() > 0
+            else self.config.default_action
+            for pid, sid in self.human_players.items()
+        }
 
-        if self.is_multiagent:
+        # bot actions
+        bot_actions = {
+            pid: self.config.policy_inference_fn(self.obs[pid], bot)
+            if self.tick_num % self.config.frame_skip == 0
+            else self.config.default_action
+            for pid, bot in self.bot_players.items()
+        }
+
+        player_actions.update(bot_actions)
+
+        if len(player_actions) == 1:
+            # not multiagent
+            player_actions = list(player_actions.values())[0]
+
+        self.obs, rewards, terminateds, truncateds, _ = self.env.step(player_actions)
+
+        if isinstance(terminateds, dict):
             terminateds = terminateds["__all__"]
             truncateds = truncateds["__all__"]
 
-        self.t += 1
+        self.tick_num += 1
         if terminateds or truncateds:
-            print("Terminated!" if terminateds else "Truncated!")
-            self.is_done = True
-            self.closed = True
-            self.t = 0
-            self.episode_num += 1
+            if self.episode_num < self.config.num_episodes:
+                self.status = GameStatus.Reset
+            else:
+                self.status = GameStatus.Done
+
+        return self.status
 
     def reset(self, seed: int | None = None):
         self.obs, _ = self.env.reset(seed=seed)
-        self.is_done = False
-
-
-class RemoteGameOld:
-    def __init__(
-        self,
-        env: gym.Env,
-        human_agent_id: str | None = None,
-        policy_handler: None = None,
-        seed: int | None = None,
-    ) -> None:
-        self.env = env
-        self.seed = seed
-        self.closed = False
-        self.human_agent_id = human_agent_id
-        self.policy_handler = policy_handler
-        self.obs = None
-        self.pending_actions = queue.Queue(maxsize=1)
-        self.id = 0  # this will be set as the subjects socket id
-        self.t = 0
-        self.episode_num = 0
-        self.is_done = False
-
-        self.is_multiagent: bool = hasattr(env, "_agent_ids")
-        self.agent_ids: list[str] = env._agent_ids if self.is_multiagent else [None]
-
-    def step(self, actions: dict[str, int] | int):
-        self.obs, rewards, terminateds, truncateds, _ = self.env.step(actions)
-        print(f"step={self.t}, actions={actions}, rewards={rewards}")
-
-        if self.is_multiagent:
-            terminateds = terminateds["__all__"]
-            truncateds = truncateds["__all__"]
-
-        self.t += 1
-        if terminateds or truncateds:
-            print("Terminated!" if terminateds else "Truncated!")
-            self.is_done = True
-            self.closed = True
-            self.t = 0
-            self.episode_num += 1
-
-    def reset(self, seed: int | None = None):
-        self.obs, _ = self.env.reset(seed=seed)
-        self.is_done = False
+        self.status = GameStatus.Active
+        self.tick_num = 0
+        self.episode_num += 1

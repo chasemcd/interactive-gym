@@ -1,5 +1,4 @@
 import base64
-import json
 import logging
 import os
 import threading
@@ -9,7 +8,6 @@ import random
 
 import flask
 import flask_socketio
-import pygame
 
 try:
     import cv2
@@ -33,6 +31,7 @@ SUBJECTS = utils.ThreadSafeDict()
 # Data structure to save subjects games in memory OBJECTS by their socket id
 GAMES = utils.ThreadSafeDict()
 
+# Games that are currently being played
 ACTIVE_GAMES = utils.ThreadSafeSet()
 
 # Queue of games IDs that are waiting for additional players to join. Note that some of these IDs might
@@ -72,11 +71,6 @@ socketio = flask_socketio.SocketIO(
     app, cors_allowed_origins="*", logger=app.config["DEBUG"]
 )
 
-LOGFILE = "./logs.txt"  # TODO: set logging location
-handler = logging.FileHandler(LOGFILE)
-handler.setLevel(logging.ERROR)
-app.logger.addHandler(handler)
-
 
 def try_create_game() -> tuple[
     remote_game.RemoteGame | None, None | RuntimeError | Exception
@@ -102,8 +96,7 @@ def _create_game():
         socketio.emit("create_game_failed", {"error", err.__repr__()})
         return
 
-    if not game.is_at_player_capacity():
-        WAITING_GAMES.append(game.game_id)
+    WAITING_GAMES.append(game.game_id)
 
 
 @socketio.on("join")
@@ -129,7 +122,11 @@ def join_or_create_game(data):
             if game.is_ready_to_start():
                 WAITING_GAMES.remove(game.game_id)
                 ACTIVE_GAMES.add(game.game_id)
-                socketio.emit("start_game", {}, room=game.game_id)
+                socketio.emit(
+                    "start_game",
+                    {"config": CONFIG.to_dict(serializable=True)},
+                    room=game.game_id,
+                )
                 socketio.start_background_task(run_game, game)
             else:
                 socketio.emit(
@@ -249,12 +246,10 @@ def user_index(subject_name):
     return flask.render_template(
         "index.html",
         async_mode=socketio.async_mode,
-        start_header_text=CONFIG.start_header_text,
-        start_page_text=CONFIG.start_page_text,
+        welcome_header_text=CONFIG.welcome_header_text,
+        welcome_text=CONFIG.welcome_text,
         game_header_text=CONFIG.game_header_text,
         game_page_text=CONFIG.game_page_text,
-        between_episode_header_text=CONFIG.between_episode_header,
-        between_episode_page_text=CONFIG.between_episode_header,
         final_page_header_text=CONFIG.final_page_header_text,
         final_page_text=CONFIG.final_page_text,
     )
@@ -297,31 +292,6 @@ def on_disconnect():
     del SUBJECTS[subject_id]
 
 
-@socketio.on("request_config")
-def send_config(*args):
-    config = CONFIG.to_dict(serializable=True)
-    socketio.emit("send_config", {"config": json.dumps(config)})
-
-
-@socketio.on("create_game")
-def create_game(data):
-    _create_game()
-
-
-@socketio.on("play_single_episode")
-def play_single_episode(data):
-    subject_socket_id = flask.request.sid
-    with SUBJECTS[subject_socket_id]:
-        flask_socketio.join_room(subject_socket_id)
-        env = CONFIG.env_creator(render_mode="rgb_array")
-        game = remote_game.RemoteGameOld(
-            env, human_agent_id=CONFIG.human_id, policy_handler=None, seed=CONFIG.seed,
-        )
-        game.id = subject_socket_id
-        GAMES[subject_socket_id] = game
-        socketio.start_background_task(run_episode, game)
-
-
 @socketio.on("send_pressed_keys")
 def on_action(data):
     """
@@ -349,85 +319,38 @@ def on_action(data):
 
 def run_game(game: remote_game.RemoteGame):
     end_status = [remote_game.GameStatus.Inactive, remote_game.GameStatus.Done]
+    game.reset()
     while game.status not in end_status:
+        socketio.emit("request_pressed_keys", {})
         with game.lock:
             game.tick()
 
         render_game(game)
         if game.status == remote_game.GameStatus.Reset:
-            socketio.emit("game_reset", {}, room=game.game_id)
+            socketio.emit(
+                "game_reset",
+                {
+                    "timeout": CONFIG.reset_timeout,
+                    "config": CONFIG.to_dict(serializable=True),
+                },
+                room=game.game_id,
+            )
+            socketio.sleep(CONFIG.reset_timeout / 1000)
+            game.reset()
 
         socketio.sleep(1 / game.config.fps)
 
     with game.lock:
-        socketio.emit("end_game", {}, room=game.game_id)
+        socketio.emit(
+            "end_game",
+            {"redirect_url": CONFIG.redirect_url, "timeout": CONFIG.redirect_timeout},
+            room=game.game_id,
+        )
 
         if game.status != remote_game.GameStatus.Inactive:
             game.tear_down()
 
         _cleanup_game(game)
-
-
-@socketio.on("run_episode")
-def run_episode(game: remote_game.RemoteGame):
-    """
-    Runs a single episode of the game, managing action collection and
-    environment transitions.
-    """
-    # pygame clock is used to manage fps
-    clock = pygame.time.Clock()
-    game.reset(game.seed)
-    while not game.is_done:
-        # Tell the front end that we want to receive actions at the next update.
-        socketio.emit(
-            "request_pressed_keys", {"data": "Server requests pressed key data."}
-        )
-
-        # limit to specified fps
-        clock.tick(CONFIG.fps)
-
-        # render the current state of the game
-        render_game(game=game)
-
-        # collect the actions of humans and/or AI
-        actions = get_actions(game)
-
-        # transition the environment according to the actions
-        game.step(actions)
-
-    socketio.emit("episode_complete", {})
-
-
-def get_actions(game: remote_game.RemoteGame):
-    if game.is_multiagent:
-        actions = {agent_id: CONFIG.default_action for agent_id in game.agent_ids}
-    else:
-        actions = CONFIG.default_action
-
-    if game.is_multiagent:
-        for a_id, obs in game.obs.items():
-            if a_id == game.human_agent_id:
-                continue
-
-            if game.env.t % CONFIG.frame_skip == 0:
-                actions[a_id] = game.policy_handler.compute_single_action(
-                    obs=obs, agent_id=a_id
-                )
-
-    elif not game.human_agent_id and game.t % CONFIG.frame_skip == 0:
-        actions = game.policy_handler.compute_single_action(game.obs)
-
-    if game.human_agent_id and game.pending_actions.qsize() != 0:
-        human_action = game.pending_actions.get(block=False)
-    else:
-        human_action = CONFIG.default_action
-
-    if game.is_multiagent:
-        actions[game.human_agent_id] = human_action
-    else:
-        actions = human_action
-
-    return actions
 
 
 def render_game(game: remote_game.RemoteGame):
@@ -443,9 +366,12 @@ def render_game(game: remote_game.RemoteGame):
         _, encoded_image = cv2.imencode(".png", game_image)
         encoded_image = base64.b64encode(encoded_image).decode()
 
+    # TODO(chase): this emits the same state to every player in a room, but we may want
+    #   to have different observations for each player. Figure that out (maybe state is a dict
+    #   with player_ids and their respective observations?).
     socketio.emit(
         "environment_state",
-        {"state": state, "game_image_base64": encoded_image, "step": game.t,},
+        {"state": state, "game_image_base64": encoded_image, "step": game.tick_num,},
         room=game.game_id,
     )
 
@@ -453,6 +379,10 @@ def render_game(game: remote_game.RemoteGame):
 def run(config):
     global CONFIG
     CONFIG = config
+
+    handler = logging.FileHandler(CONFIG.logfile)
+    handler.setLevel(logging.ERROR)
+    app.logger.addHandler(handler)
 
     socketio.run(
         app,

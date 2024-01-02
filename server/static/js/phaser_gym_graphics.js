@@ -9,22 +9,26 @@ var game_config = {
 var game_graphics;
 
 function updateState(state_data) {
-    try {
-        game_graphics.set_state(state_data);
-    } catch {
-        console.warn("Error updating state; the graphics likely haven't been loaded yet.");
-    }
+    game_graphics.set_state(state_data);
+    //
+    // try {
+    //     game_graphics.set_state(state_data);
+    // } catch {
+    //     console.warn("Error updating state; the graphics likely haven't been loaded yet.");
+    // }
 }
 
 
 function graphics_start(graphics_config) {
-    // TODO: pass scene config as an argument here.
     game_graphics = new GraphicsManager(game_config, graphics_config);
 }
 
 // Invoked at 'end_game' event
 function graphics_end() {
-    game_graphics.game.destroy({removeCanvas: true});
+    $("#gameContainer").empty();
+    game_graphics.game.renderer.destroy();
+    game_graphics.game.loop.stop();
+    game_graphics.game.destroy();
 }
 
 class GraphicsManager {
@@ -54,25 +58,6 @@ class GraphicsManager {
     set_config
 }
 
-
-/*
-game object dict
-    {
-        uuid: unique identifier
-        image_loc: path to image
-        sprite_sheet_loc: path to sprite sheet (if any)
-        object_type: object type, if not using an image
-        object_size: size of the object
-        x: relative x position [0, 1], multiplied by screen width
-        y: relative y position [0, 1], multiplied by screen height
-        orientation: direction facing (if applicable/using sprite sheet)
-        angle: should we rotate the sprite? In degrees.
-        depth: object depth (other things render on top?).
-        animation: name of the animation to play from a sprite sheet
-        animations: a list of animations to initialize from the sprite sheet
-                format: anim = {key, frames, frameRate, repeat, hideOnComplete}
-    }
- */
 
 class GymScene extends Phaser.Scene {
 
@@ -381,8 +366,6 @@ class GymScene extends Phaser.Scene {
             { fontFamily: text_config.font, fontSize: text_config.size, color: "#000"}
         );
         this.object_map[text_config.uuid].setDepth(1)
-        console.log(this.object_map[text_config.uuid])
-
     }
 
     _updateText(text_config) {
