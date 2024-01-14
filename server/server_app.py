@@ -1,13 +1,14 @@
 import base64
-import logging
 import os
-import threading
-import uuid
 import queue
 import random
+import threading
+import time
+import uuid
 
 import flask
 import flask_socketio
+from absl import logging
 
 try:
     import cv2
@@ -37,6 +38,7 @@ ACTIVE_GAMES = utils.ThreadSafeSet()
 # Queue of games IDs that are waiting for additional players to join. Note that some of these IDs might
 # be stale (i.e. if FREE_MAP[id] = True)
 WAITING_GAMES = []
+WAITROOM_TIMEOUTS = utils.ThreadSafeDict()
 
 # Mapping of users to locks associated with the ID. Enforces user-level serialization
 USERS = utils.ThreadSafeDict()
@@ -44,17 +46,17 @@ USERS = utils.ThreadSafeDict()
 # Mapping of user id's to the current game (room) they are in
 USER_ROOMS = utils.ThreadSafeDict()
 
-# TODO(chase): move to config
-MAX_GAMES = 1
-
-# Global queue of available IDs. This is how we synch game creation and keep track of how many games are in memory
-FREE_IDS = queue.Queue(maxsize=MAX_GAMES)
-
 # Bitmap that indicates whether ID is currently in use. Game with ID=i is "freed" by setting FREE_MAP[i] = True
 FREE_MAP = utils.ThreadSafeDict()
 
+# Number of games allowed
+NUM_EPISODES = 1
+
+# Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
+FREE_IDS = queue.Queue(maxsize=NUM_EPISODES)
+
 # Initialize our ID tracking data
-for i in range(MAX_GAMES):
+for i in range(NUM_EPISODES):
     FREE_IDS.put(i)
     FREE_MAP[i] = True
 
@@ -90,13 +92,20 @@ def try_create_game() -> tuple[
         return game, None
 
 
-def _create_game():
+def _create_game() -> None:
+    """
+    Create a new game and add it to WAITING_GAMES and start the lobby timer.
+    If creation fails, we emit the create_game_failed event.
+    """
     game, err = try_create_game()
     if game is None:
-        socketio.emit("create_game_failed", {"error", err.__repr__()})
+        socketio.emit("create_game_failed", {"error": err.__repr__()})
         return
 
     WAITING_GAMES.append(game.game_id)
+    WAITROOM_TIMEOUTS[game.game_id] = time.time() + (
+        CONFIG.waitroom_timeout / 1000
+    )  # convert waitroom timeout to seconds
 
 
 @socketio.on("join")
@@ -129,11 +138,15 @@ def join_or_create_game(data):
                 )
                 socketio.start_background_task(run_game, game)
             else:
+                remaining_wait_time = (
+                    WAITROOM_TIMEOUTS[game.game_id] - time.time()
+                ) * 1000  # convert seconds to ms
                 socketio.emit(
                     "waiting_room",
                     {
                         "cur_num_players": game.cur_num_human_players(),
                         "players_needed": len(game.get_available_human_player_ids()),
+                        "ms_remaining": remaining_wait_time,
                     },
                     room=game.game_id,
                 )
@@ -212,11 +225,13 @@ def _leave_game(subject_id) -> bool:
         elif game_is_empty:
             _cleanup_game(game)
         elif not game_was_active:
+            remaining_wait_time = (WAITROOM_TIMEOUTS[game.game_id] - time.time()) * 1000
             socketio.emit(
                 "waiting_room",
                 {
                     "cur_num_players": game.cur_num_human_players(),
                     "players_needed": len(game.get_available_human_player_ids()),
+                    "ms_remaining": remaining_wait_time,  # convert to ms remaining
                 },
                 room=game.game_id,
             )
@@ -377,12 +392,23 @@ def render_game(game: remote_game.RemoteGame):
 
 
 def run(config):
-    global CONFIG
+    global CONFIG, NUM_EPISODES, FREE_IDS, FREE_MAP
     CONFIG = config
 
-    handler = logging.FileHandler(CONFIG.logfile)
-    handler.setLevel(logging.ERROR)
-    app.logger.addHandler(handler)
+    # handler = logging.lo(CONFIG.logfile)
+    # handler.setLevel(logging.ERROR)
+    # app.logger.addHandler(handler)
+
+    # Number of games allowed
+    NUM_EPISODES = CONFIG.num_episodes
+
+    # Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
+    FREE_IDS = queue.Queue(maxsize=NUM_EPISODES)
+
+    # Initialize our ID tracking data
+    for i in range(NUM_EPISODES):
+        FREE_IDS.put(i)
+        FREE_MAP[i] = True
 
     socketio.run(
         app,

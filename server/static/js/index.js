@@ -34,10 +34,10 @@ socket.on("start_game", function(data) {
     $("#welcomeText").hide();
     $("#instructions").hide();
     $("#waitroomText").hide();
+    $('#errorText').hide()
     $("#gameHeaderText").show();
     $("#gamePageText").show();
     $("#gameContainer").show();
-
 
     let config = data.config;
 
@@ -61,11 +61,44 @@ socket.on("start_game", function(data) {
     graphics_start(graphics_config);
 })
 
+var waitroomInterval;
 socket.on("waiting_room", function(data) {
-    $("#waitroomText").show();
-    $("#waitroomText").append(`<h4>There are ${data.cur_num_players} in the lobby, waiting for ${data.players_needed} more.</h4>`);
+    if (waitroomInterval) {
+        clearInterval(waitroomInterval);
+    }
+
+    var timer = Math.floor(data.ms_remaining / 1000); // Convert milliseconds to seconds
+
+
+    // Update the text immediately to reflect the current state
+    updateWaitroomText(data, timer);
+
+    // Set up a new interval
+    waitroomInterval = setInterval(function () {
+        timer--;
+        updateWaitroomText(data, timer);
+
+        // Stop the timer if it reaches zero
+        if (timer <= 0) {
+            clearInterval(waitroomInterval);
+            $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
+            setTimeout(function() {
+                socket.emit("leave_game", {})
+            }, 10_000)
+        }
+    }, 1000);
+
 })
 
+function updateWaitroomText(data, timer) {
+    var minutes = parseInt(timer / 60, 10);
+    var seconds = parseInt(timer % 60, 10);
+
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+    $("#waitroomText").text(`There are ${data.cur_num_players} / ${data.cur_num_players + data.players_needed} players in the lobby. Waiting ${minutes}:${seconds} for more to join...`);
+    $("#waitroomText").show();
+}
 socket.on("game_reset", function(data) {
     graphics_end()
 
@@ -100,22 +133,30 @@ socket.on("game_reset", function(data) {
 
 function startResetCountdown(timeout, callback) {
     var timer = Math.floor(timeout / 1000); // Convert milliseconds to seconds
+
+
+    $("#reset-game").show();
+    var minutes = parseInt(timer / 60, 10);
+    var seconds = parseInt(timer % 60, 10);
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+    seconds = seconds < 10 ? "0" + seconds : seconds;
+    $("#reset-game").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
+
+
     var interval = setInterval(function () {
+        timer--;
         if (timer <= 0) {
             clearInterval(interval);
             $("#reset-game").hide();
-            $("#reset-game").text("")
             if (callback) callback(); // Call the callback function
         } else {
-            var minutes = parseInt(timer / 60, 10);
-            var seconds = parseInt(timer % 60, 10);
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
 
             minutes = minutes < 10 ? "0" + minutes : minutes;
             seconds = seconds < 10 ? "0" + seconds : seconds;
-            $("#reset-game").text("Waiting for the next round to start in " + minutes + ":" + seconds);
-            $("#reset-game").show();
+            $("#reset-game").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
         }
-        timer--;
     }, 1000);
 }
 
@@ -130,7 +171,8 @@ socket.on("create_game_failed", function(data) {
 
 
     let err = data['error']
-    $('#errorText').append(`<h4>Sorry, game creation code failed with error: ${JSON.stringify(err)}</>`);
+    $('#errorText').show()
+    $('#errorText').text(`Sorry, game creation code failed with error: ${JSON.stringify(err)}. You may try again by pressing the start button.`);
 })
 
 

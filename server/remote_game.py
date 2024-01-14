@@ -1,12 +1,13 @@
 import collections
-import queue
 import dataclasses
+import queue
 import threading
+import typing
+import numpy as np
 
-import gymnasium as gym
-
-from server import utils
 from configurations import remote_config
+from server import utils
+from absl import logging
 
 
 @dataclasses.dataclass(frozen=True)
@@ -34,18 +35,15 @@ class RemoteGame:
         self.human_players = {}
         self.bot_players = {}
         self.bot_threads = {}
-        self._load_policies()
 
         # Game environment
         self.env = None
-        self.obs = None
+        self.obs: np.ndarray | dict[str, typing.Any] | None = None
         self.game_id = game_id
         self.tick_num = 0
         self.episode_num = 0
 
-        self.is_done = False
-
-        self.build()
+        self._build()
 
     def _build_env(self) -> None:
         self.env = self.config.env_creator(**self.config.env_config)
@@ -89,7 +87,9 @@ class RemoteGame:
                 break
 
         if player_id is None:
-            print(f"Attempted to remove {subject_id} but player wasn't found.")
+            logging.warning(
+                f"Attempted to remove {subject_id} but player wasn't found."
+            )
             return
 
         self.human_players[player_id] = utils.Available
@@ -98,16 +98,17 @@ class RemoteGame:
         ready = self.is_at_player_capacity()
         return ready
 
-    def build(self):
+    def _build(self):
         self._build_env()
+        self._load_policies()
 
     def tear_down(self):
         self.status = GameStatus.Inactive
         for q in self.pending_actions.values():
             q.queue.clear()
 
-    def enqueue_action(self, subject_id, action):
-
+    def enqueue_action(self, subject_id, action) -> None:
+        """Queue an action for a human player"""
         if self.status != GameStatus.Active:
             return
 
@@ -119,7 +120,7 @@ class RemoteGame:
         except queue.Full:
             pass
 
-    def add_player(self, player_id: str | int, identifier: str | int):
+    def add_player(self, player_id: str | int, identifier: str | int) -> None:
         available_ids = self.get_available_human_player_ids()
         assert (
             player_id in available_ids
@@ -127,7 +128,7 @@ class RemoteGame:
 
         self.human_players[player_id] = identifier
 
-    def tick(self):
+    def tick(self) -> None:
         # Player actions
         player_actions = {
             pid: self.pending_actions[sid].get(block=False)
@@ -163,9 +164,7 @@ class RemoteGame:
             else:
                 self.status = GameStatus.Done
 
-        return self.status
-
-    def reset(self, seed: int | None = None):
+    def reset(self, seed: int | None = None) -> None:
         self.obs, _ = self.env.reset(seed=seed)
         self.status = GameStatus.Active
         self.tick_num = 0

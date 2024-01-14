@@ -191,6 +191,7 @@ class RemoteConfig:
         page_title: str | None = None,
         redirect_url: str | None = None,
         redirect_timeout: int | None = None,
+        waitroom_timeout: int | None = None,
         welcome_header_text: str | None = None,
         game_header_text: str | None = None,
         game_page_text: str | None = None,
@@ -204,6 +205,9 @@ class RemoteConfig:
 
         if redirect_timeout is not None:
             self.redirect_timeout = redirect_timeout
+
+        if waitroom_timeout is not None:
+            self.waitroom_timeout = waitroom_timeout
 
         if welcome_header_text is not None:
             self.welcome_header_text = welcome_header_text
