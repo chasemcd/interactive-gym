@@ -3,6 +3,7 @@ import gymnasium as gym
 from configurations import remote_config
 from examples.mountaincar import mountaincar_utils
 from server import server_app
+from server.remote_game import PolicyTypes
 
 """
 This is an example script for running MountainCar-v0 in
@@ -30,11 +31,10 @@ action_mapping = {"ArrowLeft": LEFT_ACCELERATION, "ArrowRight": RIGHT_ACCELERATI
 
 config = (
     remote_config.RemoteConfig()
-    .policies(policy_mapping={"human": "human", "human2": "human"})
+    .policies(policy_mapping={PolicyTypes.Human: PolicyTypes.Human})
     .environment(env_creator=env_creator, env_name="MountainCar-v0")
     .rendering(
-        fps=30
-    )  # , env_to_state_fn=mountaincar_utils.mountaincar_to_render_state)
+        fps=30, env_to_state_fn=mountaincar_utils.mountaincar_to_render_state)
     .gameplay(
         human_id="agent-0",
         default_action=NOOP_ACTION,

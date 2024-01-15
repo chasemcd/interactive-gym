@@ -395,10 +395,6 @@ def run(config):
     global CONFIG, NUM_EPISODES, FREE_IDS, FREE_MAP
     CONFIG = config
 
-    # handler = logging.lo(CONFIG.logfile)
-    # handler.setLevel(logging.ERROR)
-    # app.logger.addHandler(handler)
-
     # Number of games allowed
     NUM_EPISODES = CONFIG.num_episodes
 
