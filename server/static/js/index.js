@@ -217,7 +217,7 @@ function enable_key_listener() {
         }
 
         pressedKeys[event.key] = true; // Add key to pressedKeys when it is pressed
-        // shouldSendPressedKeys = true;
+        console.log(Object.keys(pressedKeys));
     });
 
     $(document).on('keyup', function(event) {

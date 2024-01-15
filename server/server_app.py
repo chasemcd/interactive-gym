@@ -5,6 +5,7 @@ import random
 import threading
 import time
 import uuid
+import itertools
 
 import flask
 import flask_socketio
@@ -74,9 +75,9 @@ socketio = flask_socketio.SocketIO(
 )
 
 
-def try_create_game() -> tuple[
-    remote_game.RemoteGame | None, None | RuntimeError | Exception
-]:
+def try_create_game() -> (
+    tuple[remote_game.RemoteGame | None, None | RuntimeError | Exception]
+):
     try:
         game_id = FREE_IDS.get(block=False)
         assert FREE_MAP[game_id], "Game ID already in use!"
@@ -113,7 +114,6 @@ def join_or_create_game(data):
     subject_id = flask.request.sid
 
     with SUBJECTS[subject_id]:
-
         # already in a game so don't join a new one
         if _get_existing_game(subject_id) is not None:
             return
@@ -253,7 +253,10 @@ def index(*args):
 @app.route("/instructions")
 def instructions():
     """Display instructions page."""
-    return flask.render_template("instructions.html", async_mode=socketio.async_mode,)
+    return flask.render_template(
+        "instructions.html",
+        async_mode=socketio.async_mode,
+    )
 
 
 @app.route("/<subject_name>")
@@ -288,7 +291,8 @@ def on_leave(data):
 
         if game_was_active:
             socketio.emit(
-                "end_game", {},
+                "end_game",
+                {},
             )
         else:
             socketio.emit("end_lobby")
@@ -311,13 +315,30 @@ def on_disconnect():
 def on_action(data):
     """
     Translate pressed keys into game action and add them to the pending_actions queue.
-
-    TODO(chase): Check for composite actions, multiple keys, etc.
     """
     subject_id = flask.request.sid
     game = _get_existing_game(subject_id)
 
     pressed_keys = data["pressed_keys"]
+
+    max_composite_action_size = max(
+        [len(k) for k in CONFIG.action_mapping.keys() if isinstance(k, tuple)] + [0]
+    )
+    if max_composite_action_size > 1:
+        composite_actions = [
+            action for action in CONFIG.action_mapping if isinstance(action, tuple)
+        ]
+
+        composites = [
+            tuple(sorted(action_comp))
+            for action_comp in itertools.combinations(
+                pressed_keys, max_composite_action_size
+            )
+        ]
+        for composite in composites:
+            if composite in composite_actions:
+                pressed_keys = [composite]
+                break
 
     if not game or not any([k in CONFIG.action_mapping for k in pressed_keys]):
         return
@@ -325,11 +346,12 @@ def on_action(data):
     action = None
     for k in pressed_keys:
         if k in CONFIG.action_mapping:
-            action = k
+            action = CONFIG.action_mapping[k]
             break
+
     assert action is not None
 
-    game.enqueue_action(subject_id, CONFIG.action_mapping[action])
+    game.enqueue_action(subject_id, action)
 
 
 def run_game(game: remote_game.RemoteGame):
@@ -377,7 +399,7 @@ def render_game(game: remote_game.RemoteGame):
     else:
         # Generate a base64 image of the game and send it to display
         assert cv2 is not None, "Must install cv2 to use default image rendering!"
-        game_image = game.env.render()
+        game_image = game.env.render(mode="rgb_array")
         _, encoded_image = cv2.imencode(".png", game_image)
         encoded_image = base64.b64encode(encoded_image).decode()
 
@@ -386,7 +408,11 @@ def render_game(game: remote_game.RemoteGame):
     #   with player_ids and their respective observations?).
     socketio.emit(
         "environment_state",
-        {"state": state, "game_image_base64": encoded_image, "step": game.tick_num,},
+        {
+            "state": state,
+            "game_image_base64": encoded_image,
+            "step": game.tick_num,
+        },
         room=game.game_id,
     )
 

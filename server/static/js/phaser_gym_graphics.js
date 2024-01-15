@@ -326,7 +326,10 @@ class GymScene extends Phaser.Scene {
     }
 
     _updateCircle(circle_config) {
-        // TODO
+        let uuid = circle_config.uuid;
+        let graphics = this.object_map[uuid];
+        graphics.clear();
+        this._addCircle(circle_config);
     }
 
     _addRectangle(rectangle_config) {

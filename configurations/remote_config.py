@@ -170,6 +170,13 @@ class RemoteConfig:
         default_action: int | str | None = None,
     ):
         if action_mapping is not None:
+            # ensure the composite action tuples are sorted
+            sorted_tuple_action_map = {}
+            for k, v in action_mapping.items():
+                if isinstance(k, tuple):
+                    sorted_tuple_action_map[tuple(sorted(k))] = v
+                else:
+                    sorted_tuple_action_map[k] = v
             self.action_mapping = action_mapping
 
         if human_id is not None:

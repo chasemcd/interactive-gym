@@ -137,15 +137,23 @@ class RemoteGame:
             for pid, sid in self.human_players.items()
         }
 
-        # bot actions
-        bot_actions = {
-            pid: self.config.policy_inference_fn(self.obs[pid], bot)
-            if self.tick_num % self.config.frame_skip == 0
-            else self.config.default_action
-            for pid, bot in self.bot_players.items()
-        }
+        # # bot actions
+        # bot_actions = {
+        #     pid: self.config.policy_inference_fn(self.obs[pid], bot)
+        #     if self.tick_num % self.config.frame_skip == 0 and bot != PolicyTypes.Random
+        #     else self.config.default_action
+        #     for pid, bot in self.bot_players.items()
+        # }
 
-        player_actions.update(bot_actions)
+        # TODO(chase): add frame skip! also we shouldn't use default action on frame skip! should just repeat the last action
+        for pid, bot in self.bot_players.items():
+            if bot == PolicyTypes.Random:
+                print("random")
+                player_actions[pid] = self.env.action_space.sample()
+            else:
+                player_actions[pid] = self.config.policy_inference_fn(
+                    self.obs[pid], bot
+                )
 
         if len(player_actions) == 1:
             # not multiagent
