@@ -30,16 +30,25 @@ def slime_volleyball_env_to_rendering(
         points=[
             (
                 to_x(env.game.fence.x),
-                to_y(env.game.fence.y),
+                to_y(env.game.fence.y + env.game.fence.h / 2),
             ),
             (
                 to_x(env.game.fence.x),
-                to_y(env.game.fence.y - env.game.fence.h),
+                to_y(env.game.fence.y - env.game.fence.h / 2),
             ),
         ],
         width=env.game.fence.w * config.game_width / constants.REF_W,
     )
     render_objects.append(fence)
+
+    fence_stub = object_contexts.Circle(
+        uuid="fence_stub",
+        color="#000000",
+        x=to_x(env.game.fence_stub.x),
+        y=to_y(env.game.fence_stub.y),
+        radius=env.game.fence_stub.r * config.game_width / constants.REF_W,
+    )
+    render_objects.append(fence_stub)
 
     render_objects += generate_slime_agent_objects(
         "agent_left",
@@ -107,7 +116,7 @@ def generate_slime_agent_objects(
     color: str,
     env: slimevolley_env.SlimeVolleyEnv,
     config: remote_config.RemoteConfig,
-    resolution: int = 50,
+    resolution: int = 30,
 ):
     objects = []
     points = []
@@ -137,7 +146,7 @@ def generate_slime_agent_objects(
     eyeY = ballY / dist
 
     pupil = object_contexts.Circle(
-        uuid=f"{identifier}_eye_white",
+        uuid=f"{identifier}_eye_pupil",
         x=to_x(x + (0.6) * radius * c + eyeX * 0.15 * radius),
         y=to_y(y + (0.6) * radius * s + eyeY * 0.15 * radius),
         color="#000000",
@@ -146,7 +155,7 @@ def generate_slime_agent_objects(
     )
 
     eye_white = object_contexts.Circle(
-        uuid=f"{identifier}_pupil",
+        uuid=f"{identifier}_eye_white",
         x=to_x(x + (0.6) * radius * c),
         y=to_y(y + (0.6) * radius * s),
         color="#FFFFFF",
