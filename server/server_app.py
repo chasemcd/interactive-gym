@@ -51,13 +51,13 @@ USER_ROOMS = utils.ThreadSafeDict()
 FREE_MAP = utils.ThreadSafeDict()
 
 # Number of games allowed
-NUM_EPISODES = 1
+MAX_CONCURRENT_GAMES = 1
 
 # Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
-FREE_IDS = queue.Queue(maxsize=NUM_EPISODES)
+FREE_IDS = queue.Queue(maxsize=MAX_CONCURRENT_GAMES)
 
 # Initialize our ID tracking data
-for i in range(NUM_EPISODES):
+for i in range(MAX_CONCURRENT_GAMES):
     FREE_IDS.put(i)
     FREE_MAP[i] = True
 
@@ -148,7 +148,7 @@ def join_or_create_game(data):
                         "players_needed": len(game.get_available_human_player_ids()),
                         "ms_remaining": remaining_wait_time,
                     },
-                    room=game.game_id,
+                    room=subject_id,
                 )
 
 
@@ -395,7 +395,7 @@ def render_game(game: remote_game.RemoteGame):
     encoded_image = None
     if CONFIG.env_to_state_fn is not None:
         # generate a state object representation
-        state = CONFIG.env_to_state_fn(game.env)
+        state = CONFIG.env_to_state_fn(game.env, CONFIG)
     else:
         # Generate a base64 image of the game and send it to display
         assert cv2 is not None, "Must install cv2 to use default image rendering!"
@@ -418,17 +418,15 @@ def render_game(game: remote_game.RemoteGame):
 
 
 def run(config):
-    global CONFIG, NUM_EPISODES, FREE_IDS, FREE_MAP
+    global CONFIG, FREE_IDS, MAX_CONCURRENT_GAMES, FREE_MAP
     CONFIG = config
-
-    # Number of games allowed
-    NUM_EPISODES = CONFIG.num_episodes
+    MAX_CONCURRENT_GAMES = CONFIG.max_concurrent_games
 
     # Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
-    FREE_IDS = queue.Queue(maxsize=NUM_EPISODES)
+    FREE_IDS = queue.Queue(maxsize=CONFIG.max_concurrent_games)
 
     # Initialize our ID tracking data
-    for i in range(NUM_EPISODES):
+    for i in range(CONFIG.max_concurrent_games):
         FREE_IDS.put(i)
         FREE_MAP[i] = True
 
