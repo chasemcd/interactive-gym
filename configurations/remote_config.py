@@ -13,6 +13,7 @@ class RemoteConfig:
         # hosting
         self.host = None
         self.port = 8000
+        self.max_concurrent_games = 1
 
         # policies
         self.load_policy_fn: typing.Callable | None = None
@@ -132,12 +133,21 @@ class RemoteConfig:
 
         return self
 
-    def hosting(self, host: str | None = None, port: int | None = None):
+    def hosting(
+        self,
+        host: str | None = None,
+        port: int | None = None,
+        max_concurrent_games: int | None = None,
+    ):
         if host is not None:
             self.host = host
 
         if port is not None:
             self.port = port
+
+        if max_concurrent_games is not None:
+            assert max_concurrent_games >= 1, "Must have at least one concurrent game!"
+            self.max_concurrent_games = max_concurrent_games
 
         return self
 

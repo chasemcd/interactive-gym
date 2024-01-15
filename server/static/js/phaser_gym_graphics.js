@@ -3,19 +3,18 @@ var game_config = {
     pixelArt: true,
     audio: {
         noAudio: true
-    }
+    },
+    resolution: window.devicePixelRatio,
 };
 
 var game_graphics;
 
 function updateState(state_data) {
-    game_graphics.set_state(state_data);
-    //
-    // try {
-    //     game_graphics.set_state(state_data);
-    // } catch {
-    //     console.warn("Error updating state; the graphics likely haven't been loaded yet.");
-    // }
+    try {
+        game_graphics.set_state(state_data);
+    } catch {
+        console.warn("Error updating state; the graphics likely haven't been loaded yet.");
+    }
 }
 
 
@@ -358,7 +357,10 @@ class GymScene extends Phaser.Scene {
     }
 
     _updatePolygon(polygon_config) {
-        // TODO
+        let uuid = polygon_config.uuid;
+        let graphics = this.object_map[uuid];
+        graphics.clear();
+        this._addPolygon(polygon_config);
     }
 
     _addText(text_config) {

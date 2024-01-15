@@ -1,25 +1,6 @@
 var socket = io();
 
-
-// TODO(chase): Rather than destroy the canvas at episode end, we can simply hide and show
-//  it which whill prevent us from having to reload all of the assets at each episode. We'll
-//  also need to reset object_map and clean up lingering objects from one episode to another.
-function hideGameCanvas() {
-    var canvas = document.getElementById('phaser-canvas');
-    if (canvas) {
-        canvas.style.display = 'none'; // Hide the canvas
-    }
-}
-
-function showGameCanvas() {
-    var canvas = document.getElementById('phaser-canvas');
-    if (canvas) {
-        canvas.style.display = 'block'; // Show the canvas
-    }
-}
-
-
-$(() => {
+$(function() {
     $('#startButton').click( () => {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
@@ -87,6 +68,7 @@ socket.on("waiting_room", function(data) {
             }, 10_000)
         }
     }, 1000);
+    $("#waitroomText").show();
 
 })
 
@@ -97,7 +79,6 @@ function updateWaitroomText(data, timer) {
     minutes = minutes < 10 ? "0" + minutes : minutes;
     seconds = seconds < 10 ? "0" + seconds : seconds;
     $("#waitroomText").text(`There are ${data.cur_num_players} / ${data.cur_num_players + data.players_needed} players in the lobby. Waiting ${minutes}:${seconds} for more to join...`);
-    $("#waitroomText").show();
 }
 socket.on("game_reset", function(data) {
     graphics_end()

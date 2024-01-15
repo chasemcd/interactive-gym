@@ -12,7 +12,7 @@ TIMESTEP = 1 / 30.0
 NUDGE = 0.1
 FRICTION = 1.0  # 1 means no FRICTION, less means FRICTION
 INIT_DELAY_FRAMES = 30
-GRAVITY = -9.8 * 2 * 1.5  # -9.8 * 2 * 1.5
+GRAVITY = -9.8 * 1.5 * 1.5  # -9.8 * 2 * 1.5
 
 MAXLIVES = 1  # game ends when one agent loses this many games
 

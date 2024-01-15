@@ -46,13 +46,15 @@ config = (
     .policies(
         policy_mapping={
             "agent_left": PolicyTypes.Human,
-            "agent_right": PolicyTypes.Random,
+            "agent_right": PolicyTypes.Human,
         }
     )
     .environment(env_creator=env_creator, env_name="slime_volleyball")
     .rendering(
         fps=30,
         env_to_state_fn=slime_volleyball_utils.slime_volleyball_env_to_rendering,
+        game_width=800,
+        game_height=600,
     )
     .gameplay(
         default_action=NOOP,
