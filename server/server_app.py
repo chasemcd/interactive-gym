@@ -359,12 +359,17 @@ def on_action(data):
 def run_game(game: remote_game.RemoteGame):
     end_status = [remote_game.GameStatus.Inactive, remote_game.GameStatus.Done]
     game.reset()
+    render_game(game)
+    socketio.sleep(1 / game.config.fps)
+
     while game.status not in end_status:
         socketio.emit("request_pressed_keys", {})
         with game.lock:
             game.tick()
 
         render_game(game)
+        socketio.sleep(1 / game.config.fps)
+
         if game.status == remote_game.GameStatus.Reset:
             socketio.emit(
                 "game_reset",
@@ -376,8 +381,6 @@ def run_game(game: remote_game.RemoteGame):
             )
             socketio.sleep(CONFIG.reset_timeout / 1000)
             game.reset()
-
-        socketio.sleep(1 / game.config.fps)
 
     with game.lock:
         socketio.emit(
