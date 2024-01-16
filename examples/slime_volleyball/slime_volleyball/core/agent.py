@@ -63,7 +63,7 @@ class Agent:
         if self.y <= constants.REF_U + constants.NUDGE * constants.TIMESTEP:
             self.vy = self.desired_vy
 
-        self.vx = self.desired_vx  # * self.dir
+        self.vx = self.desired_vx * self.dir
 
         self.move()
 

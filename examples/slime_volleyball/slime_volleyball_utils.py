@@ -24,31 +24,65 @@ def slime_volleyball_env_to_rendering(
 ) -> list:
     render_objects = []
 
-    fence = object_contexts.Line(
-        uuid="fence",
-        color="#000000",
-        points=[
-            (
-                to_x(env.game.fence.x),
-                to_y(env.game.fence.y + env.game.fence.h / 2),
-            ),
-            (
-                to_x(env.game.fence.x),
-                to_y(env.game.fence.y - env.game.fence.h / 2),
-            ),
-        ],
-        width=env.game.fence.w * config.game_width / constants.REF_W,
-    )
-    render_objects.append(fence)
+    # static objects only rendered on the first frame
+    if env.t == 0:
+        fence = object_contexts.Line(
+            uuid="fence",
+            color="#000000",
+            points=[
+                (
+                    to_x(env.game.fence.x),
+                    to_y(env.game.fence.y + env.game.fence.h / 2),
+                ),
+                (
+                    to_x(env.game.fence.x),
+                    to_y(env.game.fence.y - env.game.fence.h / 2),
+                ),
+            ],
+            width=env.game.fence.w * config.game_width / constants.REF_W,
+        )
+        render_objects.append(fence)
 
-    fence_stub = object_contexts.Circle(
-        uuid="fence_stub",
-        color="#000000",
-        x=to_x(env.game.fence_stub.x),
-        y=to_y(env.game.fence_stub.y),
-        radius=env.game.fence_stub.r * config.game_width / constants.REF_W,
-    )
-    render_objects.append(fence_stub)
+        fence_stub = object_contexts.Circle(
+            uuid="fence_stub",
+            color="#000000",
+            x=to_x(env.game.fence_stub.x),
+            y=to_y(env.game.fence_stub.y),
+            radius=env.game.fence_stub.r * config.game_width / constants.REF_W,
+        )
+        render_objects.append(fence_stub)
+
+        ground = object_contexts.Line(
+            uuid="ground",
+            color="#747275",
+            points=[
+                (
+                    0,
+                    1
+                    - env.game.ground.y / constants.REF_W
+                    - constants.REF_U / constants.REF_W / 2,
+                ),
+                (
+                    1,
+                    1
+                    - env.game.ground.y / constants.REF_W
+                    - constants.REF_U / constants.REF_W / 2,
+                ),
+            ],
+            fill_below=True,
+            width=env.game.ground.w / constants.REF_W,
+            depth=-1,
+        )
+        render_objects.append(ground)
+
+        border = object_contexts.Polygon(
+            uuid="border",
+            color="#AEF359",
+            points=[(0, 0), (1, 0), (1, 1), (0, 1)],
+            depth=-5,
+            alpha=0.1,
+        )
+        render_objects.append(border)
 
     render_objects += generate_slime_agent_objects(
         "agent_left",
@@ -80,38 +114,6 @@ def slime_volleyball_env_to_rendering(
         radius=env.game.ball.r * config.game_width / constants.REF_W,
     )
     render_objects.append(ball)
-
-    ground = object_contexts.Line(
-        uuid="ground",
-        color="#747275",
-        points=[
-            (
-                0,
-                1
-                - env.game.ground.y / constants.REF_W
-                - constants.REF_U / constants.REF_W / 2,
-            ),
-            (
-                1,
-                1
-                - env.game.ground.y / constants.REF_W
-                - constants.REF_U / constants.REF_W / 2,
-            ),
-        ],
-        fill_below=True,
-        width=env.game.ground.w / constants.REF_W,
-        depth=-1,
-    )
-    render_objects.append(ground)
-
-    border = object_contexts.Polygon(
-        uuid="border",
-        color="#AEF359",
-        points=[(0, 0), (1, 0), (1, 1), (0, 1)],
-        depth=-5,
-        alpha=0.1,
-    )
-    render_objects.append(border)
 
     return [obj.as_dict() for obj in render_objects]
 

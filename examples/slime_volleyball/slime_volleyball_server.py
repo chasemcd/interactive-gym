@@ -45,7 +45,7 @@ config = (
     remote_config.RemoteConfig()
     .policies(
         policy_mapping={
-            "agent_left": PolicyTypes.Human,
+            # "agent_left": PolicyTypes.Human,
             "agent_right": PolicyTypes.Human,
         }
     )
@@ -59,7 +59,7 @@ config = (
     .gameplay(
         default_action=NOOP,
         action_mapping=action_mapping,
-        num_episodes=10,
+        num_episodes=1,
     )
     .hosting(port=8000)
     .user_experience(
