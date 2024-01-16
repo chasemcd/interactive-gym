@@ -100,7 +100,9 @@ def _create_game() -> None:
     """
     game, err = try_create_game()
     if game is None:
-        socketio.emit("create_game_failed", {"error": err.__repr__()})
+        socketio.emit(
+            "create_game_failed", {"error": err.__repr__()}, room=flask.request.sid
+        )
         return
 
     WAITING_GAMES.append(game.game_id)

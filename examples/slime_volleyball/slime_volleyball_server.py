@@ -51,7 +51,7 @@ config = (
     )
     .environment(env_creator=env_creator, env_name="slime_volleyball")
     .rendering(
-        fps=30,
+        fps=40,
         env_to_state_fn=slime_volleyball_utils.slime_volleyball_env_to_rendering,
         game_width=800,
         game_height=600,

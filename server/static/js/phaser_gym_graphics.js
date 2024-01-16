@@ -347,7 +347,7 @@ class GymScene extends Phaser.Scene {
 
 
         // Set the fill style (color and alpha)
-        graphics.fillStyle(this._strToHex(polygon_config.color), polygon_config.alpha); // Green color, fully opaque
+        graphics.fillStyle(this._strToHex(polygon_config.color), polygon_config.alpha);
 
         // Draw the filled polygon
         graphics.fillPoints(points, true); // 'true' to close the polygon

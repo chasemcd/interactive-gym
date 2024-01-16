@@ -104,6 +104,15 @@ def slime_volleyball_env_to_rendering(
     )
     render_objects.append(ground)
 
+    border = object_contexts.Polygon(
+        uuid="border",
+        color="#AEF359",
+        points=[(0, 0), (1, 0), (1, 1), (0, 1)],
+        depth=-5,
+        alpha=0.1,
+    )
+    render_objects.append(border)
+
     return [obj.as_dict() for obj in render_objects]
 
 

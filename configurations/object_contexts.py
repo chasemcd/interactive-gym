@@ -78,6 +78,7 @@ class Polygon:
     uuid: str
     color: str
     points: list[tuple[float, float]]
+    alpha: float = 1
     object_type: str = "polygon"
     depth: int = -1
 
