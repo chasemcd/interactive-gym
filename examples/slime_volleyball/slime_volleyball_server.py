@@ -59,9 +59,9 @@ config = (
     .gameplay(
         default_action=NOOP,
         action_mapping=action_mapping,
-        num_episodes=1,
+        num_episodes=10,
     )
-    .hosting(port=8000)
+    .hosting(port=5703, host="0.0.0.0")
     .user_experience(
         page_title="Slime Volleyball",
         welcome_header_text="Slime Volleyball",
@@ -71,7 +71,7 @@ config = (
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://www.cmu.edu/dietrich/sds/ddmlab",
-        redirect_timeout=20_000,
+        redirect_timeout=120_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
     )
 )
