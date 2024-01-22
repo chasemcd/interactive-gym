@@ -56,10 +56,14 @@ MAX_CONCURRENT_GAMES = 1
 # Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
 FREE_IDS = queue.Queue(maxsize=MAX_CONCURRENT_GAMES)
 
+# holds reset events so we only continue in game loop when triggered
+RESET_EVENTS = utils.ThreadSafeDict()
+
 # Initialize our ID tracking data
 for i in range(MAX_CONCURRENT_GAMES):
     FREE_IDS.put(i)
     FREE_MAP[i] = True
+    RESET_EVENTS[i] = threading.Event()
 
 
 #######################
@@ -356,6 +360,11 @@ def on_action(data):
     game.enqueue_action(subject_id, action)
 
 
+@socketio.on("reset_complete")
+def handle_reset_complete(data):
+    RESET_EVENTS[data["room"]].set()
+
+
 def run_game(game: remote_game.RemoteGame):
     end_status = [remote_game.GameStatus.Inactive, remote_game.GameStatus.Done]
     game.reset()
@@ -376,11 +385,16 @@ def run_game(game: remote_game.RemoteGame):
                 {
                     "timeout": CONFIG.reset_timeout,
                     "config": CONFIG.to_dict(serializable=True),
+                    "room": game.game_id,
                 },
                 room=game.game_id,
             )
-            socketio.sleep(CONFIG.reset_timeout / 1000)
+
+            RESET_EVENTS[game.game_id].wait()
+            RESET_EVENTS[game.game_id].clear()
             game.reset()
+            render_game(game)
+            socketio.sleep(1 / game.config.fps)
 
     with game.lock:
         socketio.emit(
@@ -434,6 +448,7 @@ def run(config):
     for i in range(CONFIG.max_concurrent_games):
         FREE_IDS.put(i)
         FREE_MAP[i] = True
+        RESET_EVENTS[i] = threading.Event()
 
     socketio.run(
         app,

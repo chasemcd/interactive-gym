@@ -68,6 +68,7 @@ class GymScene extends Phaser.Scene {
         this.assets_to_preload = config.assets_to_preload;
         this.animation_configs = config.animation_configs;
         this.background = config.background;
+        this.last_rendered_step = -1;
     }
     preload () {
         // preload any specified images/assets
@@ -110,14 +111,19 @@ class GymScene extends Phaser.Scene {
     };
 
     update() {
-        this.drawState();
+        // Avoid rendering the same step twice if the server hasn't sent an update yet
+        if (this.state.step !== this.last_rendered_step) {
+            this.drawState();
+            this.last_rendered_step = this.state.step;
+        }
+
     };
 
     set_state(state) {
         this.state = state;
     }
 
-    drawState() {
+     drawState() {
         /*
         Iterate over the objects defined in the state and
         add them to the environment and update as necessary.

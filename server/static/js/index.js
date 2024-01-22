@@ -106,6 +106,8 @@ socket.on("game_reset", function(data) {
         // This function will be called after the countdown
         enable_key_listener();
         graphics_start(graphics_config);
+
+        socket.emit("reset_complete", {room: data.room});
     });
 
 
