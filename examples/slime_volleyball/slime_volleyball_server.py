@@ -1,10 +1,8 @@
-import gymnasium as gym
+from slime_volleyball import slimevolley_env
 
 from configurations import remote_config
-from examples.mountaincar import mountaincar_utils
 from server import server_app
 from server.remote_game import PolicyTypes
-from examples.slime_volleyball.slime_volleyball import slimevolley_env
 from examples.slime_volleyball import slime_volleyball_utils
 
 """
@@ -28,7 +26,8 @@ RIGHT = 5
 
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
-    return slimevolley_env.SlimeVolleyEnv()
+    config = {"use_baseline_policy": False}
+    return slimevolley_env.SlimeVolleyEnv(config=config)
 
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
@@ -45,7 +44,7 @@ config = (
     remote_config.RemoteConfig()
     .policies(
         policy_mapping={
-            # "agent_left": PolicyTypes.Human,
+            "agent_left": PolicyTypes.Human,
             "agent_right": PolicyTypes.Human,
         }
     )
@@ -53,8 +52,8 @@ config = (
     .rendering(
         fps=40,
         env_to_state_fn=slime_volleyball_utils.slime_volleyball_env_to_rendering,
-        game_width=800,
-        game_height=600,
+        game_width=600,
+        game_height=400,
     )
     .gameplay(
         default_action=NOOP,

@@ -3,8 +3,8 @@ import math
 import gymnasium as gym
 import numpy as np
 from configurations import object_contexts
-from examples.slime_volleyball.slime_volleyball import slimevolley_env
-from examples.slime_volleyball.slime_volleyball.core import constants
+from slime_volleyball import slimevolley_env
+from slime_volleyball.core import constants
 from configurations import remote_config
 
 
