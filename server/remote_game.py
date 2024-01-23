@@ -31,7 +31,8 @@ class RemoteGame:
         self.lock = threading.Lock()
 
         # Players and actions
-        self.pending_actions = collections.defaultdict(lambda: queue.Queue(maxsize=1))
+        self.pending_actions = None
+        self.reset_pending_actions()
         self.human_players = {}
         self.bot_players = {}
         self.bot_threads = {}
@@ -172,7 +173,11 @@ class RemoteGame:
             else:
                 self.status = GameStatus.Done
 
+    def reset_pending_actions(self) -> None:
+        self.pending_actions = collections.defaultdict(lambda: queue.Queue(maxsize=1))
+
     def reset(self, seed: int | None = None) -> None:
+        self.reset_pending_actions()
         self.obs, _ = self.env.reset(seed=seed)
         self.status = GameStatus.Active
         self.tick_num = 0
