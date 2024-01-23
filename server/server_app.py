@@ -6,6 +6,7 @@ import threading
 import time
 import uuid
 import itertools
+import atexit
 
 import flask
 import flask_socketio
@@ -74,6 +75,7 @@ app = flask.Flask(__name__, template_folder=os.path.join("static", "templates"))
 app.config["SECRET_KEY"] = "secret!"
 
 app.config["DEBUG"] = os.getenv("FLASK_ENV", "production") == "development"
+print(app.config["DEBUG"])
 socketio = flask_socketio.SocketIO(
     app, cors_allowed_origins="*", logger=app.config["DEBUG"]
 )
@@ -362,6 +364,7 @@ def on_action(data):
 
 @socketio.on("reset_complete")
 def handle_reset_complete(data):
+    print(f"Reset done for room {data['room']}")
     RESET_EVENTS[data["room"]].set()
 
 
@@ -391,10 +394,20 @@ def run_game(game: remote_game.RemoteGame):
             )
 
             RESET_EVENTS[game.game_id].wait()
-            RESET_EVENTS[game.game_id].clear()
-            game.reset()
+            
+            with game.lock:
+                game.reset()
+            
             render_game(game)
+            
             socketio.sleep(1 / game.config.fps)
+
+            # Move to the end after sleep() in case
+            # one players comes slightly after anothers
+            # TODO(chase): make this more robust, maybe
+            #   an event for each SID. 
+            RESET_EVENTS[game.game_id].clear()
+
 
     with game.lock:
         socketio.emit(
@@ -436,6 +449,14 @@ def render_game(game: remote_game.RemoteGame):
     )
 
 
+def on_exit():
+    # Force-terminate all games on server termination
+    for game_id in GAMES:
+        socketio.emit('end_game', {}, room=game_id)
+
+
+
+
 def run(config):
     global CONFIG, FREE_IDS, MAX_CONCURRENT_GAMES, FREE_MAP
     CONFIG = config
@@ -450,10 +471,11 @@ def run(config):
         FREE_MAP[i] = True
         RESET_EVENTS[i] = threading.Event()
 
+    atexit.register(on_exit)
+
     socketio.run(
         app,
         log_output=app.config["DEBUG"],
         port=CONFIG.port,
         host=CONFIG.host,
-        allow_unsafe_werkzeug=True,
     )
