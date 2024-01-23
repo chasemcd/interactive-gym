@@ -46,7 +46,6 @@ rpds-py==0.10.0
 scipy==1.11.2
 simple-websocket==0.10.1
 six==1.16.0
-slime-volleyball @ git+https://github.com/chasemcd/slimevolleygym.git@17a79f881984ef1d685346edf1893cf4716f1463
 swig==4.1.1
 typing_extensions==4.7.1
 tzdata==2023.3
