@@ -160,8 +160,7 @@ socket.on("create_game_failed", function(data) {
 
 
 socket.on('environment_state', function(data) {
-    // Draw state update
-    updateState(data);
+    addStateToBuffer(data);
 });
 
 socket.on('end_game', function(data) {

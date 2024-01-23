@@ -8,13 +8,14 @@ var game_config = {
 };
 
 var game_graphics;
+let stateBuffer = []
+const MAX_BUFFER_SIZE = 5;
 
-function updateState(state_data) {
-    try {
-        game_graphics.set_state(state_data);
-    } catch {
-        console.warn("Error updating state; the graphics likely haven't been loaded yet.");
+function addStateToBuffer(state_data) {
+    if (stateBuffer >= MAX_BUFFER_SIZE) {
+        stateBuffer.shift(); // remove the oldest state
     }
+    stateBuffer.push(state_data);
 }
 
 
@@ -22,12 +23,13 @@ function graphics_start(graphics_config) {
     game_graphics = new GraphicsManager(game_config, graphics_config);
 }
 
-// Invoked at 'end_game' event
+
 function graphics_end() {
     $("#gameContainer").empty();
     game_graphics.game.renderer.destroy();
     game_graphics.game.loop.stop();
     game_graphics.game.destroy();
+    stateBuffer = [];
 }
 
 class GraphicsManager {
@@ -45,16 +47,6 @@ class GraphicsManager {
         game_config.fps = graphics_config.fps;
         this.game = new Phaser.Game(game_config);
     }
-
-    set_state(state) {
-        this.game.scene.getScene('GymScene').set_state(state);
-
-        this.game.scale.pageAlignHorizontally = true;
-        this.game.scale.pageAlignVertically = true;
-        this.game.scale.refresh();
-    }
-
-    set_config
 }
 
 
@@ -111,12 +103,10 @@ class GymScene extends Phaser.Scene {
     };
 
     update() {
-        // Avoid rendering the same step twice if the server hasn't sent an update yet
-        if (this.state.step !== this.last_rendered_step) {
-            this.drawState();
-            this.last_rendered_step = this.state.step;
+        if (stateBuffer.length > 0) {
+            this.state = stateBuffer.shift(); // get the oldest state from the buffer
+            this.drawState()
         }
-
     };
 
     set_state(state) {
