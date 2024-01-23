@@ -50,7 +50,7 @@ config = (
     )
     .environment(env_creator=env_creator, env_name="slime_volleyball")
     .rendering(
-        fps=40,
+        fps=20,
         env_to_state_fn=slime_volleyball_utils.slime_volleyball_env_to_rendering,
         game_width=600,
         game_height=400,
@@ -70,7 +70,7 @@ config = (
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://www.cmu.edu/dietrich/sds/ddmlab",
-        redirect_timeout=120_000,
+        redirect_timeout=240_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
     )
 )
