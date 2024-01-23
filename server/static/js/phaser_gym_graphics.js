@@ -9,7 +9,7 @@ var game_config = {
 
 var game_graphics;
 let stateBuffer = []
-const MAX_BUFFER_SIZE = 5;
+const MAX_BUFFER_SIZE = 2;
 
 function addStateToBuffer(state_data) {
     if (stateBuffer >= MAX_BUFFER_SIZE) {
@@ -26,9 +26,7 @@ function graphics_start(graphics_config) {
 
 function graphics_end() {
     $("#gameContainer").empty();
-    game_graphics.game.renderer.destroy();
-    game_graphics.game.loop.stop();
-    game_graphics.game.destroy();
+    game_graphics.game.destroy(true);
     stateBuffer = [];
 }
 
@@ -47,6 +45,9 @@ class GraphicsManager {
         game_config.fps = graphics_config.fps;
         this.game = new Phaser.Game(game_config);
     }
+
+
+
 }
 
 
@@ -99,7 +100,10 @@ class GymScene extends Phaser.Scene {
         }
 
         // Draw the initial state, if anything
-        this.drawState();
+        if (stateBuffer.length > 0) {
+            this.state = stateBuffer.shift(); // get the oldest state from the buffer
+            this.drawState()
+        }
     };
 
     update() {
@@ -109,11 +113,8 @@ class GymScene extends Phaser.Scene {
         }
     };
 
-    set_state(state) {
-        this.state = state;
-    }
-
      drawState() {
+
         /*
         Iterate over the objects defined in the state and
         add them to the environment and update as necessary.
@@ -127,6 +128,7 @@ class GymScene extends Phaser.Scene {
         // NOTE: This approach is very inefficient and not good practice! It's oriented
         //  to testing or local experiments.
         if (game_state_objects == null && !(game_state_image == null)) {
+            
             // Remove the current image
             let oldImage;
 
