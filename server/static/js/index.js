@@ -4,10 +4,26 @@ $(function() {
     $('#startButton').click( () => {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
-        socket.emit("join", {});
+        socket.emit("join", {session_id: window.sessionId});
 
     })
 })
+
+socket.on('server_session_id', function(data) {
+    window.sessionId = data.session_id;
+});
+
+
+socket.on('invalid_session', function(data) {
+    alert(data.message);
+    // TODO(chase): tell participants to refresh the page
+    $('#finalPageHeaderText').hide()
+    $('#finalPageText').hide()
+    $("#gameHeaderText").hide();
+    $("#gamePageText").hide();
+    $("#gameContainer").hide();
+    $("#invalidSession").show();
+});
 
 
 socket.on("start_game", function(data) {
@@ -64,7 +80,7 @@ socket.on("waiting_room", function(data) {
             clearInterval(waitroomInterval);
             $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
             setTimeout(function() {
-                socket.emit("leave_game", {})
+                socket.emit("leave_game", {session_id: window.sessionId})
             }, 10_000)
         }
     }, 1000);
@@ -107,7 +123,7 @@ socket.on("game_reset", function(data) {
         enable_key_listener();
         graphics_start(graphics_config);
 
-        socket.emit("reset_complete", {room: data.room});
+        socket.emit("reset_complete", {room: data.room, session_id: window.sessionId});
     });
 
 
@@ -167,7 +183,7 @@ socket.on('end_game', function(data) {
     // Hide game data and display game-over html
     graphics_end();
     disable_key_listener()
-    socket.emit("leave_game", {})
+    socket.emit("leave_game", {session_id: window.sessionId})
 
     $('#finalPageHeaderText').show()
     $('#finalPageText').show()
@@ -190,7 +206,7 @@ socket.on('end_game', function(data) {
 var pressedKeys = {};
 
 socket.on('request_pressed_keys', function(data) {
-    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(pressedKeys)});
+    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(pressedKeys), session_id: window.sessionId});
 });
 
 function enable_key_listener() {

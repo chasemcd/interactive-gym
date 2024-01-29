@@ -7,6 +7,8 @@ import time
 import uuid
 import itertools
 import atexit
+import secrets
+
 
 import flask
 import flask_socketio
@@ -66,6 +68,8 @@ for i in range(MAX_CONCURRENT_GAMES):
     FREE_MAP[i] = True
     RESET_EVENTS[i] = utils.ThreadSafeDict()
 
+# Generate a unique identifier for the server session
+SERVER_SESSION_ID = secrets.token_urlsafe(16)
 
 #######################
 # Flask Configuration #
@@ -119,6 +123,16 @@ def _create_game() -> None:
 @socketio.on("join")
 def join_or_create_game(data):
     subject_id = flask.request.sid
+    client_session_id = data.get("session_id")
+
+    # Validate session
+    if not is_valid_session(client_session_id):
+        flask_socketio.emit(
+            "invalid_session",
+            {"message": "Session is invalid. Please reconnect."},
+            room=subject_id,
+        )
+        return
 
     with SUBJECTS[subject_id]:
         # already in a game so don't join a new one
@@ -287,6 +301,10 @@ def user_index(subject_name):
     )
 
 
+def is_valid_session(client_session_id):
+    return client_session_id == SERVER_SESSION_ID
+
+
 @socketio.on("connect")
 def on_connect():
     subject_socket_id = flask.request.sid
@@ -296,10 +314,27 @@ def on_connect():
 
     SUBJECTS[subject_socket_id] = threading.Lock()
 
+    # Send the current server session ID to the client
+    flask_socketio.emit(
+        "server_session_id", {"session_id": SERVER_SESSION_ID}, room=subject_socket_id
+    )
+
 
 @socketio.on("leave_game")
 def on_leave(data):
     subject_id = flask.request.sid
+
+    client_session_id = data.get("session_id")
+
+    # Validate session
+    if not is_valid_session(client_session_id):
+        flask_socketio.emit(
+            "invalid_session",
+            {"message": "Session is invalid. Please reconnect."},
+            room=subject_id,
+        )
+        return
+
     with SUBJECTS[subject_id]:
         game_was_active = _leave_game(subject_id)
 
@@ -331,6 +366,17 @@ def on_action(data):
     Translate pressed keys into game action and add them to the pending_actions queue.
     """
     subject_id = flask.request.sid
+    client_session_id = data.get("session_id")
+
+    # Validate session
+    if not is_valid_session(client_session_id):
+        flask_socketio.emit(
+            "invalid_session",
+            {"message": "Session is invalid. Please reconnect."},
+            room=subject_id,
+        )
+        return
+
     game = _get_existing_game(subject_id)
 
     if game is None:
@@ -374,6 +420,16 @@ def on_action(data):
 @socketio.on("reset_complete")
 def handle_reset_complete(data):
     subject_id = flask.request.sid
+    client_session_id = data.get("session_id")
+
+    if not is_valid_session(client_session_id):
+        flask_socketio.emit(
+            "invalid_session",
+            {"message": "Session is invalid. Please reconnect."},
+            room=subject_id,
+        )
+        return
+
     game_id = data["room"]
 
     game = GAMES.get(game_id, None)
@@ -382,7 +438,11 @@ def handle_reset_complete(data):
         return
 
     # Set the event for the corresponding player
-    RESET_EVENTS[game_id][subject_id].set()
+    try:
+        RESET_EVENTS[game_id][subject_id].set()
+    except:
+        print("keyerror!!!", subject_id)
+        print(RESET_EVENTS[game_id].keys())
 
     # Check if all players have completed their reset
     if all(event.is_set() for event in RESET_EVENTS[game_id].values()):
