@@ -69,7 +69,7 @@ config = (
         game_page_text="Use the arrow keys to move the character on the right!",
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
-        redirect_url="https://www.cmu.edu/dietrich/sds/ddmlab",
+        redirect_url="https://www.google.com/",
         redirect_timeout=240_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
     )
