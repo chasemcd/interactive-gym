@@ -381,7 +381,6 @@ def handle_reset_complete(data):
 
     # Check if all players have completed their reset
     if all(event.is_set() for event in RESET_EVENTS[game_id].values()):
-        print(f"All players completed reset in room {game_id}")
         game.reset_event.set()  # Signal to the game loop that reset is complete
 
 

@@ -44,7 +44,7 @@ config = (
     remote_config.RemoteConfig()
     .policies(
         policy_mapping={
-            "agent_left": PolicyTypes.Human,
+            # "agent_left": PolicyTypes.Human,
             "agent_right": PolicyTypes.Human,
         }
     )
