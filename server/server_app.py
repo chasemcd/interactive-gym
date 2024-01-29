@@ -64,7 +64,7 @@ RESET_EVENTS = utils.ThreadSafeDict()
 for i in range(MAX_CONCURRENT_GAMES):
     FREE_IDS.put(i)
     FREE_MAP[i] = True
-    RESET_EVENTS[i] = threading.Event()
+    RESET_EVENTS[i] = utils.ThreadSafeDict()
 
 
 #######################
@@ -131,6 +131,9 @@ def join_or_create_game(data):
         with game.lock:
             flask_socketio.join_room(game.game_id)
             USER_ROOMS[subject_id] = game.game_id
+
+            # add unique event to sync resets across players
+            RESET_EVENTS[game.game_id][subject_id] = threading.Event()
 
             # TODO(chase): Figure out how to specify the ID in the URL for debugging
             available_human_player_ids = game.get_available_human_player_ids()
@@ -224,6 +227,7 @@ def _leave_game(subject_id) -> bool:
     with game.lock:
         flask_socketio.leave_room(game.game_id)
         del USER_ROOMS[subject_id]
+        del RESET_EVENTS[game.game_id][subject_id]
         game.remove_human_player(subject_id)
 
         game_was_active = game.game_id in ACTIVE_GAMES
@@ -364,8 +368,21 @@ def on_action(data):
 
 @socketio.on("reset_complete")
 def handle_reset_complete(data):
-    print(f"Reset done for room {data['room']}")
-    RESET_EVENTS[data["room"]].set()
+    subject_id = flask.request.sid
+    game_id = data["room"]
+
+    game = GAMES.get(game_id, None)
+
+    if game is None:
+        return
+
+    # Set the event for the corresponding player
+    RESET_EVENTS[game_id][subject_id].set()
+
+    # Check if all players have completed their reset
+    if all(event.is_set() for event in RESET_EVENTS[game_id].values()):
+        print(f"All players completed reset in room {game_id}")
+        game.reset_event.set()  # Signal to the game loop that reset is complete
 
 
 def run_game(game: remote_game.RemoteGame):
@@ -393,21 +410,20 @@ def run_game(game: remote_game.RemoteGame):
                 room=game.game_id,
             )
 
-            RESET_EVENTS[game.game_id].wait()
-            
+            game.reset_event.wait()
+            # Clear the events for each player
+            for event in RESET_EVENTS[game.game_id].values():
+                event.clear()
+
+            # Clear the game reset event
+            game.reset_event.clear()
+
             with game.lock:
                 game.reset()
-            
+
             render_game(game)
-            
+
             socketio.sleep(1 / game.config.fps)
-
-            # Move to the end after sleep() in case
-            # one players comes slightly after anothers
-            # TODO(chase): make this more robust, maybe
-            #   an event for each SID. 
-            RESET_EVENTS[game.game_id].clear()
-
 
     with game.lock:
         socketio.emit(
@@ -452,9 +468,7 @@ def render_game(game: remote_game.RemoteGame):
 def on_exit():
     # Force-terminate all games on server termination
     for game_id in GAMES:
-        socketio.emit('end_game', {}, room=game_id)
-
-
+        socketio.emit("end_game", {}, room=game_id)
 
 
 def run(config):
@@ -469,7 +483,7 @@ def run(config):
     for i in range(CONFIG.max_concurrent_games):
         FREE_IDS.put(i)
         FREE_MAP[i] = True
-        RESET_EVENTS[i] = threading.Event()
+        RESET_EVENTS[i] = utils.ThreadSafeDict()
 
     atexit.register(on_exit)
 

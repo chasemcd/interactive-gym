@@ -29,6 +29,7 @@ class RemoteGame:
         self.config = config
         self.status = GameStatus.Inactive
         self.lock = threading.Lock()
+        self.reset_event = threading.Event()
 
         # Players and actions
         self.pending_actions = None
