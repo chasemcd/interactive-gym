@@ -24,9 +24,17 @@ UPRIGHT = 4
 RIGHT = 5
 
 
+POLICY_MAPPING = {
+    "agent_left": PolicyTypes.Human,
+    "agent_right": PolicyTypes.Human,
+}
+
+
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
-    config = {"use_baseline_policy": False}
+    config = {
+        "human_inputs": POLICY_MAPPING["agent_left"] == PolicyTypes.Human,
+    }
     return slimevolley_env.SlimeVolleyEnv(config=config)
 
 
@@ -42,12 +50,7 @@ action_mapping = {
 
 config = (
     remote_config.RemoteConfig()
-    .policies(
-        policy_mapping={
-            # "agent_left": PolicyTypes.Human,
-            "agent_right": PolicyTypes.Human,
-        }
-    )
+    .policies(policy_mapping=POLICY_MAPPING)
     .environment(env_creator=env_creator, env_name="slime_volleyball")
     .rendering(
         fps=30,
