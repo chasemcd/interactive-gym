@@ -167,6 +167,7 @@ socket.on('end_game', function(data) {
     // Hide game data and display game-over html
     graphics_end();
     disable_key_listener()
+    socket.emit("leave_game", {})
 
     $('#finalPageHeaderText').show()
     $('#finalPageText').show()

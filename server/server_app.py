@@ -75,7 +75,6 @@ app = flask.Flask(__name__, template_folder=os.path.join("static", "templates"))
 app.config["SECRET_KEY"] = "secret!"
 
 app.config["DEBUG"] = os.getenv("FLASK_ENV", "production") == "development"
-print(app.config["DEBUG"])
 socketio = flask_socketio.SocketIO(
     app, cors_allowed_origins="*", logger=app.config["DEBUG"]
 )
@@ -127,6 +126,8 @@ def join_or_create_game(data):
             return
 
         game = _create_or_join_game()
+        if game is None:  # there was an error that is now displayed
+            return
 
         with game.lock:
             flask_socketio.join_room(game.game_id)
@@ -185,7 +186,7 @@ def _create_or_join_game() -> remote_game.RemoteGame:
     _create_game()  # adds to waiting game
     game = get_waiting_game()
 
-    assert game is not None, "Game retrieval failed!"
+    # assert game is not None, "Game retrieval failed!"
 
     return game
 
@@ -205,6 +206,7 @@ def _cleanup_game(game: remote_game.RemoteGame):
         if subject_id is utils.Available:
             continue
         del USER_ROOMS[subject_id]
+        del RESET_EVENTS[game.game_id][subject_id]
 
     socketio.close_room(game.game_id)
 
@@ -331,6 +333,9 @@ def on_action(data):
     subject_id = flask.request.sid
     game = _get_existing_game(subject_id)
 
+    if game is None:
+        return
+
     pressed_keys = data["pressed_keys"]
 
     max_composite_action_size = max(
@@ -352,7 +357,7 @@ def on_action(data):
                 pressed_keys = [composite]
                 break
 
-    if not game or not any([k in CONFIG.action_mapping for k in pressed_keys]):
+    if not any([k in CONFIG.action_mapping for k in pressed_keys]):
         return
 
     action = None
@@ -410,6 +415,7 @@ def run_game(game: remote_game.RemoteGame):
             )
 
             game.reset_event.wait()
+
             # Clear the events for each player
             for event in RESET_EVENTS[game.game_id].values():
                 event.clear()
@@ -425,16 +431,16 @@ def run_game(game: remote_game.RemoteGame):
             socketio.sleep(1 / game.config.fps)
 
     with game.lock:
+        if game.status != remote_game.GameStatus.Inactive:
+            game.tear_down()
+
+        _cleanup_game(game)
+
         socketio.emit(
             "end_game",
             {"redirect_url": CONFIG.redirect_url, "timeout": CONFIG.redirect_timeout},
             room=game.game_id,
         )
-
-        if game.status != remote_game.GameStatus.Inactive:
-            game.tear_down()
-
-        _cleanup_game(game)
 
 
 def render_game(game: remote_game.RemoteGame):
