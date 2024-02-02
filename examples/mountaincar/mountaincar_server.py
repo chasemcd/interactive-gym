@@ -33,15 +33,14 @@ config = (
     remote_config.RemoteConfig()
     .policies(policy_mapping={PolicyTypes.Human: PolicyTypes.Human})
     .environment(env_creator=env_creator, env_name="MountainCar-v0")
-    .rendering(
-        fps=30, env_to_state_fn=mountaincar_utils.mountaincar_to_render_state)
+    .rendering(fps=30, env_to_state_fn=mountaincar_utils.mountaincar_to_render_state)
     .gameplay(
         human_id="agent-0",
         default_action=NOOP_ACTION,
         action_mapping=action_mapping,
         num_episodes=2,
     )
-    .hosting(port=8000)
+    .hosting(port=5703, host="0.0.0.0")
     .user_experience(
         page_title="Interactive MountainCar-v0",
         welcome_header_text="Interactive MountainCar-v0",
