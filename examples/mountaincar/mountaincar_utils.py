@@ -8,7 +8,7 @@ prev_x = None
 FPS = 30
 
 
-def mountaincar_to_render_state(env: gym.Env) -> list[dict]:
+def mountaincar_to_render_state(env: gym.Env, *args, **kwargs) -> list[dict]:
     global ball_rotation, prev_x
     y_offset = 0.05
     min_pos, max_pos = env.unwrapped.min_position, env.unwrapped.max_position
