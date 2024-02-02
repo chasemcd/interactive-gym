@@ -4,6 +4,7 @@ import queue
 import threading
 import typing
 import numpy as np
+from gymnasium import spaces
 
 from configurations import remote_config
 from server import utils
@@ -150,7 +151,12 @@ class RemoteGame:
         # TODO(chase): add frame skip! also we shouldn't use default action on frame skip! should just repeat the last action
         for pid, bot in self.bot_players.items():
             if bot == PolicyTypes.Random:
-                player_actions[pid] = self.env.action_space.sample()
+                if isinstance(self.env.action_space, spaces.Dict) or isinstance(
+                    self.env.action_space, dict
+                ):
+                    player_actions[pid] = self.env.action_space[pid].sample()
+                else:
+                    player_actions[pid] = self.env.action_space.sample()
             else:
                 player_actions[pid] = self.config.policy_inference_fn(
                     self.obs[pid], bot
