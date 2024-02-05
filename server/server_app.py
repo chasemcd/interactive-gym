@@ -538,7 +538,7 @@ def on_exit():
 
 
 def run(config):
-    global CONFIG, FREE_IDS, MAX_CONCURRENT_GAMES, FREE_MAP
+    global app, CONFIG, FREE_IDS, MAX_CONCURRENT_GAMES, FREE_MAP
     CONFIG = config
     MAX_CONCURRENT_GAMES = CONFIG.max_concurrent_games
 
@@ -553,7 +553,7 @@ def run(config):
 
     atexit.register(on_exit)
 
-    app = profiler.ProfilerMiddleware(app)
+    app.wsgi_app = profiler.ProfilerMiddleware(app.wsgi_app)
 
     socketio.run(
         app,
