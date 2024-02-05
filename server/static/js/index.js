@@ -16,7 +16,6 @@ socket.on('server_session_id', function(data) {
 
 socket.on('invalid_session', function(data) {
     alert(data.message);
-    // TODO(chase): tell participants to refresh the page
     $('#finalPageHeaderText').hide()
     $('#finalPageText').hide()
     $("#gameHeaderText").hide();
