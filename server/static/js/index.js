@@ -202,9 +202,19 @@ socket.on('pong_response', function(data) {
 function calculateMedian(arr) {
     const sortedArr = arr.slice().sort((a, b) => a - b);
     const mid = Math.floor(sortedArr.length / 2);
+    let median;
 
-    // Median is the middle element for odd arrays, or average of two middle elements for even arrays
-    return sortedArr.length % 2 !== 0 ? sortedArr[mid] : (sortedArr[mid - 1] + sortedArr[mid]) / 2;
+    if (sortedArr.length % 2 !== 0) {
+        median = sortedArr[mid];
+    } else {
+        median = (sortedArr[mid - 1] + sortedArr[mid]) / 2;
+    }
+
+    // Round to the nearest integer
+    median = Math.round(median);
+
+    // Format as a two-digit number
+    return median.toString().padStart(3, '0');
 }
 
 socket.on('end_game', function(data) {
