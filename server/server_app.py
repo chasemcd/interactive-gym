@@ -465,11 +465,11 @@ def run_game(game: remote_game.RemoteGame):
         with game.lock:
             game.tick()
 
-        socketio.sleep(1 / game.config.fps)
         # if game.tick_num % 2 != 0:
         #     continue
 
         render_game(game)
+        socketio.sleep(1 / game.config.fps)
 
         if game.status == remote_game.GameStatus.Reset:
             socketio.emit(
