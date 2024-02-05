@@ -180,11 +180,32 @@ socket.on('environment_state', function(data) {
     socket.emit("pong", { timestamp: Date.now() });
 });
 
+
+var latencyMeasurements = [];
 socket.on('pong_response', function(data) {
     var latency = Date.now() - data.timestamp;
-    document.getElementById('latencyValue').innerText = latency;
+    latencyMeasurements.push(latency);
+
+    var maxMeasurements = 20; // limit to last 20 measurements
+    if (latencyMeasurements.length > maxMeasurements) {
+        latencyMeasurements.shift(); // Remove the oldest measurement
+    }
+
+    // Calculate the median
+    var medianLatency = calculateMedian(latencyMeasurements);
+
+    // Update the latency display in the UI
+    document.getElementById('latencyValue').innerText = medianLatency;
     document.getElementById('latencyDisplay').style.display = 'block'; // Show the latency display
 });
+
+function calculateMedian(arr) {
+    const sortedArr = arr.slice().sort((a, b) => a - b);
+    const mid = Math.floor(sortedArr.length / 2);
+
+    // Median is the middle element for odd arrays, or average of two middle elements for even arrays
+    return sortedArr.length % 2 !== 0 ? sortedArr[mid] : (sortedArr[mid - 1] + sortedArr[mid]) / 2;
+}
 
 socket.on('end_game', function(data) {
     // Hide game data and display game-over html
