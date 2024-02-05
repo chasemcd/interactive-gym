@@ -450,6 +450,11 @@ def handle_reset_complete(data):
         game.reset_event.set()  # Signal to the game loop that reset is complete
 
 
+@socketio.on("pong")
+def on_pong(data):
+    socketio.emit("pong_response", {"timestamp": data.get("timestamp")})
+
+
 def run_game(game: remote_game.RemoteGame):
     end_status = [remote_game.GameStatus.Inactive, remote_game.GameStatus.Done]
     game.reset()
@@ -553,7 +558,7 @@ def run(config):
 
     atexit.register(on_exit)
 
-    app.wsgi_app = profiler.ProfilerMiddleware(app.wsgi_app)
+    # app.wsgi_app = profiler.ProfilerMiddleware(app.wsgi_app)
 
     socketio.run(
         app,
