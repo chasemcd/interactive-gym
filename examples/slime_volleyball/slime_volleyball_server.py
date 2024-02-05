@@ -25,7 +25,7 @@ RIGHT = 5
 
 
 POLICY_MAPPING = {
-    "agent_left": PolicyTypes.Random,
+    # "agent_left": PolicyTypes.Random,
     "agent_right": PolicyTypes.Human,
 }
 
@@ -33,7 +33,7 @@ POLICY_MAPPING = {
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
     config = {
-        "human_inputs": POLICY_MAPPING["agent_left"] == PolicyTypes.Human,
+        "human_inputs": POLICY_MAPPING.get("agent_left") == PolicyTypes.Human,
     }
     return slimevolley_env.SlimeVolleyEnv(config=config)
 
