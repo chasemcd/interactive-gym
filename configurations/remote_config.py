@@ -1,0 +1,296 @@
+import copy
+import json
+import typing
+
+
+class RemoteConfig:
+    def __init__(self):
+        self.env_creator: typing.Callable | None = None
+        self.env_name: str | None = None
+        self.env_config: dict[str, typing.Any] = {}
+        self.seed: int = 42
+
+        # hosting
+        self.host = None
+        self.port = 8000
+        self.max_concurrent_games = 1
+
+        # policies
+        self.load_policy_fn: typing.Callable | None = None
+        self.policy_inference_fn: typing.Callable | None = None
+        self.policy_mapping: dict[str, typing.Any] = dict()
+        self.available_policies: dict[str, typing.Any] = dict()
+        self.policy_configs: dict[str, typing.Any] = dict()
+        self.frame_skip: int = 4
+
+        # gameplay
+        self.num_episodes: int = 1
+        self.action_mapping: dict[str, int] = dict()
+        self.human_id: str | int | None = None
+        self.default_action: int | str | None = None
+
+        # rendering
+        self.env_to_state_fn: typing.Callable | None = None
+        self.location_representation: str = "relative"  # "relative" or "pixels"
+        self.game_width: int | None = 600
+        self.game_height: int | None = 400
+        self.fps: int = 10
+        self.background: str = "#FFFFFF"  # white background default
+        self.state_init: list = []
+        self.assets_dir: str = "./static/assets/"
+        self.assets_to_preload: list[str] = []
+        self.animation_configs: list = []
+
+        # user_experience
+        self.redirect_url: str | None = None  # send user here after experiment.
+        self.redirect_timeout: int = 5_000  # 5k ms = 5 seconds default
+        self.page_title: str = "interactive-gym"
+        self.game_header_text: str = "Game Page Header"
+        self.welcome_header_text: str = "Start Page Header"
+        self.welcome_text: str = "Start Page Text"
+        self.game_page_text: str = "Game Page Text"
+        self.between_episode_header: str = "Between Episode Page Header"
+        self.between_episode_text: str = "Between Episode Page Text"
+        self.final_page_text: str = "Final page text"
+        self.final_page_header_text: str = "Final Page Header"
+        self.instructions: str = "Game Instructions"  # can pass html
+        self.reset_timeout: int = 3000
+
+        # logging
+        self.logfile: str = "./log"
+
+    def logging(self, logfile: str | None = None):
+        if logfile is not None:
+            self.logfile = logfile
+
+    def environment(
+        self,
+        env_creator: typing.Callable | None = None,
+        env_name: str | None = None,
+        env_config: dict[str, typing.Any] | None = None,
+        seed: int | None = None,
+    ):
+        if env_creator is not None:
+            self.env_creator = env_creator
+
+        if env_name is not None:
+            self.env_name = env_name
+
+        if env_config is not None:
+            self.env_config = env_config
+
+        if seed is not None:
+            self.seed = seed
+
+        return self
+
+    def rendering(
+        self,
+        fps: int | None = None,
+        env_to_state_fn: typing.Callable | None = None,
+        location_representation: str | None = None,
+        game_width: int | None = None,
+        game_height: int | None = None,
+        background: str | None = None,
+        state_init: list | None = None,
+        assets_dir: str | None = None,
+        assets_to_preload: list[str] | None = None,
+        animation_configs: list | None = None,
+    ):
+        if env_to_state_fn is not None:
+            self.env_to_state_fn = env_to_state_fn
+
+        if location_representation is not None:
+            assert location_representation in [
+                "relative",
+                "pixels",
+            ], "Must pass either relative or pixel location!"
+            self.location_representation = location_representation
+
+        if fps is not None:
+            self.fps = fps
+
+        if game_width is not None:
+            self.game_width = game_width
+
+        if game_height is not None:
+            self.game_height = game_height
+
+        if background is not None:
+            self.background = background
+
+        if state_init is not None:
+            self.state_init = state_init
+
+        if assets_dir is not None:
+            self.assets_dir = assets_dir
+
+        if assets_to_preload is not None:
+            self.assets_to_preload = assets_to_preload
+
+        if animation_configs is not None:
+            self.animation_configs = animation_configs
+
+        return self
+
+    def hosting(
+        self,
+        host: str | None = None,
+        port: int | None = None,
+        max_concurrent_games: int | None = None,
+    ):
+        if host is not None:
+            self.host = host
+
+        if port is not None:
+            self.port = port
+
+        if max_concurrent_games is not None:
+            assert max_concurrent_games >= 1, "Must have at least one concurrent game!"
+            self.max_concurrent_games = max_concurrent_games
+
+        return self
+
+    def policies(
+        self,
+        policy_mapping: dict | None = None,
+        load_policy_fn: typing.Callable | None = None,
+        policy_inference_fn: typing.Callable | None = None,
+        frame_skip: int | None = None,
+    ):
+        if policy_mapping is not None:
+            self.policy_mapping = policy_mapping
+
+        if load_policy_fn is not None:
+            self.load_policy_fn = load_policy_fn
+
+        if policy_inference_fn is not None:
+            self.policy_inference_fn = policy_inference_fn
+
+        if frame_skip is not None:
+            self.frame_skip = frame_skip
+
+        return self
+
+    def gameplay(
+        self,
+        action_mapping: dict | None = None,
+        human_id: str | int | None = None,
+        num_episodes: int | None = None,
+        default_action: int | str | None = None,
+    ):
+        if action_mapping is not None:
+            # ensure the composite action tuples are sorted
+            sorted_tuple_action_map = {}
+            for k, v in action_mapping.items():
+                if isinstance(k, tuple):
+                    sorted_tuple_action_map[tuple(sorted(k))] = v
+                else:
+                    sorted_tuple_action_map[k] = v
+            self.action_mapping = action_mapping
+
+        if human_id is not None:
+            self.human_id = human_id
+
+        if num_episodes is not None:
+            assert (
+                type(num_episodes) == int and num_episodes >= 1
+            ), "Must pass an int >=1 to num episodes."
+            self.num_episodes = num_episodes
+
+        if default_action is not None:
+            self.default_action = default_action
+
+        return self
+
+    def user_experience(
+        self,
+        page_title: str | None = None,
+        redirect_url: str | None = None,
+        redirect_timeout: int | None = None,
+        waitroom_timeout: int | None = None,
+        welcome_header_text: str | None = None,
+        game_header_text: str | None = None,
+        game_page_text: str | None = None,
+        welcome_text: str | None = None,
+        final_page_header_text: str | None = None,
+        final_page_text: str | None = None,
+        instructions: str | None = None,
+    ):
+        if redirect_url is not None:
+            self.redirect_url = redirect_url
+
+        if redirect_timeout is not None:
+            self.redirect_timeout = redirect_timeout
+
+        if waitroom_timeout is not None:
+            self.waitroom_timeout = waitroom_timeout
+
+        if welcome_header_text is not None:
+            self.welcome_header_text = welcome_header_text
+
+        if game_header_text is not None:
+            self.game_header_text = game_header_text
+
+        if instructions is not None:
+            self.instructions = instructions
+
+        if welcome_text is not None:
+            self.welcome_text = welcome_text
+
+        if game_page_text is not None:
+            self.game_page_text = game_page_text
+
+        if final_page_text is not None:
+            self.final_page_text = final_page_text
+
+        if final_page_header_text is not None:
+            self.final_page_header_text = final_page_header_text
+
+        if page_title is not None:
+            self.page_title = page_title
+
+        return self
+
+    def to_dict(self, serializable=False):
+        config = copy.deepcopy(vars(self))
+        if serializable:
+            config = serialize_dict(config)
+        return config
+
+
+def serialize_dict(data):
+    """
+    Serialize a dictionary to JSON, removing unserializable keys recursively.
+
+    :param data: Dictionary to serialize.
+    :return: Serialized object with unserializable elements removed.
+    """
+    if isinstance(data, dict):
+        # Use dictionary comprehension to process each key-value pair
+        return {
+            key: serialize_dict(value)
+            for key, value in data.items()
+            if is_json_serializable(value)
+        }
+    elif isinstance(data, list):
+        # Use list comprehension to process each item
+        return [serialize_dict(item) for item in data if is_json_serializable(item)]
+    elif is_json_serializable(data):
+        return data
+    else:
+        return None  # or some other default value
+
+
+def is_json_serializable(value):
+    """
+    Check if a value is JSON serializable.
+
+    :param value: The value to check.
+    :return: True if the value is JSON serializable, False otherwise.
+    """
+    try:
+        json.dumps(value)
+        return True
+    except (TypeError, OverflowError):
+        return False

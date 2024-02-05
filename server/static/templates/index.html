@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ page_title }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css?family=Press Start 2P');
+
+        /* General page styling */
+        body, html {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 18px;
+            background-color: #fff; /* white background */
+            color: #000; /* black text */
+            text-align: center; /* Center aligning everything */
+            padding-top: 50px; /* Spacing from the top */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .text-container {
+            max-width: 800px; /* Maximum width */
+            font-family: 'Press Start 2P', cursive;
+            font-size: 18px;
+            text-align: center; /* Center aligning everything */
+        }
+
+        /* Style for the start button */
+        #startButton {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 20px;
+            background-color: #008000; /* Green color for start */
+            color: white;
+            border: none;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        #gamePageText, #startPageText {
+            font-size: 10px;
+        }
+
+        #reset-game, #waitroomText {
+            background-color: white; /* White background color */
+            border: 2px solid black; /* Black border */
+            padding: 20px; /* Space around the text */
+            border-radius: 10px; /* Rounded corners for the box */
+            color: black; /* Text color */
+            font-size: 10px; /* Adjust as per your preference */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: Adds a shadow for a 3D effect */
+        }
+
+        #errorText {
+            background-color: white; /* White background color */
+            border: 2px solid red; /* red border */
+            padding: 20px; /* Space around the text */
+            border-radius: 10px; /* Rounded corners for the box */
+            color: black; /* Text color */
+            font-size: 10px; /* Adjust as per your preference */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: Adds a shadow for a 3D effect */
+        }
+
+        #latencyContainer {
+            position: fixed; /* Fixed position */
+            top: 10px; /* 10px from the top */
+            right: 10px; /* 10px from the right */
+            background-color: rgba(255, 255, 255, 0.5); /* Semi-transparent background */
+            padding: 5px 10px; /* Padding around the text */
+            border-radius: 5px; /* Rounded corners */
+            color: lightgrey; /* Light grey text color */
+            font-size: 10px; /* Font size */
+        }
+
+        /* Style for the game container */
+        #gameContainer {
+            display: none; /* Initially hide the game container */
+            max-width: 1000px; /* Maximum width */
+            margin: auto; /* Centering */
+            border: 2px solid #fff; /* White border */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="text-container">
+        <!-- Texts for start -->
+        <h1 id="welcomeHeader">{{ welcome_header_text }}</h1>
+        <p id="welcomeText">{{ welcome_text }}</p>
+        <p id="instructions">{{ instructions }}</p>
+
+        <p id="waitroomText" style="display: none;"> {{ waitroomText }}</p>
+
+        <!-- Texts for game, initially hidden -->
+        <h1 id="gameHeaderText" style="display: none;">{{ game_header_text }}</h1>
+        <p id="gamePageText" style="display: none;">{{ game_page_text }}</p>
+
+        <!-- Texts for final page, initially hidden -->
+        <h1 id="finalPageHeaderText" style="display: none;">{{ final_page_header_text }}</h1>
+        <p id="finalPageText" style="display: none;">{{ final_page_text }}</p>
+
+        <div id="reset-game", class="text-center" style="display:none"></div>
+        <div id="invalidSession", class="text-center" style="display:none"> "Invalid Session. Please refresh the page!</div>
+
+        <div id="errorText" style="display: none;"></div>
+
+        <!-- Game container -->
+        <div id="gameContainer"></div>
+
+        <!-- Start button -->
+        <button id="startButton">Start</button>
+
+
+    </div>
+
+    <!-- Latency (Ping) Display Container -->
+    <div id="latencyContainer" style="display: none;">
+        ping: <span id="latencyValue">00</span> ms
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js" integrity="sha512-zoJXRvW2gC8Z0Xo3lBbao5+AS3g6YWr5ztKqaicua11xHo+AvE1b0lT9ODgrHTmNUxeCw0Ry4BGRYZfXu70weg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><script src="static/js/index.js", type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="static/js/phaser_gym_graphics.js", type="text/javascript"></script>
+
+</body>
+</html>
