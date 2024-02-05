@@ -195,7 +195,7 @@ socket.on('pong_response', function(data) {
     var medianLatency = calculateMedian(latencyMeasurements);
 
     // Update the latency (ping) display in the UI
-    document.getElementById('latencyValue').innerText = formattedMedianLatency;
+    document.getElementById('latencyValue').innerText = medianLatency;
     document.getElementById('latencyContainer').style.display = 'block'; // Show the latency (ping) display
 });
 
