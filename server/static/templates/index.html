@@ -66,6 +66,13 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: Adds a shadow for a 3D effect */
         }
 
+        #latencyDisplay {
+        color: lightgrey; /* Set text color to light grey */
+        font-size: 14px; /* Adjust the font size as needed */
+        margin-top: 10px; /* Space above the latency display */
+        /* Other styles (if needed) */
+        }
+
         /* Style for the game container */
         #gameContainer {
             display: none; /* Initially hide the game container */
@@ -103,6 +110,9 @@
 
         <!-- Start button -->
         <button id="startButton">Start</button>
+
+        <p id="latencyDisplay" style="display: none;">Latency: <span id="latencyValue">0</span> ms</p>
+
 
 
     </div>

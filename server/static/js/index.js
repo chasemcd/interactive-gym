@@ -176,6 +176,14 @@ socket.on("create_game_failed", function(data) {
 
 socket.on('environment_state', function(data) {
     addStateToBuffer(data);
+    // Emit pong with timestamp
+    socket.emit("pong", { timestamp: Date.now() });
+});
+
+socket.on('pong_response', function(data) {
+    var latency = Date.now() - data.timestamp;
+    document.getElementById('latencyValue').innerText = latency;
+    document.getElementById('latencyDisplay').style.display = 'block'; // Show the latency display
 });
 
 socket.on('end_game', function(data) {
