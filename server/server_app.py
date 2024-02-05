@@ -8,7 +8,6 @@ import uuid
 import itertools
 import atexit
 import secrets
-from werkzeug.middleware import profiler
 
 
 import flask
@@ -451,7 +450,7 @@ def handle_reset_complete(data):
 
 
 @socketio.on("pong")
-def on_pong(data):
+async def on_pong(data):
     socketio.emit("pong_response", {"timestamp": data.get("timestamp")})
 
 
