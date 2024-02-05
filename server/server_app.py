@@ -8,6 +8,7 @@ import uuid
 import itertools
 import atexit
 import secrets
+from werkzeug.middleware import profiler
 
 
 import flask
@@ -551,6 +552,8 @@ def run(config):
         RESET_EVENTS[i] = utils.ThreadSafeDict()
 
     atexit.register(on_exit)
+
+    app = profiler.ProfilerMiddleware(app)
 
     socketio.run(
         app,
