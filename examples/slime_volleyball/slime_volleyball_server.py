@@ -25,7 +25,7 @@ RIGHT = 5
 
 
 POLICY_MAPPING = {
-    # "agent_left": PolicyTypes.Random,
+    "agent_left": PolicyTypes.Human,
     "agent_right": PolicyTypes.Human,
 }
 
