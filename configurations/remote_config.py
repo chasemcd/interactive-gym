@@ -2,6 +2,8 @@ import copy
 import json
 import typing
 
+from configurations import configuration_constants
+
 
 class RemoteConfig:
     def __init__(self):
@@ -28,6 +30,7 @@ class RemoteConfig:
         self.action_mapping: dict[str, int] = dict()
         self.human_id: str | int | None = None
         self.default_action: int | str | None = None
+        self.input_mode: str = configuration_constants.InputModes.PressedKeys
 
         # rendering
         self.env_to_state_fn: typing.Callable | None = None
@@ -178,6 +181,7 @@ class RemoteConfig:
         human_id: str | int | None = None,
         num_episodes: int | None = None,
         default_action: int | str | None = None,
+        input_mode: str | None = None,
     ):
         if action_mapping is not None:
             # ensure the composite action tuples are sorted
@@ -200,6 +204,10 @@ class RemoteConfig:
 
         if default_action is not None:
             self.default_action = default_action
+
+        if input_mode is not None:
+            assert input_mode in configuration_constants.InputModes
+            self.input_mode = input_mode
 
         return self
 

@@ -95,6 +95,7 @@ function updateWaitroomText(data, timer) {
     seconds = seconds < 10 ? "0" + seconds : seconds;
     $("#waitroomText").text(`There are ${data.cur_num_players} / ${data.cur_num_players + data.players_needed} players in the lobby. Waiting ${minutes}:${seconds} for more to join...`);
 }
+
 socket.on("game_reset", function(data) {
     graphics_end()
 
@@ -116,10 +117,11 @@ socket.on("game_reset", function(data) {
         'animation_configs': config.animation_configs,
     };
 
+    input_mode = config.input_mode;
 
     startResetCountdown(data.timeout, function() {
         // This function will be called after the countdown
-        enable_key_listener();
+        enable_key_listener(input_mode);
         graphics_start(graphics_config);
 
         socket.emit("reset_complete", {room: data.room, session_id: window.sessionId});
@@ -247,8 +249,16 @@ socket.on('request_pressed_keys', function(data) {
     socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(pressedKeys), session_id: window.sessionId});
 });
 
-function enable_key_listener() {
+function enable_key_listener(input_mode) {
     $(document).on('keydown', function(event) {
+
+        // If we're using the single keystroke input method, we just send the key when it's pressed
+        if (input_mode == "single_keystroke") {
+            socket.emit('send_pressed_keys', {'pressed_keys': Array(event.key), session_id: window.sessionId});
+            return;
+        }
+
+        // Otherwise, we keep track of the keys that are pressed and send them on request
         if (pressedKeys[event.key]) {
             return; // Key is already pressed, so exit the function
         }
@@ -257,6 +267,11 @@ function enable_key_listener() {
     });
 
     $(document).on('keyup', function(event) {
+        if (input_mode == "single_keystroke") {
+            return;
+        }
+
+        // If we're tracking pressed keys, remove it
         delete pressedKeys[event.key]; // Remove key from pressedKeys when it is released
     });
 }

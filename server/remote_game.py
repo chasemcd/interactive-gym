@@ -134,9 +134,11 @@ class RemoteGame:
     def tick(self) -> None:
         # Player actions
         player_actions = {
-            pid: self.pending_actions[sid].get(block=False)
-            if self.pending_actions[sid].qsize() > 0
-            else self.config.default_action
+            pid: (
+                self.pending_actions[sid].get(block=False)
+                if self.pending_actions[sid].qsize() > 0
+                else self.config.default_action
+            )
             for pid, sid in self.human_players.items()
         }
 
@@ -162,9 +164,9 @@ class RemoteGame:
                     self.obs[pid], bot
                 )
 
-        if len(player_actions) == 1:
-            # not multiagent
-            player_actions = list(player_actions.values())[0]
+        # if len(player_actions) == 1:
+        #     # not multiagent
+        #     player_actions = list(player_actions.values())[0]
 
         self.obs, rewards, terminateds, truncateds, _ = self.env.step(player_actions)
 

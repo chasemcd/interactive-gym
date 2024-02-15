@@ -26,6 +26,7 @@ except ImportError:
 
 from server import remote_game
 from configurations import remote_config
+from configurations import configuration_constants
 from server import utils
 
 CONFIG = remote_config.RemoteConfig()
@@ -461,7 +462,9 @@ def run_game(game: remote_game.RemoteGame):
     socketio.sleep(1 / game.config.fps)
 
     while game.status not in end_status:
-        socketio.emit("request_pressed_keys", {})
+
+        if CONFIG.input_mode == configuration_constants.InputModes.PressedKeys:
+            socketio.emit("request_pressed_keys", {})
         with game.lock:
             game.tick()
 
