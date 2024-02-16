@@ -55,7 +55,7 @@ USER_ROOMS = utils.ThreadSafeDict()
 FREE_MAP = utils.ThreadSafeDict()
 
 # Number of games allowed
-MAX_CONCURRENT_GAMES = 1
+MAX_CONCURRENT_GAMES = 5
 
 # Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
 FREE_IDS = queue.Queue(maxsize=MAX_CONCURRENT_GAMES)
