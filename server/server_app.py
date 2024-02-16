@@ -523,7 +523,10 @@ def render_game(game: remote_game.RemoteGame):
     else:
         # Generate a base64 image of the game and send it to display
         assert cv2 is not None, "Must install cv2 to use default image rendering!"
-        game_image = game.env.render(mode="rgb_array")
+        assert (
+            game.env.render_mode == "rgb_array"
+        ), "Env must be using render more rgb_array!"
+        game_image = game.env.render()
         _, encoded_image = cv2.imencode(".png", game_image)
         encoded_image = base64.b64encode(encoded_image).decode()
 

@@ -53,7 +53,7 @@ socket.on("start_game", function(data) {
         'animation_configs': config.animation_configs,
     };
 
-    enable_key_listener()
+    enable_key_listener(config.input_mode)
     graphics_start(graphics_config);
 })
 
@@ -252,7 +252,8 @@ socket.on('request_pressed_keys', function(data) {
 function enable_key_listener(input_mode) {
     $(document).on('keydown', function(event) {
 
-        // If we're using the single keystroke input method, we just send the key when it's pressed
+        // If we're using the single keystroke input method, we just send the key when it's pressed.
+        // This means no composite actions. 
         if (input_mode == "single_keystroke") {
             socket.emit('send_pressed_keys', {'pressed_keys': Array(event.key), session_id: window.sessionId});
             return;

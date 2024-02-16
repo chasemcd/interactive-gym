@@ -49,7 +49,9 @@ class RemoteGame:
         self._build()
 
     def _build_env(self) -> None:
-        self.env = self.config.env_creator(**self.config.env_config)
+        self.env = self.config.env_creator(
+            **self.config.env_config, render_mode="rgb_array"
+        )
 
     def _load_policies(self) -> None:
         """Load and instantiates all policies"""

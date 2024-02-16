@@ -4,6 +4,7 @@ from configurations import remote_config
 from server import server_app
 from server.remote_game import PolicyTypes
 from configurations import configuration_constants
+from examples.cogrid_overcooked import overcooked_utils
 
 """
 This is an example script for running MountainCar-v0 in
@@ -55,8 +56,8 @@ config = (
     .policies(policy_mapping=POLICY_MAPPING)
     .environment(env_creator=env_creator, env_name="slime_volleyball")
     .rendering(
-        fps=20,
-        # env_to_state_fn=slime_volleyball_utils.slime_volleyball_env_to_rendering,
+        fps=10,
+        # env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
         game_width=600,
         game_height=400,
     )

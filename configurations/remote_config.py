@@ -206,7 +206,6 @@ class RemoteConfig:
             self.default_action = default_action
 
         if input_mode is not None:
-            assert input_mode in configuration_constants.InputModes
             self.input_mode = input_mode
 
         return self
