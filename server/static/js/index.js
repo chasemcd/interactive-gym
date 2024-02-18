@@ -98,6 +98,7 @@ function updateWaitroomText(data, timer) {
 
 socket.on("game_reset", function(data) {
     graphics_end()
+    disable_key_listener();
 
 
     // Initialize game

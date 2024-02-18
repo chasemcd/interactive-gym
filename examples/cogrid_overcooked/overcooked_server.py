@@ -28,16 +28,13 @@ Noop = 6
 
 POLICY_MAPPING = {
     "agent-0": PolicyTypes.Human,
-    # "agent_right": PolicyTypes.Human,
+    "agent-1": PolicyTypes.Human,
 }
 
 
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
-    config = {
-        "human_inputs": POLICY_MAPPING.get("agent_left") == PolicyTypes.Human,
-    }
-    return registry.make("SAOvercooked-V0", render_mode="rgb_array")
+    return registry.make("Overcooked-V0", render_mode="rgb_array")
 
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
@@ -54,7 +51,7 @@ action_mapping = {
 config = (
     remote_config.RemoteConfig()
     .policies(policy_mapping=POLICY_MAPPING)
-    .environment(env_creator=env_creator, env_name="slime_volleyball")
+    .environment(env_creator=env_creator, env_name="cogrid_overcooked")
     .rendering(
         fps=10,
         # env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
