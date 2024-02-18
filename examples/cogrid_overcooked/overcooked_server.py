@@ -28,7 +28,7 @@ Noop = 6
 
 POLICY_MAPPING = {
     "agent-0": PolicyTypes.Human,
-    "agent-1": PolicyTypes.Human,
+    "agent-1": PolicyTypes.Random,
 }
 
 
