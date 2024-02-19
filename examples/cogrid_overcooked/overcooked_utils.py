@@ -6,9 +6,10 @@ from cogrid.core import grid_object
 
 from configurations import remote_config
 from configurations import object_contexts
+from server import remote_game
 
 ASSET_PATH = "static/assets/"
-TILE_SIZE = 16
+TILE_SIZE = 45
 DIR_TO_CARDINAL_DIRECTION = {
     0: "EAST",
     1: "SOUTH",
@@ -19,10 +20,18 @@ PLAYER_COLORS = {0: "blue", 1: "green"}
 
 
 def get_x_y(pos: tuple[int, int], game_height: int, game_width: int) -> tuple[int, int]:
-    row, col = pos
+    col, row = pos
     x = row * TILE_SIZE / game_width
-    y = 1 - col * TILE_SIZE / game_height
+    y = col * TILE_SIZE / game_height
     return x, y
+
+
+def hud_text_fn(game: remote_game.RemoteGame) -> str:
+    """Function to create HUD text to display"""
+    score = int(
+        list(game.episode_rewards.values())[0] if len(game.episode_rewards) > 0 else 0
+    )
+    return f"Round Score: {score:03d} Round Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
 
 
 def overcooked_preload_assets_spec() -> (
@@ -67,6 +76,7 @@ def overcooked_env_to_render_fn(
         render_objects += generate_static_tools(env=env, config=config)
 
     render_objects += generate_agent_sprites(env=env, config=config)
+    render_objects += generate_objects(env=env, config=config)
 
     return [obj.as_dict() for obj in render_objects]
 
@@ -95,6 +105,7 @@ def generate_counter_objects(
                 image_name="terrain",
                 frame="counter.png",
                 permanent=True,
+                depth=-2,
             )
         )
     return objs
@@ -129,7 +140,6 @@ def generate_static_tools(
 ) -> list[object_contexts.Sprite]:
     objs = []
     for obj in env.grid.grid:
-
         if isinstance(obj, overcooked_grid_objects.PlateStack):
             x, y = get_x_y(obj.pos, config.game_height, config.game_width)
             objs.append(
@@ -158,6 +168,20 @@ def generate_static_tools(
                     permanent=True,
                 )
             )
+        elif isinstance(obj, overcooked_grid_objects.Pot):
+            x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+            objs.append(
+                object_contexts.Sprite(
+                    obj.uuid,
+                    x=x,
+                    y=y,
+                    height=TILE_SIZE,
+                    width=TILE_SIZE,
+                    image_name="terrain",
+                    frame="pot.png",
+                    permanent=True,
+                )
+            )
 
     return objs
 
@@ -168,7 +192,6 @@ def generate_agent_sprites(
     objs = []
     for i, agent_obj in enumerate(env.grid.grid_agents.values()):
         x, y = get_x_y(agent_obj.pos, config.game_height, config.game_width)
-        print(x, y)
         held_object_name = ""
         if agent_obj.inventory:
             assert (
@@ -180,6 +203,8 @@ def generate_agent_sprites(
                 held_object_name = "-onion"
             elif isinstance(held_obj, overcooked_grid_objects.OnionSoup):
                 held_object_name = "-soup-onion"
+            elif isinstance(held_obj, overcooked_grid_objects.Plate):
+                held_object_name = "-dish"
 
         dir = DIR_TO_CARDINAL_DIRECTION[agent_obj.dir]
 
@@ -191,6 +216,7 @@ def generate_agent_sprites(
                 height=TILE_SIZE,
                 width=TILE_SIZE,
                 image_name="chefs",
+                tween=False,
                 frame=f"{dir}{held_object_name}.png",
             )
         )
@@ -204,7 +230,107 @@ def generate_agent_sprites(
                 width=TILE_SIZE,
                 image_name="chefs",
                 frame=f"{dir}-{PLAYER_COLORS[i]}hat.png",
+                tween=False,
                 depth=2,
             )
         )
     return objs
+
+
+def generate_objects(
+    env: overcooked.Overcooked, config: remote_config.RemoteConfig
+) -> list[object_contexts.Sprite]:
+    objs = []
+    for obj in env.grid.grid:
+        if obj is None:
+            continue
+
+        if obj.can_place_on and obj.obj_placed_on is not None:
+            objs += temp_object_creation(obj=obj.obj_placed_on, config=config)
+
+        objs += temp_object_creation(obj=obj, config=config)
+
+    return objs
+
+
+def temp_object_creation(obj: grid_object.GridObj, config: remote_config.RemoteConfig):
+    if isinstance(obj, overcooked_grid_objects.Pot):
+        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        if not obj.objects_in_pot:
+            return []
+        status = "cooked" if obj.cooking_timer == 0 else "cooking"
+        if status == "cooking":
+            frame = f"soup-onion-{len(obj.objects_in_pot)}-cooking.png"
+        else:
+            frame = "soup-onion-cooked.png"
+
+        pot_sprite = [
+            object_contexts.Sprite(
+                obj.uuid,
+                x=x,
+                y=y,
+                height=TILE_SIZE,
+                width=TILE_SIZE,
+                image_name="objects",
+                frame=frame,
+                depth=-1,
+            )
+        ]
+
+        if status == "cooking" and len(obj.objects_in_pot) == 3:
+            pot_sprite.append(
+                object_contexts.Text(
+                    uuid="time_left",
+                    text=f"{obj.cooking_timer:02d}",
+                    x=x,
+                    y=y,
+                    size=14,
+                    color="red",
+                )
+            )
+
+        return pot_sprite
+    elif isinstance(obj, overcooked_grid_objects.Onion):
+        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        return [
+            object_contexts.Sprite(
+                obj.uuid,
+                x=x,
+                y=y,
+                height=TILE_SIZE,
+                width=TILE_SIZE,
+                image_name="objects",
+                frame="onion.png",
+                depth=-1,
+            )
+        ]
+
+    elif isinstance(obj, overcooked_grid_objects.Plate):
+        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        return [
+            object_contexts.Sprite(
+                obj.uuid,
+                x=x,
+                y=y,
+                height=TILE_SIZE,
+                width=TILE_SIZE,
+                image_name="objects",
+                frame="dish.png",
+                depth=-1,
+            )
+        ]
+    elif isinstance(obj, overcooked_grid_objects.OnionSoup):
+        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        return [
+            object_contexts.Sprite(
+                obj.uuid,
+                x=x,
+                y=y,
+                height=TILE_SIZE,
+                width=TILE_SIZE,
+                image_name="objects",
+                frame="soup-onion-dish.png",
+                depth=-1,
+            )
+        ]
+    return []

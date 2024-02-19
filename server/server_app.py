@@ -530,6 +530,8 @@ def render_game(game: remote_game.RemoteGame):
         _, encoded_image = cv2.imencode(".png", game_image)
         encoded_image = base64.b64encode(encoded_image).decode()
 
+    hud_text = CONFIG.hud_text_fn(game) if CONFIG.hud_text_fn is not None else None
+
     # TODO(chase): this emits the same state to every player in a room, but we may want
     #   to have different observations for each player. Figure that out (maybe state is a dict
     #   with player_ids and their respective observations?).
@@ -539,6 +541,7 @@ def render_game(game: remote_game.RemoteGame):
             "state": state,
             "game_image_base64": encoded_image,
             "step": game.tick_num,
+            "hud_text": hud_text,
         },
         room=game.game_id,
     )

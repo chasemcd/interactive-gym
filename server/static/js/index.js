@@ -178,6 +178,9 @@ socket.on("create_game_failed", function(data) {
 
 
 socket.on('environment_state', function(data) {
+    $('#hudText').show()
+    $('#hudText').text(data.hud_text)
+
     addStateToBuffer(data);
     // Emit pong with timestamp
     socket.emit("pong", { timestamp: Date.now() });

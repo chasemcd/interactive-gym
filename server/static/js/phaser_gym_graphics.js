@@ -182,7 +182,7 @@ class GymScene extends Phaser.Scene {
                 } else {
                     object_map = this.temp_object_map;
                 };
-
+                
                 // Check if we need to add a new object
                 if (!object_map.hasOwnProperty(game_obj.uuid)) {
                     this._addObject(game_obj, object_map);
@@ -197,7 +197,7 @@ class GymScene extends Phaser.Scene {
             Object.keys(this.temp_object_map).forEach(obj_uuid => {
                 if (!game_state_object_ids.includes(obj_uuid)) {
                     this.temp_object_map[obj_uuid].destroy();
-                    this.temp_object_map.Remove(obj_uuid);
+                    delete this.temp_object_map[obj_uuid];
                 }
             })
 
@@ -205,12 +205,6 @@ class GymScene extends Phaser.Scene {
     };
 
     _addObject(object_config, object_map) {
-
-
-
-        console.log("adding", object_config.uuid, "to", object_map)
-
-
         if (object_config.object_type === "sprite") {
             this._addSprite(object_config, object_map);
         } else if (object_config.object_type === "animation") {
@@ -282,31 +276,32 @@ class GymScene extends Phaser.Scene {
                 sprite.setFrame(object_config.frame);
             }
 
-
             sprite.setDisplaySize(object_config.width, object_config.height);
             sprite.setOrigin(0);
+            sprite.setVisible(true);
         }
 
-
-        new_x = Math.floor(object_config.x * this.width);
-        new_y = Math.floor(object_config.y * this.height);
-        if (object_config.tween == true) {
+        let new_x = Math.floor(object_config.x * this.width);
+        let new_y = Math.floor(object_config.y * this.height);
+        sprite.setVisible(true);
+        sprite.setAlpha(1);
+        
+        if (object_config.tween === true && (new_x !== sprite.x || new_y !== sprite.y)) {
             this.tweens.add({
-                targets: sprite,
+                targets: [sprite],
                 x: new_x,
                 y: new_y,
-                duration: 30,
+                duration: object_config.tween_duration,
                 ease: 'Linear',
+                repeat: 0,
+                yoyo: false,
                 onComplete: (tween, target, player) => {
-                    target.setPosition(new_x, new_y);
                 }
             })
         } else {
             sprite.x = new_x;
             sprite.y = new_y;
         } 
-
-
 
     }
 

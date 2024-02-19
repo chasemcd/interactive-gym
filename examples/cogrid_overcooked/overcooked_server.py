@@ -56,8 +56,10 @@ config = (
         fps=10,
         env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
         assets_to_preload=overcooked_utils.overcooked_preload_assets_spec(),
+        hud_text_fn=overcooked_utils.hud_text_fn,
         game_width=overcooked_utils.TILE_SIZE * 9,
         game_height=overcooked_utils.TILE_SIZE * 10,
+        background="#e6b453",
     )
     .gameplay(
         default_action=Noop,

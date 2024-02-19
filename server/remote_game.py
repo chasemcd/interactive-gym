@@ -45,6 +45,7 @@ class RemoteGame:
         self.game_id = game_id
         self.tick_num = 0
         self.episode_num = 0
+        self.episode_rewards = collections.defaultdict(lambda: 0)
 
         self._build()
 
@@ -179,6 +180,11 @@ class RemoteGame:
             self.obs, rewards, terminateds, truncateds, _ = self.env.step(
                 player_actions
             )
+        if not isinstance(rewards, dict):
+            self.episode_rewards[0] += rewards
+        else:
+            for k, v in rewards.items():
+                self.episode_rewards[k] += v
 
         if isinstance(terminateds, dict):
             terminateds = terminateds["__all__"]
@@ -200,3 +206,4 @@ class RemoteGame:
         self.status = GameStatus.Active
         self.tick_num = 0
         self.episode_num += 1
+        self.episode_rewards = collections.defaultdict(lambda: 0)

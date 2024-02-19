@@ -33,7 +33,11 @@ config = (
     remote_config.RemoteConfig()
     .policies(policy_mapping={PolicyTypes.Human: PolicyTypes.Human})
     .environment(env_creator=env_creator, env_name="MountainCar-v0")
-    .rendering(fps=30, env_to_state_fn=mountaincar_utils.mountaincar_to_render_state)
+    .rendering(
+        fps=30,
+        env_to_state_fn=mountaincar_utils.mountaincar_to_render_state,
+        assets_to_preload=mountaincar_utils.overcooked_preload_assets_spec(),
+    )
     .gameplay(
         default_action=NOOP_ACTION,
         action_mapping=action_mapping,

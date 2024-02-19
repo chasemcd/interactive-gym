@@ -40,6 +40,8 @@ class Sprite:
     depth: int = 1
     animation: str | None = None
     object_type: str = "sprite"
+    tween: bool = False
+    tween_duration: int = 50
     permanent: bool = False
 
     def as_dict(self) -> dict[str, typing.Any]:
