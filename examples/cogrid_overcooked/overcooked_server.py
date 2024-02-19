@@ -54,9 +54,10 @@ config = (
     .environment(env_creator=env_creator, env_name="cogrid_overcooked")
     .rendering(
         fps=10,
-        # env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
-        game_width=600,
-        game_height=400,
+        env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
+        assets_to_preload=overcooked_utils.overcooked_preload_assets_spec(),
+        game_width=overcooked_utils.TILE_SIZE * 9,
+        game_height=overcooked_utils.TILE_SIZE * 10,
     )
     .gameplay(
         default_action=Noop,

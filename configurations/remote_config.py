@@ -34,6 +34,7 @@ class RemoteConfig:
 
         # rendering
         self.env_to_state_fn: typing.Callable | None = None
+        self.preload_specs: list[dict[str, str | int | float]] | None = None
         self.location_representation: str = "relative"  # "relative" or "pixels"
         self.game_width: int | None = 600
         self.game_height: int | None = 400
@@ -91,6 +92,7 @@ class RemoteConfig:
         self,
         fps: int | None = None,
         env_to_state_fn: typing.Callable | None = None,
+        preload_specs: list[dict[str, str | float | int]] | None = None,
         location_representation: str | None = None,
         game_width: int | None = None,
         game_height: int | None = None,
@@ -102,6 +104,9 @@ class RemoteConfig:
     ):
         if env_to_state_fn is not None:
             self.env_to_state_fn = env_to_state_fn
+
+        if preload_specs is not None:
+            self.preload_specs = preload_specs
 
         if location_representation is not None:
             assert location_representation in [

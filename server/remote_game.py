@@ -166,11 +166,19 @@ class RemoteGame:
                     self.obs[pid], bot
                 )
 
-        # if len(player_actions) == 1:
-        #     # not multiagent
-        #     player_actions = list(player_actions.values())[0]
+        if len(player_actions) == 1:
+            # not multiagent
+            player_actions = list(player_actions.values())[0]
 
-        self.obs, rewards, terminateds, truncateds, _ = self.env.step(player_actions)
+        try:
+            self.obs, rewards, terminateds, truncateds, _ = self.env.step(
+                player_actions
+            )
+        except AssertionError:
+            player_actions = list(player_actions.values())[0]
+            self.obs, rewards, terminateds, truncateds, _ = self.env.step(
+                player_actions
+            )
 
         if isinstance(terminateds, dict):
             terminateds = terminateds["__all__"]

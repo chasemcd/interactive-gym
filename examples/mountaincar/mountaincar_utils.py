@@ -1,3 +1,4 @@
+import os
 import gymnasium as gym
 import numpy as np
 
@@ -6,6 +7,22 @@ from configurations import object_contexts
 ball_rotation = 0
 prev_x = None
 FPS = 30
+
+ASSET_PATH = "static/assets/"
+
+
+def overcooked_preload_assets_spec() -> (
+    list[
+        object_contexts.AtlasSpec
+        | object_contexts.MultiAtlasSpec
+        | object_contexts.ImgSpec
+    ]
+):
+    return [
+        object_contexts.ImgSpec(
+            "green_ball", img_path=os.path.join(ASSET_PATH, "green_ball.png")
+        ).as_dict()
+    ]
 
 
 def mountaincar_to_render_state(env: gym.Env, *args, **kwargs) -> list[dict]:
@@ -30,7 +47,13 @@ def mountaincar_to_render_state(env: gym.Env, *args, **kwargs) -> list[dict]:
     prev_x = car_x
 
     car_sprite = object_contexts.Sprite(
-        uuid="car", image_name="green_ball.png", x=car_x, y=car_y, angle=ball_rotation
+        uuid="car",
+        image_name="green_ball",
+        x=car_x,
+        y=car_y,
+        height=16,
+        width=16,
+        angle=ball_rotation,
     )
 
     # Get coordinates of the flag

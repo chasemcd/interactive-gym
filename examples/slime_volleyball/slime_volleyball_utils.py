@@ -40,6 +40,7 @@ def slime_volleyball_env_to_rendering(
                 ),
             ],
             width=env.game.fence.w * config.game_width / constants.REF_W,
+            permanent=True,
         )
         render_objects.append(fence)
 
@@ -49,6 +50,7 @@ def slime_volleyball_env_to_rendering(
             x=to_x(env.game.fence_stub.x),
             y=to_y(env.game.fence_stub.y),
             radius=env.game.fence_stub.r * config.game_width / constants.REF_W,
+            permanent=True,
         )
         render_objects.append(fence_stub)
 
@@ -72,6 +74,7 @@ def slime_volleyball_env_to_rendering(
             fill_below=True,
             width=env.game.ground.w / constants.REF_W,
             depth=-1,
+            permanent=True,
         )
         render_objects.append(ground)
 
@@ -81,6 +84,7 @@ def slime_volleyball_env_to_rendering(
             points=[(0, 0), (1, 0), (1, 1), (0, 1)],
             depth=-5,
             alpha=0.1,
+            permanent=True,
         )
         render_objects.append(border)
 

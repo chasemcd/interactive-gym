@@ -45,9 +45,6 @@ class GraphicsManager {
         game_config.fps = graphics_config.fps;
         this.game = new Phaser.Game(game_config);
     }
-
-
-
 }
 
 
@@ -55,7 +52,8 @@ class GymScene extends Phaser.Scene {
 
     constructor(config) {
         super({key: "GymScene"});
-        this.object_map = {};
+        this.temp_object_map = {};
+        this.perm_object_map = {};
         this.state = config.state_init;
         this.assets_dir = config.assets_dir;
         this.assets_to_preload = config.assets_to_preload;
@@ -64,10 +62,22 @@ class GymScene extends Phaser.Scene {
         this.last_rendered_step = -1;
     }
     preload () {
-        // preload any specified images/assets
-        // for (let image_name in this.assets_to_preload) {
-        //     this.load.image(image_name, `${this.assets_dir}${image_name}`)
-        // }
+
+        // Load images or atlases for sprite sheets
+        this.assets_to_preload.forEach(obj_config => {
+            if (obj_config.object_type == "img_spec") {
+                this.load.image(obj_config.name, obj_config.img_path)
+
+            } else if (obj_config.object_type == "spritesheet") {
+                this.load.spritesheet(obj_config.name, obj_config.img_path, {frameWidth: obj_config.frame_width, frameHeight: obj_config.frame_height})
+            } else if (obj_config.object_type == "atlas_spec") {
+                this.load.atlas(obj_config.name, obj_config.img_path, obj_config.atlas_path)
+
+            } else if (obj_config.object_type == "multi_atlas_spec") {
+                this.load.multiatlas(obj_config.name, obj_config.atlas_path, obj_config.img_path)
+            }
+        });
+
         //
         // // Define any animations that we might use on our sprites
         // for (let anim in this.animation_configs) {
@@ -132,20 +142,20 @@ class GymScene extends Phaser.Scene {
             // Remove the current image
             let oldImage;
 
-            if (this.object_map.hasOwnProperty("curStateImage")) {
-                oldImage = this.object_map['curStateImage'];
+            if (this.temp_object_map.hasOwnProperty("curStateImage")) {
+                oldImage = this.temp_object_map['curStateImage'];
             }
 
             // This will trigger when the new texture is added
             this.textures.once('addtexture', function () {
 
                 // Place the updated image and store so we can remove later
-                this.object_map['curStateImage'] = this.add.image(
+                this.temp_object_map['curStateImage'] = this.add.image(
                     0,
                     0,
                     `curStateImage_${this.state.step}`
                 );
-                this.object_map['curStateImage'].setOrigin(0, 0);
+                this.temp_object_map['curStateImage'].setOrigin(0, 0);
 
                 // Remove the old image
                 if (!(oldImage == null)) {
@@ -165,100 +175,155 @@ class GymScene extends Phaser.Scene {
             // If we have game state objects, we'll render and update each object as necessary.
             game_state_objects.forEach((game_obj) => {
 
+                var object_map;
+                let permanent = game_obj.permanent;
+                if (permanent === true) {
+                    object_map = this.perm_object_map;
+                } else {
+                    object_map = this.temp_object_map;
+                };
+
                 // Check if we need to add a new object
-                if (!this.object_map.hasOwnProperty(game_obj.uuid)) {
-                    this._addObject(game_obj);
+                if (!object_map.hasOwnProperty(game_obj.uuid)) {
+                    this._addObject(game_obj, object_map);
                 }
 
 
-                this._updateObject(game_obj);
+                this._updateObject(game_obj, object_map);
+            });
+
+            // Remove any existing temporary objects that are no longer present
+            let game_state_object_ids = game_state_objects.map(obj_config => obj_config.uuid)
+            Object.keys(this.temp_object_map).forEach(obj_uuid => {
+                if (!game_state_object_ids.includes(obj_uuid)) {
+                    this.temp_object_map[obj_uuid].destroy();
+                    this.temp_object_map.Remove(obj_uuid);
+                }
             })
 
         }
     };
 
-    _addObject(object_config) {
+    _addObject(object_config, object_map) {
+
+
+
+        console.log("adding", object_config.uuid, "to", object_map)
+
+
         if (object_config.object_type === "sprite") {
-            this._addSprite(object_config);
+            this._addSprite(object_config, object_map);
         } else if (object_config.object_type === "animation") {
-            this._addAnimation(object_config)
+            this._addAnimation(object_config, object_map)
         } else if (object_config.object_type === "line") {
-            this._addLine(object_config)
+            this._addLine(object_config, object_map)
         } else if (object_config.object_type === "circle") {
-            this._addCircle(object_config)
+            this._addCircle(object_config, object_map)
         } else if (object_config.object_type === "rectangle") {
-            this._addRectangle(object_config)
+            this._addRectangle(object_config, object_map)
         } else if (object_config.object_type === "polygon") {
-            this._addPolygon(object_config)
+            this._addPolygon(object_config, object_map)
         } else if (object_config.object_type === "text") {
-            this._addText(object_config)
+            this._addText(object_config, object_map)
         } else {
             console.warn("Unrecognized object type in _addObject:", object_config.object_type)
         }
     }
 
-    _updateObject(object_config) {
+    _updateObject(object_config, object_map) {
+
         if (object_config.object_type === "sprite") {
-            this._updateSprite(object_config);
+            this._updateSprite(object_config, object_map);
         } else if (object_config.object_type === "line") {
-            this._updateLine(object_config)
+            this._updateLine(object_config, object_map)
         } else if (object_config.object_type === "circle") {
-            this._updateCircle(object_config)
+            this._updateCircle(object_config, object_map)
         } else if (object_config.object_type === "rectangle") {
-            this._updateRectangle(object_config)
+            this._updateRectangle(object_config, object_map)
         } else if (object_config.object_type === "polygon") {
-            this._updatePolygon(object_config)
+            this._updatePolygon(object_config, object_map)
         } else if (object_config.object_type === "text") {
-            this._updateText(object_config)
+            this._updateText(object_config, object_map)
         } else {
             console.warn("Unrecognized object type in _updateObject:", object_config.object_type)
         }
     }
 
-    _addSprite(object_config) {
+    _addSprite(object_config, object_map) {
         let uuid = object_config.uuid;
 
         // Add a blank sprite to the specified location, everything else
         // will be updated in _updateObject
-        this.object_map[uuid] = this.add.sprite(
+        object_map[uuid] = this.add.sprite(
             {
                 x: Math.floor(object_config.x * this.width),
                 y: Math.floor(object_config.y * this.height),
                 depth: object_config.depth,
             }
         );
+
     };
 
-    _updateSprite(object_config) {
-        let uuid = object_config.uuid;
-        let obj = this.object_map[uuid];
-        obj.x = Math.floor(object_config.x * this.width);
-        obj.y = Math.floor(object_config.y * this.height);
-        obj.angle = object_config.angle;
+    _updateSprite(object_config, object_map) {
+        let sprite = object_map[object_config.uuid];
 
-        this._addTexture(object_config.image_name)
+        sprite.angle = object_config.angle;
 
+        // this._addTexture(object_config.image_name)
+
+        // TODO(chase): enable animation playing
         // if (object_config.cur_animation !== null && obj.anims.getCurrentKey() !== object_config.cur_animation) {
         //     obj.play(object_config.cur_animation)
         // } else
-        if (object_config.image_name !== null && obj.texture.key !== object_config.image_name) {
-            obj.setTexture(object_config.image_name)
+        if (object_config.image_name !== null) {
+            sprite.setTexture(object_config.image_name, object_config.frame);
+
+            if (object_config.frame !== null) {
+                sprite.setFrame(object_config.frame);
+            }
+
+
+            sprite.setDisplaySize(object_config.width, object_config.height);
+            sprite.setOrigin(0);
         }
+
+
+        new_x = Math.floor(object_config.x * this.width);
+        new_y = Math.floor(object_config.y * this.height);
+        if (object_config.tween == true) {
+            this.tweens.add({
+                targets: sprite,
+                x: new_x,
+                y: new_y,
+                duration: 30,
+                ease: 'Linear',
+                onComplete: (tween, target, player) => {
+                    target.setPosition(new_x, new_y);
+                }
+            })
+        } else {
+            sprite.x = new_x;
+            sprite.y = new_y;
+        } 
+
+
+
     }
 
-    _addTexture(texture_name) {
-        // Load the asset with the filepath as the ID
-        if (texture_name !== null && !this.textures.exists(texture_name)) {
-            this.load.image(texture_name, `${this.assets_dir}${texture_name}`)
-            this.load.start()
-        }
-    }
+    // _addTexture(texture_name) {
+    //     // Load the asset with the filepath as the ID
+    //     if (texture_name !== null && !this.textures.exists(texture_name)) {
+    //         this.load.image(texture_name, `${this.assets_dir}${texture_name}`)
+    //         this.load.start()
+    //     }
+    // }
 
     _addAnimation(anim_config) {
         // TODO: from an animation config, define an animation.
     }
 
-    _addLine(line_config) {
+    _addLine(line_config, object_map) {
+
         var graphics = this.add.graphics()
         var points = line_config.points.map((point) => new Phaser.Math.Vector2(point[0] * this.width, point[1] * this.height))
 
@@ -300,14 +365,15 @@ class GymScene extends Phaser.Scene {
         }
 
 
-        this.object_map[line_config.uuid] = graphics;
+        object_map[line_config.uuid] = graphics;
     }
 
-    _updateLine(line_config) {
+    _updateLine(line_config, object_map) {
         // TODO
     }
 
-    _addCircle(circle_config) {
+    _addCircle(circle_config, object_map) {
+
         var graphics = this.add.graphics();
         graphics.setDepth(circle_config.depth);
 
@@ -315,29 +381,30 @@ class GymScene extends Phaser.Scene {
         graphics.fillStyle(this._strToHex(circle_config.color), circle_config.alpha); // Red color, fully opaque
 
         // Draw a filled circle (x, y, radius)
-        this.object_map[circle_config.uuid] = graphics.fillCircle(
+        object_map[circle_config.uuid] = graphics.fillCircle(
             circle_config.x * this.width,
             circle_config.y * this.height,
             circle_config.radius,
         );
     }
 
-    _updateCircle(circle_config) {
+    _updateCircle(circle_config, object_map) {
         let uuid = circle_config.uuid;
-        let graphics = this.object_map[uuid];
+        let graphics = object_map[uuid];
         graphics.clear();
-        this._addCircle(circle_config);
+        this._addCircle(circle_config, object_map);
     }
 
-    _addRectangle(rectangle_config) {
+    _addRectangle(rectangle_config, object_map) {
         // TODO
     }
 
-    _updateRectangle(rectangle_config) {
+    _updateRectangle(rectangle_config, object_map) {
         // TODO
     }
 
-    _addPolygon(polygon_config) {
+    _addPolygon(polygon_config, object_map) {
+
         let graphics = this.add.graphics();
         var points = polygon_config.points.map((point) => new Phaser.Math.Vector2(point[0] * this.width, point[1] * this.height))
 
@@ -350,29 +417,28 @@ class GymScene extends Phaser.Scene {
         // Draw the filled polygon
         graphics.fillPoints(points, true); // 'true' to close the polygon
 
-        this.object_map[polygon_config.uuid] = graphics;
-
+        object_map[polygon_config.uuid] = graphics;
     }
 
-    _updatePolygon(polygon_config) {
+    _updatePolygon(polygon_config, object_map) {
         let uuid = polygon_config.uuid;
-        let graphics = this.object_map[uuid];
+        let graphics = object_map[uuid];
         graphics.clear();
-        this._addPolygon(polygon_config);
+        this._addPolygon(polygon_config, object_map);
     }
 
-    _addText(text_config) {
-        this.object_map[text_config.uuid] = this.add.text(
+    _addText(text_config, object_map) {
+        object_map[text_config.uuid] = this.add.text(
             text_config.x * this.width,
             text_config.y * this.height,
             text_config.text,
             { fontFamily: text_config.font, fontSize: text_config.size, color: "#000"}
         );
-        this.object_map[text_config.uuid].setDepth(1)
+        object_map[text_config.uuid].setDepth(3)
     }
 
-    _updateText(text_config) {
-        let text = this.object_map[text_config.uuid];
+    _updateText(text_config, object_map) {
+        let text = object_map[text_config.uuid];
         text.x = text_config.x * this.width;
         text.y = text_config.y * this.height;
         text.setText(text_config.text);

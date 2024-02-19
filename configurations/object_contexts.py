@@ -31,13 +31,16 @@ class Sprite:
     uuid: str
     x: int
     y: int
-    image_name: str | None = None
-    sprite_sheet_name: str | None = None
+    height: int
+    width: int
+    image_name: str | None = None  # texture name
+    frame: str | int | None = None
     object_size: int | None = None
     angle: int | None = None
     depth: int = 1
     animation: str | None = None
     object_type: str = "sprite"
+    permanent: bool = False
 
     def as_dict(self) -> dict[str, typing.Any]:
         return dataclasses.asdict(self)
@@ -53,6 +56,7 @@ class Line:
     fill_below: bool = False
     fill_above: bool = False
     depth: int = -1
+    permanent: bool = False
 
     def as_dict(self) -> dict[str, typing.Any]:
         return dataclasses.asdict(self)
@@ -68,6 +72,7 @@ class Circle:
     alpha: float = 1
     object_type: str = "circle"
     depth: int = -1
+    permanent: bool = False
 
     def as_dict(self) -> dict[str, typing.Any]:
         return dataclasses.asdict(self)
@@ -81,6 +86,7 @@ class Polygon:
     alpha: float = 1
     object_type: str = "polygon"
     depth: int = -1
+    permanent: bool = False
 
     def as_dict(self) -> dict[str, typing.Any]:
         return dataclasses.asdict(self)
@@ -97,6 +103,39 @@ class Text:
     font: str = "Arial"
     depth: int = -1
     object_type: str = "text"
+    permanent: bool = False
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class AtlasSpec:
+    name: str
+    img_path: str
+    atlas_path: str
+    object_type: str = "atlas_spec"
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class MultiAtlasSpec:
+    name: str
+    img_path: str
+    atlas_path: str
+    object_type: str = "multi_atlas_spec"
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class ImgSpec:
+    name: str
+    img_path: str
+    object_type: str = "img_spec"
 
     def as_dict(self) -> dict[str, typing.Any]:
         return dataclasses.asdict(self)
