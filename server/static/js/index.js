@@ -98,6 +98,7 @@ function updateWaitroomText(data, timer) {
 
 socket.on("game_reset", function(data) {
     graphics_end()
+    $('#hudText').hide()
     disable_key_listener();
 
 
