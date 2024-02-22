@@ -280,6 +280,7 @@ def _leave_game(subject_id) -> bool:
         # elif game_was_active and game.is_ready_to_start():
         #     raise ValueError("This shouldn't happen without spectators.")
         elif game_was_active and not game_is_empty:
+            print("plyyer exited with other players active")
             exit_status = utils.GameExitStatus.ActiveWithOtherPlayers
             game.tear_down()
         else:
@@ -361,9 +362,16 @@ def on_leave(data):
         else:
             game_id = None
 
-        game_was_active = _leave_game(subject_id)
+        # game_was_active = _leave_game(subject_id)
 
-        if game_was_active:
+        game_exit_status = _leave_game(subject_id)
+        if game_exit_status in [
+            utils.GameExitStatus.ActiveNoPlayers,
+            utils.GameExitStatus.ActiveWithOtherPlayers,
+        ]:
+            print(
+                f"Ending game bc subject {subject_id} left room {game_id}; Exit Status: {game_exit_status}"
+            )
             socketio.emit(
                 "end_game",
                 {},
@@ -376,6 +384,13 @@ def on_leave(data):
 @socketio.on("disconnect")
 def on_disconnect():
     subject_id = flask.request.sid
+    game = _get_existing_game(subject_id)
+    print(
+        "Subject",
+        subject_id,
+        "disconnected, Game ID:",
+        game.game_id if game is not None else "No existing game.",
+    )
 
     if subject_id not in SUBJECTS:
         return

@@ -78,6 +78,7 @@ socket.on("waiting_room", function(data) {
         if (timer <= 0) {
             clearInterval(waitroomInterval);
             $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
+            console.log("Leaving game due to waitroom ending...")
             setTimeout(function() {
                 socket.emit("leave_game", {session_id: window.sessionId})
             }, 10_000)
@@ -232,6 +233,7 @@ socket.on('end_game', function(data) {
     graphics_end();
     $('#hudText').hide()
     disable_key_listener()
+    console.log("leaving game since game ended")
     socket.emit("leave_game", {session_id: window.sessionId})
 
     $('#finalPageHeaderText').show()

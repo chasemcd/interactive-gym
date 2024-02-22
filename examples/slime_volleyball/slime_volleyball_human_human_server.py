@@ -63,7 +63,7 @@ config = (
         action_mapping=action_mapping,
         num_episodes=10,
     )
-    .hosting(port=5704, host="0.0.0.0")
+    .hosting(port=5704, host="0.0.0.0", max_concurrent_games=10)
     .user_experience(
         page_title="Slime Volleyball",
         welcome_header_text="Slime Volleyball",
