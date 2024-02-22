@@ -49,16 +49,17 @@ class RemoteConfig:
         # user_experience
         self.redirect_url: str | None = None  # send user here after experiment.
         self.redirect_timeout: int = 5_000  # 5k ms = 5 seconds default
+        self.instructions_html_file: str | None = None
         self.page_title: str = "interactive-gym"
-        self.game_header_text: str = "Game Page Header"
-        self.welcome_header_text: str = "Start Page Header"
-        self.welcome_text: str = "Start Page Text"
-        self.game_page_text: str = "Game Page Text"
-        self.between_episode_header: str = "Between Episode Page Header"
-        self.between_episode_text: str = "Between Episode Page Text"
-        self.final_page_text: str = "Final page text"
-        self.final_page_header_text: str = "Final Page Header"
-        self.instructions: str = "Game Instructions"  # can pass html
+        self.game_header_text: str = ""
+        self.welcome_header_text: str = ""
+        self.welcome_text: str = ""
+        self.game_page_text: str = ""
+        self.between_episode_header: str = ""
+        self.between_episode_text: str = ""
+        self.final_page_text: str = ""
+        self.final_page_header_text: str = ""
+        self.instructions: str = ""  # can pass html
         self.reset_timeout: int = 3000
 
         # logging
@@ -223,6 +224,7 @@ class RemoteConfig:
     def user_experience(
         self,
         page_title: str | None = None,
+        instructions_html_file: str | None = None,
         redirect_url: str | None = None,
         redirect_timeout: int | None = None,
         waitroom_timeout: int | None = None,
@@ -266,6 +268,9 @@ class RemoteConfig:
 
         if page_title is not None:
             self.page_title = page_title
+
+        if instructions_html_file is not None:
+            self.instructions_html_file = instructions_html_file
 
         return self
 

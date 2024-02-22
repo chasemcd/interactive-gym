@@ -8,7 +8,7 @@ from configurations import remote_config
 from configurations import object_contexts
 from server import remote_game
 
-ASSET_PATH = "static/assets/"
+ASSET_PATH = "static/assets/overcooked/sprites"
 TILE_SIZE = 45
 DIR_TO_CARDINAL_DIRECTION = {
     0: "EAST",
@@ -31,7 +31,7 @@ def hud_text_fn(game: remote_game.RemoteGame) -> str:
     score = int(
         list(game.episode_rewards.values())[0] if len(game.episode_rewards) > 0 else 0
     )
-    return f"Round Score: {score:03d} Round Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
+    return f"Score: {score:03d}   |    Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
 
 
 def overcooked_preload_assets_spec() -> (

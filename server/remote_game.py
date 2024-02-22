@@ -43,6 +43,10 @@ class RemoteGame:
         self.env = None
         self.obs: np.ndarray | dict[str, typing.Any] | None = None
         self.game_id = game_id
+        assert (
+            game_id is not None
+        ), f"Must pass valid game id! Got {game_id} but expected an int."
+
         self.tick_num = 0
         self.episode_num = 0
         self.episode_rewards = collections.defaultdict(lambda: 0)

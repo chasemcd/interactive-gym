@@ -55,7 +55,7 @@ USER_ROOMS = utils.ThreadSafeDict()
 FREE_MAP = utils.ThreadSafeDict()
 
 # Number of games allowed
-MAX_CONCURRENT_GAMES = 5
+MAX_CONCURRENT_GAMES = 1
 
 # Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
 FREE_IDS = queue.Queue(maxsize=MAX_CONCURRENT_GAMES)
@@ -145,6 +145,7 @@ def join_or_create_game(data):
             return
 
         with game.lock:
+            print(f"Subject {subject_id} joining room {game.game_id}")
             flask_socketio.join_room(game.game_id)
             USER_ROOMS[subject_id] = game.game_id
 
@@ -227,11 +228,10 @@ def _cleanup_game(game: remote_game.RemoteGame):
 
     FREE_MAP[game.game_id] = True
     FREE_IDS.put(game.game_id)
+    del GAMES[game.game_id]
 
     if game.game_id in ACTIVE_GAMES:
         ACTIVE_GAMES.remove(game.game_id)
-
-    del GAMES[game.game_id]
 
 
 def _leave_game(subject_id) -> bool:
@@ -242,6 +242,7 @@ def _leave_game(subject_id) -> bool:
         return False
 
     with game.lock:
+
         flask_socketio.leave_room(game.game_id)
         del USER_ROOMS[subject_id]
         del RESET_EVENTS[game.game_id][subject_id]
@@ -249,12 +250,24 @@ def _leave_game(subject_id) -> bool:
 
         game_was_active = game.game_id in ACTIVE_GAMES
         game_is_empty = game.cur_num_human_players() == 0
+
+        # If the game was running but there are no other players,
+        # we can cleanly end it.
         if game_was_active and game_is_empty:
+            exit_status = utils.GameExitStatus.ActiveNoPlayers
             game.tear_down()
+
+        # If the game wasn't active and there are no players,
+        # cleanup the traces of the game.
         elif game_is_empty:
+            exit_status = utils.GameExitStatus.InactiveNoPlayers
             _cleanup_game(game)
+
+        # if the game was not active and not empty, redirect the players back to the waitroom.
         elif not game_was_active:
+            exit_status = utils.GameExitStatus.InactiveWithOtherPlayers
             remaining_wait_time = (WAITROOM_TIMEOUTS[game.game_id] - time.time()) * 1000
+            # TODO(chase): check if we need this?
             socketio.emit(
                 "waiting_room",
                 {
@@ -264,12 +277,15 @@ def _leave_game(subject_id) -> bool:
                 },
                 room=game.game_id,
             )
-        elif game_was_active and game.is_ready_to_start():
-            pass
+        # elif game_was_active and game.is_ready_to_start():
+        #     raise ValueError("This shouldn't happen without spectators.")
         elif game_was_active and not game_is_empty:
+            exit_status = utils.GameExitStatus.ActiveWithOtherPlayers
             game.tear_down()
+        else:
+            raise NotImplementedError("Something went wrong on exit!")
 
-    return game_was_active
+    return exit_status
 
 
 @app.route("/")
@@ -279,22 +295,25 @@ def index(*args):
     return flask.redirect(flask.url_for("user_index", subject_name=subject_name))
 
 
-@app.route("/instructions")
-def instructions():
-    """Display instructions page."""
-    return flask.render_template(
-        "instructions.html",
-        async_mode=socketio.async_mode,
-    )
-
-
 @app.route("/<subject_name>")
 def user_index(subject_name):
+
+    instructions_html = ""
+    if CONFIG.instructions_html_file is not None:
+        import os
+
+        try:
+            with open(CONFIG.instructions_html_file, "r", encoding="utf-8") as f:
+                instructions_html = f.read()
+        except FileNotFoundError:
+            instructions_html = f"<p> Unable to load instructions file {CONFIG.instructions_html_file}.</p>"
+
     return flask.render_template(
         "index.html",
         async_mode=socketio.async_mode,
         welcome_header_text=CONFIG.welcome_header_text,
         welcome_text=CONFIG.welcome_text,
+        indstructions_html=instructions_html,
         game_header_text=CONFIG.game_header_text,
         game_page_text=CONFIG.game_page_text,
         final_page_header_text=CONFIG.final_page_header_text,
@@ -324,28 +343,34 @@ def on_connect():
 @socketio.on("leave_game")
 def on_leave(data):
     subject_id = flask.request.sid
-
     client_session_id = data.get("session_id")
 
     # Validate session
     if not is_valid_session(client_session_id):
         flask_socketio.emit(
             "invalid_session",
-            {"message": "Session is invalid. Please reconnect."},
+            {"message": "Session is invalid. Please refresh the page."},
             room=subject_id,
         )
         return
 
     with SUBJECTS[subject_id]:
+        game = _get_existing_game(subject_id=subject_id)
+        if game is not None:
+            game_id = game.game_id
+        else:
+            game_id = None
+
         game_was_active = _leave_game(subject_id)
 
         if game_was_active:
             socketio.emit(
                 "end_game",
                 {},
+                room=game_id,
             )
         else:
-            socketio.emit("end_lobby")
+            socketio.emit("end_lobby", room=game_id)
 
 
 @socketio.on("disconnect")
@@ -452,7 +477,9 @@ def handle_reset_complete(data):
 
 @socketio.on("pong")
 def on_pong(data):
-    socketio.emit("pong_response", {"timestamp": data.get("timestamp")})
+    socketio.emit(
+        "pong_response", {"timestamp": data.get("timestamp")}, room=flask.request.sid
+    )
 
 
 def run_game(game: remote_game.RemoteGame):
@@ -467,9 +494,6 @@ def run_game(game: remote_game.RemoteGame):
             socketio.emit("request_pressed_keys", {})
         with game.lock:
             game.tick()
-
-        # if game.tick_num % 2 != 0:
-        #     continue
 
         render_game(game)
         socketio.sleep(1 / game.config.fps)
@@ -505,13 +529,13 @@ def run_game(game: remote_game.RemoteGame):
         if game.status != remote_game.GameStatus.Inactive:
             game.tear_down()
 
-        _cleanup_game(game)
-
         socketio.emit(
             "end_game",
             {"redirect_url": CONFIG.redirect_url, "timeout": CONFIG.redirect_timeout},
             room=game.game_id,
         )
+
+        _cleanup_game(game)
 
 
 def render_game(game: remote_game.RemoteGame):
@@ -562,7 +586,8 @@ def run(config):
     FREE_IDS = queue.Queue(maxsize=CONFIG.max_concurrent_games)
 
     # Initialize our ID tracking data
-    for i in range(CONFIG.max_concurrent_games):
+    # TODO(chase): Starting at 1 fixed broadcasting to players on the instructions page. Is the default room 0?
+    for i in range(1, CONFIG.max_concurrent_games + 1):
         FREE_IDS.put(i)
         FREE_MAP[i] = True
         RESET_EVENTS[i] = utils.ThreadSafeDict()

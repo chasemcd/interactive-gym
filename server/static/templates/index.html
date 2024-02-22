@@ -5,10 +5,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css?family=Press Start 2P');
 
+
+        /* Apply 'Press Start 2P' only to specific headers */
+        #gameHeaderText, #finalPageHeaderText, #welcomeHeader {
+            font-family: 'Press Start 2P', cursive;
+        }
+
         /* General page styling */
         body, html {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 18px;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
             background-color: #fff; /* white background */
             color: #000; /* black text */
             text-align: center; /* Center aligning everything */
@@ -20,8 +26,8 @@
 
         .text-container {
             max-width: 800px; /* Maximum width */
-            font-family: 'Press Start 2P', cursive;
-            font-size: 18px;
+            font-family: Arial, sans-serif;
+            font-size: 20px;
             text-align: center; /* Center aligning everything */
         }
 
@@ -42,27 +48,38 @@
             margin-top: 20px;
         }
 
-        #gamePageText, #startPageText, #hudText {
-            font-size: 10px;
+        #gamePageText, #startPageText {
+            font-size: 20px;
         }
 
-        #reset-game, #waitroomText {
+        #reset-game, #waitroomText, #hudText {
             background-color: white; /* White background color */
             border: 2px solid black; /* Black border */
-            padding: 20px; /* Space around the text */
+            padding: 10px; /* Space around the text */
             border-radius: 10px; /* Rounded corners for the box */
             color: black; /* Text color */
-            font-size: 10px; /* Adjust as per your preference */
+            font-size: 20px; /* Adjust as per your preference */
             box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: Adds a shadow for a 3D effect */
+        }
+
+        #hudText {
+            display: inline-block; /* Makes the element's width fit its content */
+            font-family: 'Press Start 2P', cursive;
+            background-color: white; /* White background color */
+            border: 2px solid black; /* Black border */
+            padding: 8px; /* Space around the text */
+            border-radius: 10px; /* Rounded corners for the box */
+            color: black; /* Text color */
+            font-size: 14px; /* Adjust as per your preference */
         }
 
         #errorText {
             background-color: white; /* White background color */
             border: 2px solid red; /* red border */
-            padding: 20px; /* Space around the text */
+            padding: 10px; /* Space around the text */
             border-radius: 10px; /* Rounded corners for the box */
             color: black; /* Text color */
-            font-size: 10px; /* Adjust as per your preference */
+            font-size: 20px; /* Adjust as per your preference */
             box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: Adds a shadow for a 3D effect */
         }
 
@@ -74,7 +91,7 @@
             padding: 5px 10px; /* Padding around the text */
             border-radius: 5px; /* Rounded corners */
             color: lightgrey; /* Light grey text color */
-            font-size: 10px; /* Font size */
+            font-size: 16px; /* Font size */
         }
 
         /* Style for the game container */
@@ -92,7 +109,6 @@
         <!-- Texts for start -->
         <h1 id="welcomeHeader">{{ welcome_header_text }}</h1>
         <p id="welcomeText">{{ welcome_text }}</p>
-        <p id="instructions">{{ instructions }}</p>
 
         <p id="waitroomText" style="display: none;"> {{ waitroomText }}</p>
 
@@ -112,6 +128,10 @@
 
         <!-- Game container -->
         <div id="gameContainer"></div>
+
+        <div id="instructions" style="text-align: left;">
+            {{ indstructions_html|safe }}
+        </div>
 
         <!-- Start button -->
         <button id="startButton">Start</button>

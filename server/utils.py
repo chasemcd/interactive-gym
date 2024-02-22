@@ -1,6 +1,7 @@
 """
 This is all stolen from: https://github.com/HumanCompatibleAI/overcooked-demo/blob/master/server/utils.py
 """
+
 from threading import Lock
 
 
@@ -63,6 +64,13 @@ class ThreadSafeDict(dict):
             else:
                 retval = None
         return retval
+
+
+class GameExitStatus:
+    ActiveWithOtherPlayers = "active_with_other_players"
+    ActiveNoPlayers = "active_no_players"
+    InactiveNoPlayers = "inactive_no_players"
+    InactiveWithOtherPlayers = "inactive_with_other_players"
 
 
 class _Available:

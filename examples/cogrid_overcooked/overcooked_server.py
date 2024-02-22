@@ -67,13 +67,13 @@ config = (
         num_episodes=2,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
     )
-    .hosting(port=5703, host="0.0.0.0")
+    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=5)
     .user_experience(
-        page_title="Single Agent Overcooked",
+        page_title="Overcooked",
+        instructions_html_file="server/static/templates/overcooked_instructions.html",
         welcome_header_text="Overcooked",
-        welcome_text="In this game, you'll attempt to deliver as many cooked dishes as possible. You'll pick up onions (in the pile on the left), drop three of them in the grey pot (top), pick up a bowl (right stack), and pick up the soup to put into the bowl when it's done cooking. You'll score one point for each soup you deliver to the green delivery area.",
         game_header_text="Overcooked",
-        game_page_text="Use the arrow keys to move, w to pick up and drop, and q to deliver dishes to the green delivery area! ",
+        game_page_text="Use the arrow keys to move, w to pick up and drop, and q to deliver dishes to the delivery area! ",
         final_page_header_text="Overcooked",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://www.google.com/",

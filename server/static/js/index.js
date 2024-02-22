@@ -183,8 +183,10 @@ socket.on('environment_state', function(data) {
     $('#hudText').text(data.hud_text)
 
     addStateToBuffer(data);
-    // Emit pong with timestamp
-    socket.emit("pong", { timestamp: Date.now() });
+    // Emit pong with timestamp every 10 steps
+    if (data.step % 10 == 0) {
+        socket.emit("pong", { timestamp: Date.now() });
+    }
 });
 
 
@@ -225,8 +227,10 @@ function calculateMedian(arr) {
 }
 
 socket.on('end_game', function(data) {
+    console.log("game ended!")
     // Hide game data and display game-over html
     graphics_end();
+    $('#hudText').hide()
     disable_key_listener()
     socket.emit("leave_game", {session_id: window.sessionId})
 
