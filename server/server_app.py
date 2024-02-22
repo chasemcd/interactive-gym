@@ -418,16 +418,43 @@ def on_action(data):
         )
         return
 
+    pressed_keys = data["pressed_keys"]
+
+    # No keys pressed, don't execute other logic.
+    if len(pressed_keys) == 0:
+        return
+    elif len(pressed_keys) > 1:
+        if not CONFIG.game_has_composite_actions:
+            pressed_keys = pressed_keys[:1]
+        else:
+            pressed_keys = generate_composite_action(pressed_keys)
+
     game = _get_existing_game(subject_id)
 
     if game is None:
         return
 
-    pressed_keys = data["pressed_keys"]
+    if not any([k in CONFIG.action_mapping for k in pressed_keys]):
+        return
 
+    action = None
+    for k in pressed_keys:
+        if k in CONFIG.action_mapping:
+            action = CONFIG.action_mapping[k]
+            break
+
+    assert action is not None
+
+    game.enqueue_action(subject_id, action)
+
+
+def generate_composite_action(pressed_keys) -> list[tuple[str]]:
+
+    # TODO(chase): set this in the config so we don't recalculate every time
     max_composite_action_size = max(
         [len(k) for k in CONFIG.action_mapping.keys() if isinstance(k, tuple)] + [0]
     )
+
     if max_composite_action_size > 1:
         composite_actions = [
             action for action in CONFIG.action_mapping if isinstance(action, tuple)
@@ -444,18 +471,7 @@ def on_action(data):
                 pressed_keys = [composite]
                 break
 
-    if not any([k in CONFIG.action_mapping for k in pressed_keys]):
-        return
-
-    action = None
-    for k in pressed_keys:
-        if k in CONFIG.action_mapping:
-            action = CONFIG.action_mapping[k]
-            break
-
-    assert action is not None
-
-    game.enqueue_action(subject_id, action)
+    return pressed_keys
 
 
 @socketio.on("reset_complete")
@@ -501,16 +517,18 @@ def run_game(game: remote_game.RemoteGame):
     end_status = [remote_game.GameStatus.Inactive, remote_game.GameStatus.Done]
     game.reset()
     render_game(game)
+    if CONFIG.input_mode == configuration_constants.InputModes.PressedKeys:
+        socketio.emit("request_pressed_keys", {})
     socketio.sleep(1 / game.config.fps)
 
     while game.status not in end_status:
 
-        if CONFIG.input_mode == configuration_constants.InputModes.PressedKeys:
-            socketio.emit("request_pressed_keys", {})
         with game.lock:
             game.tick()
 
         render_game(game)
+        if CONFIG.input_mode == configuration_constants.InputModes.PressedKeys:
+            socketio.emit("request_pressed_keys", {})
         socketio.sleep(1 / game.config.fps)
 
         if game.status == remote_game.GameStatus.Reset:

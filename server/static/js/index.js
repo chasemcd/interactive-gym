@@ -26,6 +26,12 @@ socket.on('invalid_session', function(data) {
 
 
 socket.on("start_game", function(data) {
+    // Clear the waitroomInterval to stop the waiting room timer
+    if (waitroomInterval) {
+        clearInterval(waitroomInterval);
+    }
+
+
     $("#welcomeHeader").hide();
     $("#welcomeText").hide();
     $("#instructions").hide();

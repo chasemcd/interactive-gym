@@ -31,6 +31,7 @@ class RemoteConfig:
         self.human_id: str | int | None = None
         self.default_action: int | str | None = None
         self.input_mode: str = configuration_constants.InputModes.PressedKeys
+        self.game_has_composite_actions: bool = False
 
         # rendering
         self.env_to_state_fn: typing.Callable | None = None
@@ -199,6 +200,7 @@ class RemoteConfig:
             sorted_tuple_action_map = {}
             for k, v in action_mapping.items():
                 if isinstance(k, tuple):
+                    self.game_has_composite_actions = True
                     sorted_tuple_action_map[tuple(sorted(k))] = v
                 else:
                     sorted_tuple_action_map[k] = v
