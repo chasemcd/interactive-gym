@@ -259,6 +259,7 @@ socket.on('request_pressed_keys', function(data) {
 });
 
 function enable_key_listener(input_mode) {
+    pressedKeys = {};
     $(document).on('keydown', function(event) {
 
         // If we're using the single keystroke input method, we just send the key when it's pressed.
@@ -290,4 +291,5 @@ function enable_key_listener(input_mode) {
 function disable_key_listener() {
         $(document).off('keydown');
         $(document).off('keyup');
+        pressedKeys = {};
 }

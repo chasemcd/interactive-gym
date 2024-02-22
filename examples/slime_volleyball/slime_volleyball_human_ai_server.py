@@ -67,9 +67,9 @@ config = (
     .user_experience(
         page_title="Slime Volleyball",
         welcome_header_text="Slime Volleyball",
-        welcome_text="This is the Slime Volleyball game!",
+        instructions_html_file="server/static/templates/slime_volleyball_instructions.html",
         game_header_text="Slime Volleyball",
-        game_page_text="Use the arrow keys to move the character on the right!",
+        game_page_text="Use the arrow keys to move your character!",
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://www.google.com/",
