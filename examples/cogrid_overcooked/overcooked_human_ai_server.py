@@ -67,7 +67,7 @@ config = (
         num_episodes=2,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
     )
-    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=5)
+    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=10)
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",

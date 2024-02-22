@@ -28,7 +28,7 @@ Noop = 6
 
 POLICY_MAPPING = {
     "agent-0": PolicyTypes.Human,
-    "agent-1": PolicyTypes.Random,
+    "agent-1": PolicyTypes.Human,
 }
 
 
@@ -67,7 +67,7 @@ config = (
         num_episodes=2,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
     )
-    .hosting(port=5702, host="0.0.0.0", max_concurrent_games=5)
+    .hosting(port=5702, host="0.0.0.0", max_concurrent_games=10)
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",
