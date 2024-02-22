@@ -6,6 +6,12 @@ from configurations import object_contexts
 from slime_volleyball import slimevolley_env
 from slime_volleyball.core import constants
 from configurations import remote_config
+from server import remote_game
+
+
+def hud_text_fn(game: remote_game.RemoteGame) -> str:
+    """Function to create HUD text to display"""
+    return f"Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
 
 
 Y_OFFSET = 0.018

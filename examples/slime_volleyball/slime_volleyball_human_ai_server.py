@@ -55,6 +55,7 @@ config = (
     .rendering(
         fps=30,
         env_to_state_fn=slime_volleyball_utils.slime_volleyball_env_to_rendering,
+        hud_text_fn=slime_volleyball_utils.hud_text_fn,
         game_width=600,
         game_height=400,
     )
