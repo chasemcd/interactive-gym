@@ -91,7 +91,7 @@ config = (
         # ),  # fake waitroom of 5 to 25 seconds
         welcome_header_text="Overcooked",
         game_header_text="Overcooked",
-        game_page_text="Use the arrow keys to move, w to pick up and drop, and q to deliver dishes to the delivery area! ",
+        game_page_text="Use the arrow keys to move and W to pick up and drop. Drop dishes in the delivery area to earn points! ",
         final_page_header_text="Overcooked",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_agZ3V7Uj4jfVweG",
