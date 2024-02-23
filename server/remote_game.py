@@ -35,6 +35,10 @@ class RemoteGame:
         # Players and actions
         self.pending_actions = None
         self.reset_pending_actions()
+
+        self.state_queues = None
+        self.reset_state_queues()
+
         self.human_players = {}
         self.bot_players = {}
         self.bot_threads = {}
@@ -70,6 +74,22 @@ class RemoteGame:
                     self.config.load_policy_fn is not None
                 ), "Must provide a method to load policies via policy name to RemoteConfig!"
                 self.bot_players[agent_id] = self.config.load_policy_fn(policy_id)
+
+                # TODO(chase): put this in a separate function
+                # self.bot_threads[agent_id] = threading.Thread(
+                #     target=self.policy_consumer, args=(agent_id,)
+                # )
+
+    def policy_consumer(self, agent_id: str | int) -> None:
+        while self.status == GameStatus.Active:
+            try:
+                state = self.state_queues[agent_id].get(block=False)
+            except queue.Empty:
+                continue
+
+            policy = self.bot_players[agent_id]
+            action = self.config.policy_inference_fn(state, policy)
+            self.enqueue_action(agent_id, action)
 
     def get_available_human_player_ids(self) -> list[str]:
         """List the available human player IDs"""
@@ -114,6 +134,10 @@ class RemoteGame:
 
     def tear_down(self):
         self.status = GameStatus.Inactive
+
+        for bot_thread in self.bot_threads.values():
+            bot_thread.join()
+
         for q in self.pending_actions.values():
             q.queue.clear()
 
@@ -122,11 +146,8 @@ class RemoteGame:
         if self.status != GameStatus.Active:
             return
 
-        if subject_id not in self.human_players.values():
-            return
-
         try:
-            self.pending_actions[subject_id].put(action)
+            self.pending_actions[subject_id].put(action, block=False)
         except queue.Full:
             pass
 
@@ -139,6 +160,7 @@ class RemoteGame:
         self.human_players[player_id] = identifier
 
     def tick(self) -> None:
+
         # Player actions
         player_actions = {
             pid: (
@@ -149,41 +171,51 @@ class RemoteGame:
             for pid, sid in self.human_players.items()
         }
 
-        # # bot actions
-        # bot_actions = {
-        #     pid: self.config.policy_inference_fn(self.obs[pid], bot)
-        #     if self.tick_num % self.config.frame_skip == 0 and bot != PolicyTypes.Random
-        #     else self.config.default_action
-        #     for pid, bot in self.bot_players.items()
-        # }
-
-        # TODO(chase): add frame skip! also we shouldn't use default action on frame skip! should just repeat the last action
+        # Bot actions
         for pid, bot in self.bot_players.items():
-            if bot == PolicyTypes.Random:
+
+            # set default action
+            # TODO(chase): add option for this to be the previous action
+            player_actions[pid] = self.config.default_action
+
+            # If the bot is random, just sample the action space at
+            # frame_skip intervals
+            if (
+                bot == PolicyTypes.Random
+                and self.tick_num % self.config.frame_skip == 0
+            ):
                 if isinstance(self.env.action_space, spaces.Dict) or isinstance(
                     self.env.action_space, dict
                 ):
                     player_actions[pid] = self.env.action_space[pid].sample()
                 else:
                     player_actions[pid] = self.env.action_space.sample()
-            else:
+
+            # If we have a specified policy, pop an action from the pending actions queue
+            # if there are any
+            # TODO(Chase): figure out why this was hanging
+            # elif self.pending_actions[pid].qsize() > 0:
+            #     player_actions[pid] = self.pending_actions[pid].get(block=False)
+            elif self.tick_num % self.config.frame_skip == 0:
                 player_actions[pid] = self.config.policy_inference_fn(
                     self.obs[pid], bot
                 )
-
-        if len(player_actions) == 1:
-            # not multiagent
-            player_actions = list(player_actions.values())[0]
 
         try:
             self.obs, rewards, terminateds, truncateds, _ = self.env.step(
                 player_actions
             )
+
         except AssertionError:
             player_actions = list(player_actions.values())[0]
             self.obs, rewards, terminateds, truncateds, _ = self.env.step(
                 player_actions
             )
+
+        # print("queuing obs")
+        # if self.tick_num % self.config.frame_skip == 0:
+        #     self.enqueue_observations()
+
         if not isinstance(rewards, dict):
             self.episode_rewards[0] += rewards
         else:
@@ -201,13 +233,36 @@ class RemoteGame:
             else:
                 self.status = GameStatus.Done
 
+    def enqueue_observations(self) -> None:
+        """Add self.obs to the state queues for all bots"""
+        if self.status != GameStatus.Active:
+            return
+
+        a = "b"
+        for pid, obs in self.obs.items():
+            if pid not in self.bot_players:
+                continue
+
+            try:
+                self.state_queues[pid].put(obs, block=False)
+            except queue.Full:
+                pass
+
     def reset_pending_actions(self) -> None:
         self.pending_actions = collections.defaultdict(lambda: queue.Queue(maxsize=1))
+
+    def reset_state_queues(self) -> None:
+        self.state_queues = collections.defaultdict(lambda: queue.Queue(maxsize=1))
 
     def reset(self, seed: int | None = None) -> None:
         self.reset_pending_actions()
         self.obs, _ = self.env.reset(seed=seed)
         self.status = GameStatus.Active
+
         self.tick_num = 0
+
+        # if self.tick_num % self.config.frame_skip == 0:
+        #     self.enqueue_observations()
+
         self.episode_num += 1
         self.episode_rewards = collections.defaultdict(lambda: 0)

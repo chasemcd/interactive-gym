@@ -5,6 +5,7 @@ from server import server_app
 from server.remote_game import PolicyTypes
 from configurations import configuration_constants
 from examples.cogrid_overcooked import overcooked_utils
+from utils import onnx_inference_utils
 
 """
 This is an example script for running MountainCar-v0 in
@@ -28,7 +29,7 @@ Noop = 6
 
 POLICY_MAPPING = {
     "agent-0": PolicyTypes.Human,
-    "agent-1": PolicyTypes.Random,
+    "agent-1": "examples/cogrid_overcooked/policies/model.onnx",
 }
 
 
@@ -48,9 +49,22 @@ action_mapping = {
 }
 
 
+def dummy_query_fn(*args, **kwargs):
+    return 6
+
+
+def dummy_load_fn(bot, *args, **kwargs):
+    return bot
+
+
 config = (
     remote_config.RemoteConfig()
-    .policies(policy_mapping=POLICY_MAPPING)
+    .policies(
+        policy_mapping=POLICY_MAPPING,
+        policy_inference_fn=onnx_inference_utils.onnx_model_inference_fn,
+        load_policy_fn=onnx_inference_utils.load_onnx_policy_fn,
+        frame_skip=1,
+    )
     .environment(env_creator=env_creator, env_name="cogrid_overcooked")
     .rendering(
         fps=10,
@@ -71,10 +85,10 @@ config = (
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",
-        waitroom_time_randomization_interval_s=(
-            5,
-            25,
-        ),  # fake waitroom of 5 to 25 seconds
+        # waitroom_time_randomization_interval_s=(
+        #     5,
+        #     25,
+        # ),  # fake waitroom of 5 to 25 seconds
         welcome_header_text="Overcooked",
         game_header_text="Overcooked",
         game_page_text="Use the arrow keys to move, w to pick up and drop, and q to deliver dishes to the delivery area! ",
