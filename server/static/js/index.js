@@ -13,6 +13,11 @@ socket.on('server_session_id', function(data) {
     window.sessionId = data.session_id;
 });
 
+socket.on('connect', function() {
+    // Emit an event to the server with the subject_name
+    socket.emit('register_subject_name', { subject_name: subjectName });
+});
+
 
 socket.on('invalid_session', function(data) {
     alert(data.message);
@@ -30,7 +35,6 @@ socket.on("start_game", function(data) {
     if (waitroomInterval) {
         clearInterval(waitroomInterval);
     }
-
 
     $("#welcomeHeader").hide();
     $("#welcomeText").hide();
@@ -249,14 +253,16 @@ socket.on('end_game', function(data) {
     $("#gameContainer").hide();
 
 
-    // Set a timeout for redirection
+    socket.emit('end_game_request_redirect')
+});
+
+
+socket.on('end_game_redirect', function(data) {
     setTimeout(function() {
         // Redirect to the specified URL after the timeout
         window.location.href = data.redirect_url;
     }, data.redirect_timeout); // 5000 milliseconds = 5 seconds
 });
-
-
 
 
 

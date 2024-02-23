@@ -48,6 +48,9 @@ WAITROOM_TIMEOUTS = utils.ThreadSafeDict()
 # Mapping of users to locks associated with the ID. Enforces user-level serialization
 USERS = utils.ThreadSafeDict()
 
+# Map ids to the URL ids
+SUBJECT_ID_MAP = utils.ThreadSafeDict()
+
 # Mapping of user id's to the current game (room) they are in
 USER_ROOMS = utils.ThreadSafeDict()
 
@@ -152,11 +155,11 @@ def join_or_create_game(data):
             # add unique event to sync resets across players
             RESET_EVENTS[game.game_id][subject_id] = threading.Event()
 
-            # TODO(chase): Figure out how to specify the ID in the URL for debugging
             available_human_player_ids = game.get_available_human_player_ids()
             game.add_player(random.choice(available_human_player_ids), subject_id)
 
             if game.is_ready_to_start():
+                print("Game ready, starting!")
                 WAITING_GAMES.remove(game.game_id)
                 ACTIVE_GAMES.add(game.game_id)
                 socketio.emit(
@@ -166,6 +169,7 @@ def join_or_create_game(data):
                 )
                 socketio.start_background_task(run_game, game)
             else:
+                print("Going to wait room")
                 remaining_wait_time = (
                     WAITROOM_TIMEOUTS[game.game_id] - time.time()
                 ) * 1000  # convert seconds to ms
@@ -299,10 +303,13 @@ def index(*args):
 @app.route("/<subject_name>")
 def user_index(subject_name):
 
+    if subject_name in list(SUBJECT_ID_MAP.values()):
+        return "Error: You have already played with under this subject ID!", 404
+
+    flask.session["subject_name"] = subject_name
+
     instructions_html = ""
     if CONFIG.instructions_html_file is not None:
-        import os
-
         try:
             with open(CONFIG.instructions_html_file, "r", encoding="utf-8") as f:
                 instructions_html = f.read()
@@ -319,7 +326,17 @@ def user_index(subject_name):
         game_page_text=CONFIG.game_page_text,
         final_page_header_text=CONFIG.final_page_header_text,
         final_page_text=CONFIG.final_page_text,
+        subject_name=subject_name,
     )
+
+
+@socketio.on("register_subject_name")
+def register_subject_name(data):
+    """Ties the subject name in the URL to the flask request sid"""
+    print("registering subject name", data["subject_name"])
+    subject_name = data["subject_name"]
+    sid = flask.request.sid
+    SUBJECT_ID_MAP[sid] = subject_name
 
 
 def is_valid_session(client_session_id):
@@ -328,16 +345,16 @@ def is_valid_session(client_session_id):
 
 @socketio.on("connect")
 def on_connect():
-    subject_socket_id = flask.request.sid
+    subject_id = flask.request.sid
 
-    if subject_socket_id in SUBJECTS:
+    if subject_id in SUBJECTS:
         return
 
-    SUBJECTS[subject_socket_id] = threading.Lock()
+    SUBJECTS[subject_id] = threading.Lock()
 
     # Send the current server session ID to the client
     flask_socketio.emit(
-        "server_session_id", {"session_id": SERVER_SESSION_ID}, room=subject_socket_id
+        "server_session_id", {"session_id": SERVER_SESSION_ID}, room=subject_id
     )
 
 
@@ -564,11 +581,28 @@ def run_game(game: remote_game.RemoteGame):
 
         socketio.emit(
             "end_game",
-            {"redirect_url": CONFIG.redirect_url, "timeout": CONFIG.redirect_timeout},
+            {},
             room=game.game_id,
         )
 
         _cleanup_game(game)
+
+
+@socketio.on("end_game_request_redirect")
+def on_request_redirect():
+    subject_id = flask.request.sid
+
+    redirect_url = CONFIG.redirect_url
+    if CONFIG.append_subject_name_to_redirect:
+        redirect_url += SUBJECT_ID_MAP[subject_id]
+
+    del SUBJECT_ID_MAP[subject_id]
+
+    socketio.emit(
+        "end_game_redirect",
+        {"redirect_url": redirect_url, "timeout": CONFIG.redirect_timeout},
+        room=subject_id,
+    )
 
 
 def render_game(game: remote_game.RemoteGame):

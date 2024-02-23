@@ -76,7 +76,7 @@ config = (
         game_page_text="Use the arrow keys to move, w to pick up and drop, and q to deliver dishes to the delivery area! ",
         final_page_header_text="Overcooked",
         final_page_text="Thanks for playing, you will be redirected shortly...",
-        redirect_url="https://www.google.com/",
+        redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_agZ3V7Uj4jfVweG",
         redirect_timeout=240_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
     )
