@@ -98,6 +98,41 @@ socket.on("waiting_room", function(data) {
 
 })
 
+
+var singlePlayerWaitroomInterval;
+socket.on("single_player_waiting_room", function(data) {
+    if (singlePlayerWaitroomInterval) {
+        clearInterval(singlePlayerWaitroomInterval);
+    }
+
+    var timer = Math.floor(data.s_remaining / 1000); // Convert milliseconds to seconds
+
+
+    // Update the text immediately to reflect the current state
+    updateWaitroomText(data, timer);
+
+    // Set up a new interval
+    waitroomInterval = setInterval(function () {
+        timer--;
+        updateWaitroomText(data, timer);
+
+        // Stop the timer if it reaches zero
+        if (timer <= 0) {
+            clearInterval(singlePlayerWaitroomInterval);
+            $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
+            console.log("Leaving game due to waitroom ending...")
+            setTimeout(function() {
+                socket.emit("leave_game", {session_id: window.sessionId})
+            }, 10_000)
+        }
+    }, 1000);
+    $("#waitroomText").show();
+
+})
+
+
+
+
 function updateWaitroomText(data, timer) {
     var minutes = parseInt(timer / 60, 10);
     var seconds = parseInt(timer % 60, 10);

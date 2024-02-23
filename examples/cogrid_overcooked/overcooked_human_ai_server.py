@@ -71,6 +71,10 @@ config = (
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",
+        waitroom_time_randomization_interval_s=(
+            5,
+            25,
+        ),  # fake waitroom of 5 to 25 seconds
         welcome_header_text="Overcooked",
         game_header_text="Overcooked",
         game_page_text="Use the arrow keys to move, w to pick up and drop, and q to deliver dishes to the delivery area! ",

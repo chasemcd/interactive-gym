@@ -52,7 +52,7 @@ class RemoteConfig:
         self.append_subject_name_to_redirect: bool = False
         self.redirect_timeout: int = 5_000  # 5k ms = 5 seconds default
         self.instructions_html_file: str | None = None
-        self.waitroom_time_randomization_interval: tuple[int, int] = (0, 0)
+        self.waitroom_time_randomization_interval_s: tuple[int, int] = (0, 0)
         self.page_title: str = "interactive-gym"
         self.game_header_text: str = ""
         self.welcome_header_text: str = ""
@@ -233,7 +233,7 @@ class RemoteConfig:
         append_subject_name_to_redirect: bool | None = None,
         redirect_timeout: int | None = None,
         waitroom_timeout: tuple[int, int] | None = None,
-        waitroom_time_randomization_interval: int | None = None,
+        waitroom_time_randomization_interval_s: int | None = None,
         welcome_header_text: str | None = None,
         game_header_text: str | None = None,
         game_page_text: str | None = None,
@@ -251,9 +251,9 @@ class RemoteConfig:
         if redirect_timeout is not None:
             self.redirect_timeout = redirect_timeout
 
-        if waitroom_time_randomization_interval is not None:
-            self.waitroom_time_randomization_interval = (
-                waitroom_time_randomization_interval
+        if waitroom_time_randomization_interval_s is not None:
+            self.waitroom_time_randomization_interval_s = (
+                waitroom_time_randomization_interval_s
             )
 
         if waitroom_timeout is not None:
@@ -287,6 +287,15 @@ class RemoteConfig:
             self.instructions_html_file = instructions_html_file
 
         return self
+
+    @property
+    def simulate_waiting_room(self) -> bool:
+        """
+        Returns a boolean indicating whether or not we're
+        forcing all participants to be in a waiting room, regardless
+        of if they're waiting for other players or not.
+        """
+        return max(self.waitroom_time_randomization_interval_s) > 0
 
     def to_dict(self, serializable=False):
         config = copy.deepcopy(vars(self))

@@ -158,16 +158,32 @@ def join_or_create_game(data):
             available_human_player_ids = game.get_available_human_player_ids()
             game.add_player(random.choice(available_human_player_ids), subject_id)
 
-            if game.is_ready_to_start():
-                print("Game ready, starting!")
-                WAITING_GAMES.remove(game.game_id)
-                ACTIVE_GAMES.add(game.game_id)
+            # If the game is ready to start and we're simulating a
+            # waiting room
+            if game.is_ready_to_start() and CONFIG.simulate_waiting_room:
+
                 socketio.emit(
-                    "start_game",
-                    {"config": CONFIG.to_dict(serializable=True)},
-                    room=game.game_id,
+                    "single_player_waiting_room",
+                    {
+                        "cur_num_players": game.cur_num_human_players(),
+                        "players_needed": len(game.get_available_human_player_ids())
+                        + 1,  # Add 1 to make it look like we're waiting for one more
+                        "s_remaining": CONFIG.waitroom_timeout,
+                    },
+                    room=subject_id,
                 )
-                socketio.start_background_task(run_game, game)
+
+                randomized_wait_time = random.choice(
+                    range(*CONFIG.waitroom_time_randomization_interval_s)
+                )
+                socketio.sleep(seconds=randomized_wait_time)
+
+                start_game(game)
+
+            elif game.is_ready_to_start():
+                start_game(game)
+
+            # If there is a real waiting room
             else:
                 print("Going to wait room")
                 remaining_wait_time = (
@@ -182,6 +198,19 @@ def join_or_create_game(data):
                     },
                     room=subject_id,
                 )
+
+
+def start_game(game: remote_game.RemoteGame) -> None:
+    """Helper function with the logic to begin a game."""
+    print("Game ready, starting!")
+    WAITING_GAMES.remove(game.game_id)
+    ACTIVE_GAMES.add(game.game_id)
+    socketio.emit(
+        "start_game",
+        {"config": CONFIG.to_dict(serializable=True)},
+        room=game.game_id,
+    )
+    socketio.start_background_task(run_game, game)
 
 
 def _get_existing_game(subject_id) -> remote_game.RemoteGame | None:

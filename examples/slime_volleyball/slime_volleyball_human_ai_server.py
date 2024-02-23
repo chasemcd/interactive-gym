@@ -76,6 +76,10 @@ config = (
         redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
         redirect_timeout=240_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
+        waitroom_time_randomization_interval_s=(
+            5,
+            25,
+        ),  # fake waitroom of 5 to 25 seconds
     )
 )
 
