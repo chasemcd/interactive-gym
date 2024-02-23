@@ -63,7 +63,7 @@ config = (
         policy_mapping=POLICY_MAPPING,
         policy_inference_fn=onnx_inference_utils.onnx_model_inference_fn,
         load_policy_fn=onnx_inference_utils.load_onnx_policy_fn,
-        frame_skip=1,
+        frame_skip=2,
     )
     .environment(env_creator=env_creator, env_name="cogrid_overcooked")
     .rendering(
