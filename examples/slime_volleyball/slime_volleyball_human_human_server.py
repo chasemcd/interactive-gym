@@ -1,8 +1,8 @@
 from slime_volleyball import slimevolley_env
 
 from configurations import remote_config
+from configurations import configuration_constants
 from server import server_app
-from server.remote_game import PolicyTypes
 from examples.slime_volleyball import slime_volleyball_utils
 
 """
@@ -25,15 +25,16 @@ RIGHT = 5
 
 
 POLICY_MAPPING = {
-    "agent_left": PolicyTypes.Human,
-    "agent_right": PolicyTypes.Human,
+    "agent_left": configuration_constants.PolicyTypes.Human,
+    "agent_right": configuration_constants.PolicyTypes.Human,
 }
 
 
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
     config = {
-        "human_inputs": POLICY_MAPPING.get("agent_left") == PolicyTypes.Human,
+        "human_inputs": POLICY_MAPPING.get("agent_left")
+        == configuration_constants.PolicyTypes.Human,
     }
     return slimevolley_env.SlimeVolleyEnv(config=config)
 
@@ -53,11 +54,13 @@ config = (
     .policies(policy_mapping=POLICY_MAPPING)
     .environment(env_creator=env_creator, env_name="slime_volleyball")
     .rendering(
-        fps=30,
+        fps=35,
         env_to_state_fn=slime_volleyball_utils.slime_volleyball_env_to_rendering,
+        assets_to_preload=slime_volleyball_utils.slime_volleyball_preload_assets_spec(),
         hud_text_fn=slime_volleyball_utils.hud_text_fn,
         game_width=600,
         game_height=400,
+        background="#B9EBFF",
     )
     .gameplay(
         default_action=NOOP,

@@ -1,9 +1,10 @@
 from slime_volleyball import slimevolley_env
 
 from configurations import remote_config
+from configurations import configuration_constants
 from server import server_app
-from server.remote_game import PolicyTypes
 from examples.slime_volleyball import slime_volleyball_utils
+from examples.slime_volleyball import slime_volleyball_callback
 
 """
 This is an example script for running MountainCar-v0 in
@@ -25,15 +26,16 @@ RIGHT = 5
 
 
 POLICY_MAPPING = {
-    "agent_left": PolicyTypes.Human,
-    "agent_right": PolicyTypes.Random,
+    "agent_left": configuration_constants.PolicyTypes.Human,
+    "agent_right": configuration_constants.PolicyTypes.Random,
 }
 
 
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
     config = {
-        "human_inputs": POLICY_MAPPING.get("agent_left") == PolicyTypes.Human,
+        "human_inputs": POLICY_MAPPING.get("agent_left")
+        == configuration_constants.PolicyTypes.Human,
     }
     return slimevolley_env.SlimeVolleyEnv(config=config)
 
@@ -53,16 +55,20 @@ config = (
     .policies(policy_mapping=POLICY_MAPPING)
     .environment(env_creator=env_creator, env_name="slime_volleyball")
     .rendering(
-        fps=30,
+        fps=35,
         env_to_state_fn=slime_volleyball_utils.slime_volleyball_env_to_rendering,
+        assets_to_preload=slime_volleyball_utils.slime_volleyball_preload_assets_spec(),
         hud_text_fn=slime_volleyball_utils.hud_text_fn,
         game_width=600,
         game_height=400,
+        background="#B9EBFF",
     )
     .gameplay(
         default_action=NOOP,
+        action_population_method=configuration_constants.ActionSettings.PreviousSubmittedAction,
         action_mapping=action_mapping,
         num_episodes=10,
+        callback=slime_volleyball_callback.SlimeVolleyballCallback(),
     )
     .hosting(port=5705, host="0.0.0.0", max_concurrent_games=10)
     .user_experience(
@@ -76,10 +82,10 @@ config = (
         redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
         redirect_timeout=240_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
-        waitroom_time_randomization_interval_s=(
-            5,
-            25,
-        ),  # fake waitroom of 5 to 25 seconds
+        # waitroom_time_randomization_interval_s=(
+        #     5,
+        #     25,
+        # ),  # fake waitroom of 5 to 25 seconds
     )
 )
 

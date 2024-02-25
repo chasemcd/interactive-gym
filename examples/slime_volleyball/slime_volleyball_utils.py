@@ -1,4 +1,5 @@
 import math
+import os
 
 import gymnasium as gym
 import numpy as np
@@ -7,6 +8,27 @@ from slime_volleyball import slimevolley_env
 from slime_volleyball.core import constants
 from configurations import remote_config
 from server import remote_game
+
+
+ASSET_PATH = "static/assets/slime_volleyball/sprites"
+
+
+def slime_volleyball_preload_assets_spec() -> (
+    list[
+        object_contexts.AtlasSpec
+        | object_contexts.MultiAtlasSpec
+        | object_contexts.ImgSpec
+    ]
+):
+    slime_red = object_contexts.ImgSpec(
+        name="slime_red.png",
+        img_path=os.path.join(ASSET_PATH, "slime_red.png"),
+    )
+    slime_blue = object_contexts.ImgSpec(
+        name="slime_blue.png",
+        img_path=os.path.join(ASSET_PATH, "slime_blue.png"),
+    )
+    return [slime_red.as_dict(), slime_blue.as_dict()]
 
 
 def hud_text_fn(game: remote_game.RemoteGame) -> str:
@@ -84,16 +106,6 @@ def slime_volleyball_env_to_rendering(
         )
         render_objects.append(ground)
 
-        border = object_contexts.Polygon(
-            uuid="border",
-            color="#AEF359",
-            points=[(0, 0), (1, 0), (1, 1), (0, 1)],
-            depth=-5,
-            alpha=0.1,
-            permanent=True,
-        )
-        render_objects.append(border)
-
     render_objects += generate_slime_agent_objects(
         "agent_left",
         x=env.game.agent_left.x,
@@ -140,16 +152,28 @@ def generate_slime_agent_objects(
     resolution: int = 30,
 ):
     objects = []
-    points = []
-    for i in range(resolution + 1):
-        ang = math.pi - math.pi * i / resolution
-        points.append(
-            (to_x(math.cos(ang) * radius + x), to_y(math.sin(ang) * radius + y))
-        )
+    # points = []
+    # for i in range(resolution + 1):
+    #     ang = math.pi - math.pi * i / resolution
+    #     points.append(
+    #         (to_x(math.cos(ang) * radius + x), to_y(math.sin(ang) * radius + y))
+    #     )
+
+    # objects.append(
+    #     object_contexts.Polygon(
+    #         uuid=f"{identifier}_body", color=color, points=points, depth=-1
+    #     )
+    # )
 
     objects.append(
-        object_contexts.Polygon(
-            uuid=f"{identifier}_body", color=color, points=points, depth=-1
+        object_contexts.Sprite(
+            uuid=f"{identifier}_body_sprite",
+            image_name="slime_blue.png" if "right" in identifier else "slime_red.png",
+            x=to_x(x - radius),
+            y=to_y(y) - 30 / config.game_height,
+            height=30,
+            width=36,
+            depth=0,
         )
     )
 
