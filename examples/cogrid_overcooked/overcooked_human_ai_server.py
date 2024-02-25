@@ -2,7 +2,6 @@ from cogrid.envs import registry
 
 from configurations import remote_config
 from server import server_app
-from server.remote_game import PolicyTypes
 from configurations import configuration_constants
 from examples.cogrid_overcooked import overcooked_utils
 from examples.cogrid_overcooked import overcooked_callback
@@ -29,7 +28,7 @@ Noop = 6
 
 
 POLICY_MAPPING = {
-    "agent-0": PolicyTypes.Human,
+    "agent-0": configuration_constants.PolicyTypes.Human,
     "agent-1": "examples/cogrid_overcooked/policies/model.onnx",
 }
 

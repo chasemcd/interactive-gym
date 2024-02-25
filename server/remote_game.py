@@ -8,6 +8,7 @@ from gymnasium import spaces
 import uuid
 
 from configurations import remote_config
+from configurations import configuration_constants
 from server import utils
 from absl import logging
 
@@ -18,12 +19,6 @@ class GameStatus:
     Active = "active"
     Inactive = "inactive"
     Reset = "reset"
-
-
-@dataclasses.dataclass(frozen=True)
-class PolicyTypes:
-    Human = "human"
-    Random = "random"
 
 
 class RemoteGame:
@@ -56,8 +51,8 @@ class RemoteGame:
         self.game_uuid: str = str(uuid.uuid4())
         self.episode_num: int = 0
         self.episode_rewards = collections.defaultdict(lambda: 0)
-        self.prev_rewards: dict[str | int, float] | None = None
-        self.prev_actions: dict[str | int, str | int] = None
+        self.prev_rewards: dict[str | int, float] = {}
+        self.prev_actions: dict[str | int, str | int] = {}
 
         self._build()
 
@@ -69,9 +64,9 @@ class RemoteGame:
     def _load_policies(self) -> None:
         """Load and instantiates all policies"""
         for agent_id, policy_id in self.config.policy_mapping.items():
-            if policy_id == PolicyTypes.Human:
+            if policy_id == configuration_constants.PolicyTypes.Human:
                 self.human_players[agent_id] = utils.Available
-            elif policy_id == PolicyTypes.Random:
+            elif policy_id == configuration_constants.PolicyTypes.Random:
                 self.bot_players[agent_id] = policy_id
             else:
                 assert (
@@ -165,27 +160,68 @@ class RemoteGame:
 
     def tick(self) -> None:
 
-        # Player actions
-        player_actions = {
-            pid: (
-                self.pending_actions[sid].get(block=False)
-                if self.pending_actions[sid].qsize() > 0
-                else self.config.default_action
-            )
-            for pid, sid in self.human_players.items()
-        }
+        # If the queue is empty, we have a mechanism for deciding which action to submit
+        # Either the previous submitted action or the default action.
+        player_actions = {}
+        for pid, sid in self.human_players.items():
+            action = None
+            # Attempt to get an action from the action queue
+            # If there's no action, use default or previous depending
+            # on the method specified.
+            try:
+                action = self.pending_actions[sid].get(block=False)
+            except queue.Empty:
+                if (
+                    self.config.action_population_method
+                    == configuration_constants.ActionSettings.PreviousSubmittedAction
+                ):
+                    action = self.prev_actions.get(pid)
+
+            if action is None:
+                action = self.config.default_action
+
+            player_actions[pid] = action
+
+        #     if self.pending_actions[sid].qsize() > 0:
+
+        # if self.config.action_population_method:
+        #     default_action = self.pending_actions
+        # player_actions = {
+        #     pid: (
+        #         self.pending_actions[sid].get(block=False)
+        #         if self.pending_actions[sid].qsize() > 0
+        #         else self.config.default_action
+        #     )
+        #     for pid, sid in self.human_players.items()
+        # }
 
         # Bot actions
         for pid, bot in self.bot_players.items():
 
             # set default action
             # TODO(chase): add option for this to be the previous action
-            player_actions[pid] = self.config.default_action
+            if (
+                self.config.action_population_method
+                == configuration_constants.ActionSettings.PreviousSubmittedAction
+            ):
+                action = self.prev_actions.get(pid)
+                if action is None:
+                    action = self.config.default_action
+                player_actions[pid] = self.config.default_action
+            elif (
+                self.config.action_population_method
+                == configuration_constants.ActionSettings.DefaultAction
+            ):
+                player_actions[pid] = self.config.default_action
+            else:
+                raise NotImplementedError(
+                    f"Action population method logic not specified for method: {self.config.action_population_method}"
+                )
 
             # If the bot is random, just sample the action space at
             # frame_skip intervals
             if (
-                bot == PolicyTypes.Random
+                bot == configuration_constants.PolicyTypes.Random
                 and self.tick_num % self.config.frame_skip == 0
             ):
                 if isinstance(self.env.action_space, spaces.Dict) or isinstance(
@@ -265,6 +301,8 @@ class RemoteGame:
 
     def reset(self, seed: int | None = None) -> None:
         self.reset_pending_actions()
+        self.prev_actions = {}
+        self.prev_rewards = {}
         self.obs, _ = self.env.reset(seed=seed)
         self.status = GameStatus.Active
 

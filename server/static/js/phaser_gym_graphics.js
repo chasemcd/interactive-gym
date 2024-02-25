@@ -66,6 +66,7 @@ class GymScene extends Phaser.Scene {
         // Load images or atlases for sprite sheets
         this.assets_to_preload.forEach(obj_config => {
             if (obj_config.object_type == "img_spec") {
+                console.log("loiading", obj_config.name)
                 this.load.image(obj_config.name, obj_config.img_path)
 
             } else if (obj_config.object_type == "spritesheet") {
@@ -270,10 +271,15 @@ class GymScene extends Phaser.Scene {
         //     obj.play(object_config.cur_animation)
         // } else
         if (object_config.image_name !== null) {
-            sprite.setTexture(object_config.image_name, object_config.frame);
+
+            console.log(this.textures.exists(object_config.image_name))
+            // sprite.setTexture(object_config.image_name, object_config.frame);
 
             if (object_config.frame !== null) {
-                sprite.setFrame(object_config.frame);
+                sprite.setTexture(object_config.image_name, object_config.frame);
+
+            } else {
+                sprite.setTexture(object_config.image_name)
             }
 
             sprite.setDisplaySize(object_config.width, object_config.height);
@@ -283,6 +289,7 @@ class GymScene extends Phaser.Scene {
 
         let new_x = Math.floor(object_config.x * this.width);
         let new_y = Math.floor(object_config.y * this.height);
+        
         sprite.setVisible(true);
         sprite.setAlpha(1);
         

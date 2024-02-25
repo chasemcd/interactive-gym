@@ -32,6 +32,9 @@ class RemoteConfig:
         self.action_mapping: dict[str, int] = dict()
         self.human_id: str | int | None = None
         self.default_action: int | str | None = None
+        self.action_population_method: str = (
+            configuration_constants.ActionSettings.DefaultAction
+        )
         self.input_mode: str = configuration_constants.InputModes.PressedKeys
         self.game_has_composite_actions: bool = False
         self.callback: None = (
@@ -200,6 +203,7 @@ class RemoteConfig:
         human_id: str | int | None = None,
         num_episodes: int | None = None,
         default_action: int | str | None = None,
+        action_population_method: str | None = None,
         input_mode: str | None = None,
         callback: None = None,  # TODO(chase): add callback typehint without circular import
     ):
@@ -213,6 +217,9 @@ class RemoteConfig:
                 else:
                     sorted_tuple_action_map[k] = v
             self.action_mapping = action_mapping
+
+        if action_population_method is not None:
+            self.action_population_method = action_population_method
 
         if human_id is not None:
             self.human_id = human_id

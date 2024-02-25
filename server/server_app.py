@@ -164,6 +164,12 @@ def join_or_create_game(data):
             player_name = SUBJECT_ID_MAP[subject_id]
             game.add_player(random.choice(available_human_player_ids), player_name)
 
+            # If the game is ready to start, we'll remove it from WAITING_GAMES.
+            # This prevents any other player from joining it if, for example,
+            # we're in a simulated waiting room before starting the game.
+            if game.is_ready_to_start():
+                WAITING_GAMES.remove(game.game_id)
+
             # If the game is ready to start and we're simulating a
             # waiting room
             if game.is_ready_to_start() and CONFIG.simulate_waiting_room:
@@ -209,7 +215,6 @@ def join_or_create_game(data):
 def start_game(game: remote_game.RemoteGame) -> None:
     """Helper function with the logic to begin a game."""
     print("Game ready, starting!")
-    WAITING_GAMES.remove(game.game_id)
     ACTIVE_GAMES.add(game.game_id)
     socketio.emit(
         "start_game",
@@ -419,7 +424,8 @@ def on_leave(data):
             utils.GameExitStatus.ActiveNoPlayers,
             utils.GameExitStatus.ActiveWithOtherPlayers,
         ]:
-            CONFIG.callback.on_game_end(game)
+            if CONFIG.callback is not None:
+                CONFIG.callback.on_game_end(game)
             socketio.emit(
                 "end_game",
                 {},
@@ -459,6 +465,16 @@ def on_action(data):
     Translate pressed keys into game action and add them to the pending_actions queue.
     """
     subject_id = flask.request.sid
+
+    if subject_id not in SUBJECT_ID_MAP:
+        return
+
+    game = _get_existing_game(subject_id)
+
+    # Sometimes keys arrive but the game already ended
+    if game is None:
+        return
+
     player_name = SUBJECT_ID_MAP[subject_id]
     client_session_id = data.get("session_id")
 
@@ -473,16 +489,15 @@ def on_action(data):
 
     pressed_keys = data["pressed_keys"]
 
-    # No keys pressed, don't execute other logic.
+    # No keys pressed, queue the default action
     if len(pressed_keys) == 0:
-        return
+        game.enqueue_action(player_name, CONFIG.default_action)
+
     elif len(pressed_keys) > 1:
         if not CONFIG.game_has_composite_actions:
             pressed_keys = pressed_keys[:1]
         else:
             pressed_keys = generate_composite_action(pressed_keys)
-
-    game = _get_existing_game(subject_id)
 
     if game is None:
         return
@@ -571,7 +586,9 @@ def run_game(game: remote_game.RemoteGame):
 
     with game.lock:
         game.reset()
-        CONFIG.callback.on_episode_start(game)
+
+        if CONFIG.callback is not None:
+            CONFIG.callback.on_episode_start(game)
 
     render_game(game)
 
@@ -583,9 +600,12 @@ def run_game(game: remote_game.RemoteGame):
     while game.status not in end_status:
 
         with game.lock:
-            CONFIG.callback.on_game_tick_start(game)
+            if CONFIG.callback is not None:
+                CONFIG.callback.on_game_tick_start(game)
             game.tick()
-            CONFIG.callback.on_game_tick_end(game)
+
+            if CONFIG.callback is not None:
+                CONFIG.callback.on_game_tick_end(game)
 
         render_game(game)
         if CONFIG.input_mode == configuration_constants.InputModes.PressedKeys:
@@ -593,7 +613,8 @@ def run_game(game: remote_game.RemoteGame):
         socketio.sleep(1 / game.config.fps)
 
         if game.status == remote_game.GameStatus.Reset:
-            CONFIG.callback.on_episode_end(game)
+            if CONFIG.callback is not None:
+                CONFIG.callback.on_episode_end(game)
             socketio.emit(
                 "game_reset",
                 {
@@ -615,7 +636,8 @@ def run_game(game: remote_game.RemoteGame):
 
             with game.lock:
                 game.reset()
-                CONFIG.callback.on_episode_start(game)
+                if CONFIG.callback is not None:
+                    CONFIG.callback.on_episode_start(game)
 
             render_game(game)
 
@@ -625,7 +647,8 @@ def run_game(game: remote_game.RemoteGame):
         if game.status != remote_game.GameStatus.Inactive:
             game.tear_down()
 
-        CONFIG.callback.on_game_end(game)
+        if CONFIG.callback is not None:
+            CONFIG.callback.on_game_end(game)
         socketio.emit(
             "end_game",
             {},
@@ -691,7 +714,7 @@ def on_exit():
     # Force-terminate all games on server termination
     for game_id in GAMES:
         game = _get_existing_game(game_id)
-        if game is not None:
+        if game is not None and CONFIG.callback is not None:
             CONFIG.callback.on_game_end(game)
 
         socketio.emit("end_game", {}, room=game_id)
