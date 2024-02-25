@@ -5,6 +5,7 @@ import threading
 import typing
 import numpy as np
 from gymnasium import spaces
+import uuid
 
 from configurations import remote_config
 from server import utils
@@ -51,9 +52,12 @@ class RemoteGame:
             game_id is not None
         ), f"Must pass valid game id! Got {game_id} but expected an int."
 
-        self.tick_num = 0
-        self.episode_num = 0
+        self.tick_num: int = 0
+        self.game_uuid: str = str(uuid.uuid4())
+        self.episode_num: int = 0
         self.episode_rewards = collections.defaultdict(lambda: 0)
+        self.prev_rewards: dict[str | int, float] | None = None
+        self.prev_actions: dict[str | int, str | int] = None
 
         self._build()
 
@@ -201,6 +205,7 @@ class RemoteGame:
                     self.obs[pid], bot
                 )
 
+        self.prev_actions = player_actions
         try:
             self.obs, rewards, terminateds, truncateds, _ = self.env.step(
                 player_actions
@@ -211,6 +216,10 @@ class RemoteGame:
             self.obs, rewards, terminateds, truncateds, _ = self.env.step(
                 player_actions
             )
+
+        self.prev_rewards = (
+            rewards if isinstance(rewards, dict) else {"reward": rewards}
+        )
 
         # print("queuing obs")
         # if self.tick_num % self.config.frame_skip == 0:

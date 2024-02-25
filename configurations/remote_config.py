@@ -4,6 +4,8 @@ import typing
 
 from configurations import configuration_constants
 
+# from server import callback
+
 
 class RemoteConfig:
     def __init__(self):
@@ -32,6 +34,9 @@ class RemoteConfig:
         self.default_action: int | str | None = None
         self.input_mode: str = configuration_constants.InputModes.PressedKeys
         self.game_has_composite_actions: bool = False
+        self.callback: None = (
+            None  # TODO(chase): add callback typehint but need to avoid circular import
+        )
 
         # rendering
         self.env_to_state_fn: typing.Callable | None = None
@@ -196,6 +201,7 @@ class RemoteConfig:
         num_episodes: int | None = None,
         default_action: int | str | None = None,
         input_mode: str | None = None,
+        callback: None = None,  # TODO(chase): add callback typehint without circular import
     ):
         if action_mapping is not None:
             # ensure the composite action tuples are sorted
@@ -222,6 +228,9 @@ class RemoteConfig:
 
         if input_mode is not None:
             self.input_mode = input_mode
+
+        if callback is not None:
+            self.callback = callback
 
         return self
 

@@ -73,6 +73,9 @@ socket.on("waiting_room", function(data) {
         clearInterval(waitroomInterval);
     }
 
+    $("#instructions").hide();
+
+
     var timer = Math.floor(data.ms_remaining / 1000); // Convert milliseconds to seconds
 
 
@@ -89,9 +92,8 @@ socket.on("waiting_room", function(data) {
             clearInterval(waitroomInterval);
             $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
             console.log("Leaving game due to waitroom ending...")
-            setTimeout(function() {
-                socket.emit("leave_game", {session_id: window.sessionId})
-            }, 10_000)
+            socket.emit("leave_game", {session_id: window.sessionId})
+            socket.emit('end_game_request_redirect')
         }
     }, 1000);
     $("#waitroomText").show();
@@ -104,6 +106,10 @@ socket.on("single_player_waiting_room", function(data) {
     if (singlePlayerWaitroomInterval) {
         clearInterval(singlePlayerWaitroomInterval);
     }
+
+
+    $("#instructions").hide();
+
 
     var timer = Math.floor(data.s_remaining / 1000); // Convert milliseconds to seconds
 
@@ -120,10 +126,9 @@ socket.on("single_player_waiting_room", function(data) {
         if (timer <= 0) {
             clearInterval(singlePlayerWaitroomInterval);
             $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
-            console.log("Leaving game due to waitroom ending...")
-            setTimeout(function() {
-                socket.emit("leave_game", {session_id: window.sessionId})
-            }, 10_000)
+            console.log("Single player waitroom timed out!")
+            socket.emit("leave_game", {session_id: window.sessionId})
+            socket.emit('end_game_request_redirect')
         }
     }, 1000);
     $("#waitroomText").show();
@@ -278,7 +283,6 @@ socket.on('end_game', function(data) {
     graphics_end();
     $('#hudText').hide()
     disable_key_listener()
-    console.log("leaving game since game ended")
     socket.emit("leave_game", {session_id: window.sessionId})
 
     $('#finalPageHeaderText').show()

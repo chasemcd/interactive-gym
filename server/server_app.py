@@ -51,6 +51,9 @@ USERS = utils.ThreadSafeDict()
 # Map ids to the URL ids
 SUBJECT_ID_MAP = utils.ThreadSafeDict()
 
+# List of subject names that have entered a game (collected on end_game)
+PROCESSED_SUBJECT_NAMES = []
+
 # Mapping of user id's to the current game (room) they are in
 USER_ROOMS = utils.ThreadSafeDict()
 
@@ -156,7 +159,10 @@ def join_or_create_game(data):
             RESET_EVENTS[game.game_id][subject_id] = threading.Event()
 
             available_human_player_ids = game.get_available_human_player_ids()
-            game.add_player(random.choice(available_human_player_ids), subject_id)
+
+            # will be the name entered in the url, e.g., MTurk ID or uuid
+            player_name = SUBJECT_ID_MAP[subject_id]
+            game.add_player(random.choice(available_human_player_ids), player_name)
 
             # If the game is ready to start and we're simulating a
             # waiting room
@@ -332,7 +338,7 @@ def index(*args):
 @app.route("/<subject_name>")
 def user_index(subject_name):
 
-    if subject_name in list(SUBJECT_ID_MAP.values()):
+    if subject_name in PROCESSED_SUBJECT_NAMES:
         return "Error: You have already played with under this subject ID!", 404
 
     flask.session["subject_name"] = subject_name
@@ -408,21 +414,21 @@ def on_leave(data):
         else:
             game_id = None
 
-        # game_was_active = _leave_game(subject_id)
-
         game_exit_status = _leave_game(subject_id)
         if game_exit_status in [
             utils.GameExitStatus.ActiveNoPlayers,
             utils.GameExitStatus.ActiveWithOtherPlayers,
         ]:
-            print(
-                f"Ending game bc subject {subject_id} left room {game_id}; Exit Status: {game_exit_status}"
-            )
+            CONFIG.callback.on_game_end(game)
             socketio.emit(
                 "end_game",
                 {},
                 room=game_id,
             )
+
+            # track players that have already been in a game
+            for human_player_name in game.human_players.values():
+                PROCESSED_SUBJECT_NAMES.append(human_player_name)
         else:
             socketio.emit("end_lobby", room=game_id)
 
@@ -453,6 +459,7 @@ def on_action(data):
     Translate pressed keys into game action and add them to the pending_actions queue.
     """
     subject_id = flask.request.sid
+    player_name = SUBJECT_ID_MAP[subject_id]
     client_session_id = data.get("session_id")
 
     # Validate session
@@ -491,7 +498,7 @@ def on_action(data):
 
     assert action is not None
 
-    game.enqueue_action(subject_id, action)
+    game.enqueue_action(player_name, action)
 
 
 def generate_composite_action(pressed_keys) -> list[tuple[str]]:
@@ -561,16 +568,24 @@ def on_pong(data):
 
 def run_game(game: remote_game.RemoteGame):
     end_status = [remote_game.GameStatus.Inactive, remote_game.GameStatus.Done]
-    game.reset()
+
+    with game.lock:
+        game.reset()
+        CONFIG.callback.on_episode_start(game)
+
     render_game(game)
+
     if CONFIG.input_mode == configuration_constants.InputModes.PressedKeys:
         socketio.emit("request_pressed_keys", {})
+
     socketio.sleep(1 / game.config.fps)
 
     while game.status not in end_status:
 
         with game.lock:
+            CONFIG.callback.on_game_tick_start(game)
             game.tick()
+            CONFIG.callback.on_game_tick_end(game)
 
         render_game(game)
         if CONFIG.input_mode == configuration_constants.InputModes.PressedKeys:
@@ -578,6 +593,7 @@ def run_game(game: remote_game.RemoteGame):
         socketio.sleep(1 / game.config.fps)
 
         if game.status == remote_game.GameStatus.Reset:
+            CONFIG.callback.on_episode_end(game)
             socketio.emit(
                 "game_reset",
                 {
@@ -599,6 +615,7 @@ def run_game(game: remote_game.RemoteGame):
 
             with game.lock:
                 game.reset()
+                CONFIG.callback.on_episode_start(game)
 
             render_game(game)
 
@@ -608,11 +625,14 @@ def run_game(game: remote_game.RemoteGame):
         if game.status != remote_game.GameStatus.Inactive:
             game.tear_down()
 
+        CONFIG.callback.on_game_end(game)
         socketio.emit(
             "end_game",
             {},
             room=game.game_id,
         )
+        for human_player_name in game.human_players.values():
+            PROCESSED_SUBJECT_NAMES.append(human_player_name)
 
         _cleanup_game(game)
 
@@ -670,6 +690,10 @@ def render_game(game: remote_game.RemoteGame):
 def on_exit():
     # Force-terminate all games on server termination
     for game_id in GAMES:
+        game = _get_existing_game(game_id)
+        if game is not None:
+            CONFIG.callback.on_game_end(game)
+
         socketio.emit("end_game", {}, room=game_id)
 
 
