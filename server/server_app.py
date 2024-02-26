@@ -181,12 +181,18 @@ def join_or_create_game(data):
             # waiting room
             if game.is_ready_to_start() and CONFIG.simulate_waiting_room:
 
+                human_player_display = len(game.human_players)
+                if len(game.bot_players) > 0:
+                    human_player_display += len(game.bot_players) - 1
+                else:
+                    human_player_display -= 1
+
                 socketio.emit(
                     "single_player_waiting_room",
                     {
                         # Remove one from cur_num to make it look like we need 1 more
-                        "cur_num_players": len(game.human_players) - 1,
-                        "players_needed": len(game.human_players),
+                        "cur_num_players": human_player_display,
+                        "players_needed": 1,
                         "s_remaining": CONFIG.waitroom_timeout,
                     },
                     room=subject_id,
@@ -669,6 +675,7 @@ def run_game(game: remote_game.RemoteGame):
 
 @socketio.on("end_game_request_redirect")
 def on_request_redirect():
+    print("redirect requested")
     subject_id = flask.request.sid
 
     redirect_url = CONFIG.redirect_url

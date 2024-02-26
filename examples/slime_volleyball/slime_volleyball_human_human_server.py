@@ -81,7 +81,6 @@ config = (
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
-        redirect_timeout=240_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
     )
 )

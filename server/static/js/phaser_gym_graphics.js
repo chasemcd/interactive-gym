@@ -9,7 +9,7 @@ var game_config = {
 
 var game_graphics;
 let stateBuffer = []
-const MAX_BUFFER_SIZE = 2;
+const MAX_BUFFER_SIZE = 1;
 
 function addStateToBuffer(state_data) {
     if (stateBuffer >= MAX_BUFFER_SIZE) {

@@ -297,6 +297,7 @@ socket.on('end_game', function(data) {
 
 
 socket.on('end_game_redirect', function(data) {
+    console.log("received redirect")
     setTimeout(function() {
         // Redirect to the specified URL after the timeout
         window.location.href = data.redirect_url;

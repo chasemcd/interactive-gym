@@ -67,7 +67,7 @@ config = (
     )
     .environment(env_creator=env_creator, env_name="cogrid_overcooked")
     .rendering(
-        fps=40,
+        fps=10,
         env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
         assets_to_preload=overcooked_utils.overcooked_preload_assets_spec(),
         hud_text_fn=overcooked_utils.hud_text_fn,
@@ -78,7 +78,7 @@ config = (
     .gameplay(
         default_action=Noop,
         action_mapping=action_mapping,
-        num_episodes=1,
+        num_episodes=2,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
