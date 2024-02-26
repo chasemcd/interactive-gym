@@ -63,11 +63,11 @@ config = (
         policy_mapping=POLICY_MAPPING,
         policy_inference_fn=onnx_inference_utils.onnx_model_inference_fn,
         load_policy_fn=onnx_inference_utils.load_onnx_policy_fn,
-        frame_skip=2,
+        frame_skip=5,
     )
     .environment(env_creator=env_creator, env_name="cogrid_overcooked")
     .rendering(
-        fps=10,
+        fps=30,
         env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
         assets_to_preload=overcooked_utils.overcooked_preload_assets_spec(),
         hud_text_fn=overcooked_utils.hud_text_fn,
@@ -86,10 +86,10 @@ config = (
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",
-        waitroom_time_randomization_interval_s=(
-            5,
-            25,
-        ),  # fake waitroom of 5 to 25 seconds
+        # waitroom_time_randomization_interval_s=(
+        #     5,
+        #     25,
+        # ),  # fake waitroom of 5 to 25 seconds
         welcome_header_text="Overcooked",
         game_header_text="Overcooked",
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,

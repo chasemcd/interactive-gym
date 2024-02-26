@@ -236,27 +236,27 @@ def generate_agent_sprites(
 
         objs.append(
             object_contexts.Sprite(
-                agent_obj.uuid,
+                f"agent-{i}-sprite",
                 x=x,
                 y=y,
                 height=TILE_SIZE,
                 width=TILE_SIZE,
                 image_name="chefs",
-                tween=False,
+                tween=True,
                 frame=f"{dir}{held_object_name}.png",
             )
         )
 
         objs.append(
             object_contexts.Sprite(
-                f"hat-{agent_obj.uuid}",
+                f"agent-{i}-hat-sprite",
                 x=x,
                 y=y,
                 height=TILE_SIZE,
                 width=TILE_SIZE,
                 image_name="chefs",
                 frame=f"{dir}-{PLAYER_COLORS[i]}hat.png",
-                tween=False,
+                tween=True,
                 depth=2,
             )
         )

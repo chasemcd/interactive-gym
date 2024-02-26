@@ -66,7 +66,6 @@ class GymScene extends Phaser.Scene {
         // Load images or atlases for sprite sheets
         this.assets_to_preload.forEach(obj_config => {
             if (obj_config.object_type == "img_spec") {
-                console.log("loiading", obj_config.name)
                 this.load.image(obj_config.name, obj_config.img_path)
 
             } else if (obj_config.object_type == "spritesheet") {
@@ -183,6 +182,7 @@ class GymScene extends Phaser.Scene {
                 } else {
                     object_map = this.temp_object_map;
                 };
+
                 
                 // Check if we need to add a new object
                 if (!object_map.hasOwnProperty(game_obj.uuid)) {
@@ -272,7 +272,7 @@ class GymScene extends Phaser.Scene {
         // } else
         if (object_config.image_name !== null) {
 
-            console.log(this.textures.exists(object_config.image_name))
+            // console.log(this.textures.exists(object_config.image_name))
             // sprite.setTexture(object_config.image_name, object_config.frame);
 
             if (object_config.frame !== null) {
@@ -284,25 +284,23 @@ class GymScene extends Phaser.Scene {
 
             sprite.setDisplaySize(object_config.width, object_config.height);
             sprite.setOrigin(0);
-            sprite.setVisible(true);
         }
 
         let new_x = Math.floor(object_config.x * this.width);
         let new_y = Math.floor(object_config.y * this.height);
-        
-        sprite.setVisible(true);
-        sprite.setAlpha(1);
-        
-        if (object_config.tween === true && (new_x !== sprite.x || new_y !== sprite.y)) {
-            this.tweens.add({
+
+        if (
+
+            (new_x !== sprite.x || new_y !== sprite.y)
+            ) {
+            sprite.tween = this.tweens.add({
                 targets: [sprite],
                 x: new_x,
                 y: new_y,
                 duration: object_config.tween_duration,
                 ease: 'Linear',
-                repeat: 0,
-                yoyo: false,
                 onComplete: (tween, target, player) => {
+                    sprite.tween = null;
                 }
             })
         } else {
