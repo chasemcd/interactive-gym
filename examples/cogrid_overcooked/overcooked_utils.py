@@ -256,7 +256,7 @@ def generate_agent_sprites(
                 width=TILE_SIZE,
                 image_name="chefs",
                 frame=f"{dir}-{PLAYER_COLORS[i]}hat.png",
-                tween=True,
+                tween=False,
                 depth=2,
             )
         )
