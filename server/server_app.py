@@ -164,6 +164,12 @@ def join_or_create_game(data):
             player_name = SUBJECT_ID_MAP[subject_id]
             game.add_player(random.choice(available_human_player_ids), player_name)
 
+            if CONFIG.game_page_html_fn is not None:
+                socketio.emit(
+                    "update_game_page_text",
+                    {"game_page_text": CONFIG.game_page_html_fn(game, player_name)},
+                )
+
             # If the game is ready to start, we'll remove it from WAITING_GAMES.
             # This prevents any other player from joining it if, for example,
             # we're in a simulated waiting room before starting the game.
@@ -361,7 +367,7 @@ def user_index(subject_name):
         async_mode=socketio.async_mode,
         welcome_header_text=CONFIG.welcome_header_text,
         welcome_text=CONFIG.welcome_text,
-        indstructions_html=instructions_html,
+        instructions_html=instructions_html,
         game_header_text=CONFIG.game_header_text,
         game_page_text=CONFIG.game_page_text,
         final_page_header_text=CONFIG.final_page_header_text,

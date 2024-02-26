@@ -13,6 +13,32 @@ from server import remote_game
 ASSET_PATH = "static/assets/slime_volleyball/sprites"
 
 
+def slime_volleyball_game_page_header_fn(
+    game: remote_game.RemoteGame, player_name: str
+) -> str:
+    """Function that takes the game and a player name to determine the html that should be shown when the game active."""
+    player_id = None
+    for pid, sid in game.human_players.items():
+        if sid == player_name:
+            player_id = pid
+
+    assert player_id is not None
+
+    print(os.getcwd())
+    if player_id == "agent_right":
+        html_path = "server/static/templates/slime_vb_agent_right_header.html"
+    else:
+        html_path = "server/static/templates/slime_vb_agent_left_header.html"
+
+    try:
+        with open(html_path, "r", encoding="utf-8") as f:
+            header_html = f.read()
+    except FileNotFoundError:
+        header_html = f"<p> Unable to load header file {html_path}.</p>"
+
+    return header_html
+
+
 def slime_volleyball_preload_assets_spec() -> (
     list[
         object_contexts.AtlasSpec
@@ -33,7 +59,9 @@ def slime_volleyball_preload_assets_spec() -> (
 
 def hud_text_fn(game: remote_game.RemoteGame) -> str:
     """Function to create HUD text to display"""
-    return f"Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
+    left_red_score = game.total_positive_rewards["agent_left"]
+    right_blue_score = game.total_positive_rewards["agent_right"]
+    return f"Red Points: {int(left_red_score)} | Blue Points {int(right_blue_score)} | Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
 
 
 Y_OFFSET = 0.018

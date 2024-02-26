@@ -34,6 +34,7 @@ def onnx_model_inference_fn(
     if isinstance(observation, dict):
         observation = np.hstack(list(observation.values())).reshape((1, -1))
 
+    # TODO(chase): add compatibility with recurrent networks, must pass state in and seq lens
     model_outputs = inference_onnx_model(
         {
             "obs": observation.astype(np.float32),

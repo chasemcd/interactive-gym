@@ -304,6 +304,11 @@ socket.on('end_game_redirect', function(data) {
 });
 
 
+socket.on('update_game_page_text', function(data) {
+    // $("#gamePageText").text(data.game_page_text);
+    document.getElementById('gamePageText').innerHTML = data.game_page_text;
+})
+
 
 var pressedKeys = {};
 

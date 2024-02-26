@@ -73,7 +73,7 @@ config = (
         hud_text_fn=overcooked_utils.hud_text_fn,
         game_width=overcooked_utils.TILE_SIZE * 9,
         game_height=overcooked_utils.TILE_SIZE * 10,
-        background="#e6b453",
+        # background="#e6b453",
     )
     .gameplay(
         default_action=Noop,

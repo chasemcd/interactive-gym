@@ -5,6 +5,7 @@ from configurations import configuration_constants
 from server import server_app
 from examples.slime_volleyball import slime_volleyball_utils
 from examples.slime_volleyball import slime_volleyball_callback
+from utils import onnx_inference_utils
 
 """
 This is an example script for running MountainCar-v0 in
@@ -27,7 +28,7 @@ RIGHT = 5
 
 POLICY_MAPPING = {
     "agent_left": configuration_constants.PolicyTypes.Human,
-    "agent_right": configuration_constants.PolicyTypes.Random,
+    "agent_right": configuration_constants.PolicyTypes.Random,  # "examples/slime_volleyball/policies/slime_vb_model.onnx",
 }
 
 
@@ -52,7 +53,11 @@ action_mapping = {
 
 config = (
     remote_config.RemoteConfig()
-    .policies(policy_mapping=POLICY_MAPPING)
+    .policies(
+        policy_mapping=POLICY_MAPPING,
+        policy_inference_fn=onnx_inference_utils.onnx_model_inference_fn,
+        load_policy_fn=onnx_inference_utils.load_onnx_policy_fn,
+    )
     .environment(env_creator=env_creator, env_name="slime_volleyball")
     .rendering(
         fps=35,
@@ -76,7 +81,7 @@ config = (
         welcome_header_text="Slime Volleyball",
         instructions_html_file="server/static/templates/slime_volleyball_instructions.html",
         game_header_text="Slime Volleyball",
-        game_page_text="Use the arrow keys to move your character!",
+        game_page_html_fn=slime_volleyball_utils.slime_volleyball_game_page_header_fn,
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",

@@ -114,7 +114,7 @@
 
         <!-- Texts for game, initially hidden -->
         <h1 id="gameHeaderText" style="display: none;">{{ game_header_text }}</h1>
-        <p id="gamePageText" style="display: none;">{{ game_page_text }}</p>
+        <p id="gamePageText" style="display: none;">{{ game_page_text | safe }}</p>
 
         <!-- Texts for final page, initially hidden -->
         <h1 id="finalPageHeaderText" style="display: none;">{{ final_page_header_text }}</h1>
@@ -130,7 +130,7 @@
         <div id="gameContainer"></div>
 
         <div id="instructions" style="text-align: left;">
-            {{ indstructions_html|safe }}
+            {{ instructions_html|safe }}
         </div>
 
         <!-- Start button -->

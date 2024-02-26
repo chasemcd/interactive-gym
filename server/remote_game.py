@@ -51,6 +51,13 @@ class RemoteGame:
         self.game_uuid: str = str(uuid.uuid4())
         self.episode_num: int = 0
         self.episode_rewards = collections.defaultdict(lambda: 0)
+        self.total_rewards = collections.defaultdict(lambda: 0)  # score across episodes
+        self.total_positive_rewards = collections.defaultdict(
+            lambda: 0
+        )  # sum of positives
+        self.total_negative_rewards = collections.defaultdict(
+            lambda: 0
+        )  # sum of negatives
         self.prev_rewards: dict[str | int, float] = {}
         self.prev_actions: dict[str | int, str | int] = {}
 
@@ -263,9 +270,13 @@ class RemoteGame:
 
         if not isinstance(rewards, dict):
             self.episode_rewards[0] += rewards
+            self.total_rewards[0] += rewards
         else:
             for k, v in rewards.items():
                 self.episode_rewards[k] += v
+                self.total_rewards[k] += v
+                self.total_positive_rewards[k] += max(0, v)
+                self.total_negative_rewards[k] += min(0, v)
 
         if isinstance(terminateds, dict):
             terminateds = terminateds["__all__"]

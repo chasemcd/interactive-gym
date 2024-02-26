@@ -66,6 +66,7 @@ class RemoteConfig:
         self.welcome_header_text: str = ""
         self.welcome_text: str = ""
         self.game_page_text: str = ""
+        self.game_page_html_fn: typing.Callable | None = None
         self.between_episode_header: str = ""
         self.between_episode_text: str = ""
         self.final_page_text: str = ""
@@ -252,6 +253,7 @@ class RemoteConfig:
         waitroom_time_randomization_interval_s: int | None = None,
         welcome_header_text: str | None = None,
         game_header_text: str | None = None,
+        game_page_html_fn: typing.Callable | None = None,
         game_page_text: str | None = None,
         welcome_text: str | None = None,
         final_page_header_text: str | None = None,
@@ -263,6 +265,9 @@ class RemoteConfig:
 
         if append_subject_name_to_redirect is not None:
             self.append_subject_name_to_redirect = append_subject_name_to_redirect
+
+        if game_page_html_fn is not None:
+            self.game_page_html_fn = game_page_html_fn
 
         if redirect_timeout is not None:
             self.redirect_timeout = redirect_timeout
