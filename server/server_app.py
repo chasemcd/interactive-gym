@@ -186,7 +186,7 @@ def join_or_create_game(data):
                     {
                         # Remove one from cur_num to make it look like we need 1 more
                         "cur_num_players": len(game.human_players) - 1,
-                        "players_needed": 1,
+                        "players_needed": len(game.human_players),
                         "s_remaining": CONFIG.waitroom_timeout,
                     },
                     room=subject_id,
