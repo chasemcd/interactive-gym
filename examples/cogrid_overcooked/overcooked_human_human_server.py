@@ -52,7 +52,7 @@ config = (
     .policies(policy_mapping=POLICY_MAPPING)
     .environment(env_creator=env_creator, env_name="cogrid_overcooked")
     .rendering(
-        fps=10,
+        fps=30,
         env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
         assets_to_preload=overcooked_utils.overcooked_preload_assets_spec(),
         hud_text_fn=overcooked_utils.hud_text_fn,
