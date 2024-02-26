@@ -257,6 +257,8 @@ class GymScene extends Phaser.Scene {
             }
         );
 
+        object_map[uuid].tween = null;
+
     };
 
     _updateSprite(object_config, object_map) {
@@ -290,17 +292,19 @@ class GymScene extends Phaser.Scene {
         let new_y = Math.floor(object_config.y * this.height);
 
         if (
-            object_config.tween === true &&
+            object_config.tween == true &&
+            sprite.tween == null && 
             (new_x !== sprite.x || new_y !== sprite.y)
             ) {
-            sprite.tween = this.tweens.add({
+                // sprite.tween = 
+            this.tweens.add({
                 targets: [sprite],
                 x: new_x,
                 y: new_y,
                 duration: object_config.tween_duration,
                 ease: 'Linear',
                 onComplete: (tween, target, player) => {
-                    sprite.tween = null;
+                    // sprite.tween = null;
                 }
             })
         } else {
