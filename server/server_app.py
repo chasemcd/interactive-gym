@@ -184,9 +184,9 @@ def join_or_create_game(data):
                 socketio.emit(
                     "single_player_waiting_room",
                     {
-                        "cur_num_players": game.cur_num_human_players(),
-                        "players_needed": len(game.get_available_human_player_ids())
-                        + 1,  # Add 1 to make it look like we're waiting for one more
+                        # Remove one from cur_num to make it look like we need 1 more
+                        "cur_num_players": len(game.human_players) - 1,
+                        "players_needed": 1,
                         "s_remaining": CONFIG.waitroom_timeout,
                     },
                     room=subject_id,
@@ -743,8 +743,6 @@ def run(config):
         RESET_EVENTS[i] = utils.ThreadSafeDict()
 
     atexit.register(on_exit)
-
-    # app.wsgi_app = profiler.ProfilerMiddleware(app.wsgi_app)
 
     socketio.run(
         app,

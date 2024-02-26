@@ -73,6 +73,10 @@ config = (
         welcome_header_text="Overcooked",
         game_header_text="Overcooked",
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
+        waitroom_time_randomization_interval_s=(
+            5,
+            25,
+        ),  # fake waitroom of 5 to 25 seconds
         final_page_header_text="Overcooked",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_agZ3V7Uj4jfVweG",
