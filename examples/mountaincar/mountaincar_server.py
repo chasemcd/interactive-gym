@@ -59,7 +59,6 @@ config = (
         final_page_header_text="Interactive MountainCar-v0",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://www.cmu.edu/dietrich/sds/ddmlab",
-        redirect_timeout=20_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
     )
 )

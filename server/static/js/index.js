@@ -300,7 +300,7 @@ socket.on('end_game_redirect', function(data) {
     setTimeout(function() {
         // Redirect to the specified URL after the timeout
         window.location.href = data.redirect_url;
-    }, data.redirect_timeout); // 5000 milliseconds = 5 seconds
+    }, data.redirect_timeout);
 });
 
 

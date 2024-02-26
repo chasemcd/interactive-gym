@@ -168,6 +168,7 @@ def join_or_create_game(data):
                 socketio.emit(
                     "update_game_page_text",
                     {"game_page_text": CONFIG.game_page_html_fn(game, player_name)},
+                    room=subject_id,
                 )
 
             # If the game is ready to start, we'll remove it from WAITING_GAMES.
@@ -678,7 +679,7 @@ def on_request_redirect():
 
     socketio.emit(
         "end_game_redirect",
-        {"redirect_url": redirect_url, "timeout": CONFIG.redirect_timeout},
+        {"redirect_url": redirect_url, "redirect_timeout": CONFIG.redirect_timeout},
         room=subject_id,
     )
 

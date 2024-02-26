@@ -67,18 +67,18 @@ config = (
     )
     .environment(env_creator=env_creator, env_name="cogrid_overcooked")
     .rendering(
-        fps=10,
+        fps=40,
         env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
         assets_to_preload=overcooked_utils.overcooked_preload_assets_spec(),
         hud_text_fn=overcooked_utils.hud_text_fn,
         game_width=overcooked_utils.TILE_SIZE * 9,
         game_height=overcooked_utils.TILE_SIZE * 10,
-        # background="#e6b453",
+        background="#e6b453",
     )
     .gameplay(
         default_action=Noop,
         action_mapping=action_mapping,
-        num_episodes=2,
+        num_episodes=1,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
@@ -92,11 +92,10 @@ config = (
         ),  # fake waitroom of 5 to 25 seconds
         welcome_header_text="Overcooked",
         game_header_text="Overcooked",
-        game_page_text="Use the arrow keys to move and W to pick up and drop. Drop dishes in the delivery area to earn points! ",
+        game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
         final_page_header_text="Overcooked",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_agZ3V7Uj4jfVweG",
-        redirect_timeout=240_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
     )
 )

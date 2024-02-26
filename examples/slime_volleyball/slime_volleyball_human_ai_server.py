@@ -28,7 +28,7 @@ RIGHT = 5
 
 POLICY_MAPPING = {
     "agent_left": configuration_constants.PolicyTypes.Human,
-    "agent_right": configuration_constants.PolicyTypes.Random,  # "examples/slime_volleyball/policies/slime_vb_model.onnx",
+    "agent_right": "examples/slime_volleyball/policies/slime_vb_model.onnx",
 }
 
 
@@ -85,12 +85,11 @@ config = (
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
-        redirect_timeout=240_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
-        # waitroom_time_randomization_interval_s=(
-        #     5,
-        #     25,
-        # ),  # fake waitroom of 5 to 25 seconds
+        waitroom_time_randomization_interval_s=(
+            5,
+            25,
+        ),  # fake waitroom of 5 to 25 seconds
     )
 )
 

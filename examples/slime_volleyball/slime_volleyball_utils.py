@@ -24,7 +24,6 @@ def slime_volleyball_game_page_header_fn(
 
     assert player_id is not None
 
-    print(os.getcwd())
     if player_id == "agent_right":
         html_path = "server/static/templates/slime_vb_agent_right_header.html"
     else:

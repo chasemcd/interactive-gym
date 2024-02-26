@@ -72,11 +72,10 @@ config = (
         instructions_html_file="server/static/templates/overcooked_instructions.html",
         welcome_header_text="Overcooked",
         game_header_text="Overcooked",
-        game_page_text="Use the arrow keys to move and W to pick up and drop. Drop dishes in the delivery area to earn points! ",
+        game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
         final_page_header_text="Overcooked",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_agZ3V7Uj4jfVweG",
-        redirect_timeout=240_000,
         waitroom_timeout=120_000,  # 2 minutes in waitroom
     )
 )

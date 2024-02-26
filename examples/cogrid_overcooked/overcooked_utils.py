@@ -19,6 +19,32 @@ DIR_TO_CARDINAL_DIRECTION = {
 PLAYER_COLORS = {0: "blue", 1: "green"}
 
 
+def overcooked_game_page_header_fn(
+    game: remote_game.RemoteGame, player_name: str
+) -> str:
+    """Function that takes the game and a player name to determine the html that should be shown when the game active."""
+    player_id = None
+    for pid, sid in game.human_players.items():
+        if sid == player_name:
+            player_id = pid
+
+    assert player_id is not None
+
+    if "1" in player_id:
+        html_path = "server/static/templates/overcooked_agent_1_header.html"
+    else:
+        html_path = "server/static/templates/overcooked_agent_0_header.html"
+
+    try:
+        with open(html_path, "r", encoding="utf-8") as f:
+            header_html = f.read()
+    except FileNotFoundError:
+        header_html = f"<p> Unable to load header file {html_path}.</p>"
+
+    print("rendering_header", html_path)
+    return header_html
+
+
 def get_x_y(pos: tuple[int, int], game_height: int, game_width: int) -> tuple[int, int]:
     col, row = pos
     x = row * TILE_SIZE / game_width
