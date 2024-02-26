@@ -290,7 +290,7 @@ class GymScene extends Phaser.Scene {
         let new_y = Math.floor(object_config.y * this.height);
 
         if (
-
+            object_config.tween === true &&
             (new_x !== sprite.x || new_y !== sprite.y)
             ) {
             sprite.tween = this.tweens.add({
