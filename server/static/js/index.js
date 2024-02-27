@@ -93,7 +93,7 @@ socket.on("waiting_room", function(data) {
             $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
             console.log("Leaving game due to waitroom ending...")
             socket.emit("leave_game", {session_id: window.sessionId})
-            socket.emit('end_game_request_redirect')
+            socket.emit('end_game_request_redirect', {waitroom_timeout: true})
         }
     }, 1000);
     $("#waitroomText").show();
@@ -128,7 +128,7 @@ socket.on("single_player_waiting_room", function(data) {
             $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
             console.log("Single player waitroom timed out!")
             socket.emit("leave_game", {session_id: window.sessionId})
-            socket.emit('end_game_request_redirect')
+            socket.emit('end_game_request_redirect', {waitroom_timeout: true})
         }
     }, 1000);
     $("#waitroomText").show();
@@ -292,7 +292,7 @@ socket.on('end_game', function(data) {
     $("#gameContainer").hide();
 
 
-    socket.emit('end_game_request_redirect')
+    socket.emit('end_game_request_redirect', {waitroom_timeout: false})
 });
 
 

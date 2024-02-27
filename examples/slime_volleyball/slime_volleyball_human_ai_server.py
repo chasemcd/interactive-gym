@@ -89,8 +89,9 @@ config = (
         ),  # fake waitroom of 5 to 25 seconds
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
-        redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
+        end_game_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
         waitroom_timeout=120_000,  # 2 minutes in waitroom
+        waitroom_timeout_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_bIskl3fFOPC6ayy",
     )
 )
 

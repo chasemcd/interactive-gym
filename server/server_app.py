@@ -674,11 +674,16 @@ def run_game(game: remote_game.RemoteGame):
 
 
 @socketio.on("end_game_request_redirect")
-def on_request_redirect():
+def on_request_redirect(data):
     print("redirect requested")
     subject_id = flask.request.sid
 
-    redirect_url = CONFIG.redirect_url
+    waitroom_timeout = data.get("waitroom_timeout")
+    if waitroom_timeout:
+        redirect_url = CONFIG.waitroom_timeout_redirect_url
+    else:
+        redirect_url = CONFIG.end_game_redirect_url
+
     if CONFIG.append_subject_name_to_redirect:
         redirect_url += SUBJECT_ID_MAP[subject_id]
 
