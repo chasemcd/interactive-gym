@@ -4,6 +4,8 @@ from configurations import remote_config
 from configurations import configuration_constants
 from server import server_app
 from examples.slime_volleyball import slime_volleyball_utils
+from examples.slime_volleyball import slime_volleyball_callback
+
 
 """
 This is an example script for running MountainCar-v0 in
@@ -66,6 +68,7 @@ config = (
         default_action=NOOP,
         action_mapping=action_mapping,
         num_episodes=10,
+        callback=slime_volleyball_callback.SlimeVolleyballCallback(),
     )
     .hosting(port=5704, host="0.0.0.0", max_concurrent_games=10)
     .user_experience(

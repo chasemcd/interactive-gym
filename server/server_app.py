@@ -116,6 +116,7 @@ def _create_game() -> None:
     """
     game, err = try_create_game()
     if game is None:
+        print("create game gailed")
         socketio.emit(
             "create_game_failed", {"error": err.__repr__()}, room=flask.request.sid
         )
@@ -132,8 +133,11 @@ def join_or_create_game(data):
     subject_id = flask.request.sid
     client_session_id = data.get("session_id")
 
+    print("pressing_start")
+
     # Validate session
     if not is_valid_session(client_session_id):
+        print(subject_id, "invalid_session")
         flask_socketio.emit(
             "invalid_session",
             {"message": "Session is invalid. Please reconnect."},
@@ -144,10 +148,12 @@ def join_or_create_game(data):
     with SUBJECTS[subject_id]:
         # already in a game so don't join a new one
         if _get_existing_game(subject_id) is not None:
+            print(f"Subject {subject_id} already in a game.")
             return
 
         game = _create_or_join_game()
         if game is None:  # there was an error that is now displayed
+            print("game is None")
             return
 
         with game.lock:
@@ -255,11 +261,13 @@ def _create_or_join_game() -> remote_game.RemoteGame:
     if game is not None:
         return game
 
+    print("No waiting game, creating new one...")
+
     # Lastly, we'll make a new game and retrieve that
     _create_game()  # adds to waiting game
     game = get_waiting_game()
 
-    # assert game is not None, "Game retrieval failed!"
+    assert game is not None, "Game retrieval failed!"
 
     return game
 
@@ -283,6 +291,11 @@ def _cleanup_game(game: remote_game.RemoteGame):
 
     socketio.close_room(game.game_id)
 
+    try:
+        WAITING_GAMES.remove(game.game_id)
+    except:
+        pass
+
     FREE_MAP[game.game_id] = True
     FREE_IDS.put(game.game_id)
     del GAMES[game.game_id]
@@ -295,6 +308,7 @@ def _leave_game(subject_id) -> bool:
     """Removes the subject with `subject_id` from any current game."""
     game = _get_existing_game(subject_id)
 
+    print(game, "game on leave game")
     if game is None:
         return False
 
@@ -303,7 +317,7 @@ def _leave_game(subject_id) -> bool:
         flask_socketio.leave_room(game.game_id)
         del USER_ROOMS[subject_id]
         del RESET_EVENTS[game.game_id][subject_id]
-        game.remove_human_player(subject_id)
+        game.remove_human_player(SUBJECT_ID_MAP[subject_id])
 
         game_was_active = game.game_id in ACTIVE_GAMES
         game_is_empty = game.cur_num_human_players() == 0
@@ -313,6 +327,7 @@ def _leave_game(subject_id) -> bool:
         if game_was_active and game_is_empty:
             exit_status = utils.GameExitStatus.ActiveNoPlayers
             game.tear_down()
+            _cleanup_game(game)
 
         # If the game wasn't active and there are no players,
         # cleanup the traces of the game.
@@ -340,6 +355,8 @@ def _leave_game(subject_id) -> bool:
             print("plyyer exited with other players active")
             exit_status = utils.GameExitStatus.ActiveWithOtherPlayers
             game.tear_down()
+            _cleanup_game(game)
+
         else:
             raise NotImplementedError("Something went wrong on exit!")
 
@@ -415,6 +432,7 @@ def on_connect():
 def on_leave(data):
     subject_id = flask.request.sid
     client_session_id = data.get("session_id")
+    print(subject_id, "kleaving")
 
     # Validate session
     if not is_valid_session(client_session_id):
@@ -427,6 +445,7 @@ def on_leave(data):
 
     with SUBJECTS[subject_id]:
         game = _get_existing_game(subject_id=subject_id)
+        print(game, "game on leaving")
         if game is not None:
             game_id = game.game_id
         else:
@@ -687,7 +706,7 @@ def on_request_redirect(data):
     if CONFIG.append_subject_name_to_redirect:
         redirect_url += SUBJECT_ID_MAP[subject_id]
 
-    del SUBJECT_ID_MAP[subject_id]
+    # del SUBJECT_ID_MAP[subject_id]
 
     socketio.emit(
         "end_game_redirect",

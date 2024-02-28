@@ -4,6 +4,8 @@ from configurations import remote_config
 from server import server_app
 from configurations import configuration_constants
 from examples.cogrid_overcooked import overcooked_utils
+from examples.cogrid_overcooked import overcooked_callback
+
 
 """
 This is an example script for running MountainCar-v0 in
@@ -65,6 +67,7 @@ config = (
         action_mapping=action_mapping,
         num_episodes=2,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
+        callback=overcooked_callback.OvercookedCallback(),
     )
     .hosting(port=5702, host="0.0.0.0", max_concurrent_games=10)
     .user_experience(

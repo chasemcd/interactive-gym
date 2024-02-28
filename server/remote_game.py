@@ -128,6 +128,7 @@ class RemoteGame:
             )
             return
 
+        print("Setting", player_id, "to Available")
         self.human_players[player_id] = utils.Available
 
     def is_ready_to_start(self) -> bool:

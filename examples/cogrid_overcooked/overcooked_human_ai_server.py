@@ -95,7 +95,7 @@ config = (
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
         final_page_header_text="Overcooked",
         final_page_text="Thanks for playing, you will be redirected shortly...",
-        end_game_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
+        end_game_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_agZ3V7Uj4jfVweG",
         waitroom_timeout=120_000,  # 2 minutes in waitroom
         waitroom_timeout_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_bIskl3fFOPC6ayy",
     )
