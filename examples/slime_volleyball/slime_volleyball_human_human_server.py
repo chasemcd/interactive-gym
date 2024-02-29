@@ -67,7 +67,7 @@ config = (
     .gameplay(
         default_action=NOOP,
         action_mapping=action_mapping,
-        num_episodes=10,
+        num_episodes=60,
         callback=slime_volleyball_callback.SlimeVolleyballCallback(),
     )
     .hosting(port=5704, host="0.0.0.0", max_concurrent_games=10)
