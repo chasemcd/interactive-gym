@@ -792,4 +792,5 @@ def run(config):
         log_output=app.config["DEBUG"],
         port=CONFIG.port,
         host=CONFIG.host,
+        allow_unsafe_werkzeug=True,
     )
