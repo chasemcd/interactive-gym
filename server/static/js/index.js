@@ -39,8 +39,6 @@ function calculateMedian(arr) {
 
     // Round to the nearest integer
     median = Math.round(median);
-
-    // Format as a two-digit number
     return median;
 }
 
@@ -60,7 +58,7 @@ var refreshStartButton = setInterval(() => {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
         $('#errorText').show()
-        $('#errorText').text(`Sorry, your connection is too slow for this app. Please make sure you have a strong internet connection to ensure a good experience for all players in the game. This page will refresh if your connection improves.`);
+        $('#errorText').text("Sorry, your connection is too slow for this application. Please make sure you have a strong internet connection to ensure a good experience for all players in the game. This page will refresh if your connection improves.");
     } else if (latencyMeasurements.length <= 5) {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
