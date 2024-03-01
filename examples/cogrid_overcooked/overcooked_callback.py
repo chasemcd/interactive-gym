@@ -22,6 +22,9 @@ class OvercookedCallback(callback.GameCallback):
     def on_episode_start(self, remote_game: RemoteGame) -> None:
         self.start_times[remote_game.game_uuid] = time.time()
 
+    def on_episode_end(self, remote_game: RemoteGame) -> None:
+        self.save_and_clear_data(remote_game)
+
     def on_game_tick_start(self, remote_game: RemoteGame) -> None:
         """
         At the beginning of the tick() call, we'll log the current state of the game.
@@ -44,41 +47,8 @@ class OvercookedCallback(callback.GameCallback):
         self.actions[remote_game.game_uuid].append(actions)
         self.rewards[remote_game.game_uuid].append(rewards)
 
-    def on_game_end(self, remote_game: RemoteGame) -> None:
-
-        print("game ending!")
-
-        full_data_dicts = []
-
-        # merge the list of dicts
-        for state_data, action_data, reward_data in zip(
-            self.states[remote_game.game_uuid],
-            self.actions[remote_game.game_uuid],
-            self.rewards[remote_game.game_uuid],
-        ):
-            state_data.update(action_data)
-            state_data.update(reward_data)
-            full_data_dicts.append(state_data)
-
-        game_data = pd.DataFrame(full_data_dicts)
-        data_dir = f"data/overcooked/"
-
-        print(
-            "writing data to",
-            os.path.join(
-                os.getcwd(), os.path.join(data_dir, f"{remote_game.game_uuid}.csv")
-            ),
-        )
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-
-        game_data.to_csv(os.path.join(data_dir, f"{remote_game.game_uuid}.csv"))
-
-        # clear out data
-        del self.start_times[remote_game.game_uuid]
-        del self.states[remote_game.game_uuid]
-        del self.actions[remote_game.game_uuid]
-        del self.rewards[remote_game.game_uuid]
+    def on_game_end(self, remote_game: RemoteGame):
+        self.save_and_clear_data(remote_game)
 
     def gen_game_data(self, remote_game: RemoteGame) -> dict[str, typing.Any]:
         data = {
@@ -103,3 +73,36 @@ class OvercookedCallback(callback.GameCallback):
             data[f"{agent_id}_is_human"] = False
 
         return data
+
+    def save_and_clear_data(self, remote_game: RemoteGame) -> None:
+        full_data_dicts = []
+
+        # merge the list of dicts
+        for state_data, action_data, reward_data in zip(
+            self.states[remote_game.game_uuid],
+            self.actions[remote_game.game_uuid],
+            self.rewards[remote_game.game_uuid],
+        ):
+            state_data.update(action_data)
+            state_data.update(reward_data)
+            full_data_dicts.append(state_data)
+
+        game_data = pd.DataFrame(full_data_dicts)
+        data_dir = f"data/overcooked/"
+
+        save_file_path = os.path.join(
+            data_dir,
+            f"{remote_game.game_uuid}-episode-{remote_game.episode_num}.csv",
+        )
+
+        print("writing data to", save_file_path)
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+
+        game_data.to_csv(save_file_path)
+
+        # clear out data
+        del self.start_times[remote_game.game_uuid]
+        del self.states[remote_game.game_uuid]
+        del self.actions[remote_game.game_uuid]
+        del self.rewards[remote_game.game_uuid]
