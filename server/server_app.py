@@ -606,11 +606,42 @@ def handle_reset_complete(data):
         game.reset_event.set()  # Signal to the game loop that reset is complete
 
 
-@socketio.on("pong")
-def on_pong(data):
+@socketio.on("ping")
+def pong(data):
     socketio.emit(
-        "pong_response", {"timestamp": data.get("timestamp")}, room=flask.request.sid
+        "pong",
+        {
+            "max_latency": CONFIG.max_ping,
+            "min_ping_measurements": CONFIG.min_ping_measurements,
+        },
+        room=flask.request.sid,
     )
+
+
+@socketio.on("invalid_ping")
+def invalid_ping_redirect(data):
+
+    if data["num_measurements"] <= CONFIG.min_ping_measurements:
+        return
+
+    subject_id = flask.request.sid
+    game = _get_existing_game(subject_id)
+
+    if game is not None:
+        socketio.emit(
+            "end_game",
+            {},
+            room=game.game_id,
+        )
+    else:
+        socketio.emit(
+            "end_game_redirect",
+            {
+                "redirect_url": CONFIG.waitroom_timeout_redirect_url,
+                "redirect_timeout": CONFIG.redirect_timeout,
+            },
+            room=subject_id,
+        )
 
 
 def run_game(game: remote_game.RemoteGame):

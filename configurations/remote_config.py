@@ -37,6 +37,8 @@ class RemoteConfig:
         )
         self.input_mode: str = configuration_constants.InputModes.PressedKeys
         self.game_has_composite_actions: bool = False
+        self.max_ping: int | None = None
+        self.min_ping_measurements: int = 5
         self.callback: None = (
             None  # TODO(chase): add callback typehint but need to avoid circular import
         )
@@ -169,6 +171,7 @@ class RemoteConfig:
         host: str | None = None,
         port: int | None = None,
         max_concurrent_games: int | None = None,
+        max_ping: int | None = None,
     ):
         if host is not None:
             self.host = host
@@ -179,6 +182,9 @@ class RemoteConfig:
         if max_concurrent_games is not None:
             assert max_concurrent_games >= 1, "Must have at least one concurrent game!"
             self.max_concurrent_games = max_concurrent_games
+
+        if max_ping is not None:
+            self.max_ping = max_ping
 
         return self
 

@@ -1,5 +1,84 @@
 var socket = io();
 
+
+
+
+var latencyMeasurements = [];
+var curLatency;
+var maxLatency;
+
+socket.on('pong', function(data) {
+    var latency = Date.now() - window.lastPingTime;
+    latencyMeasurements.push(latency);
+
+    var maxMeasurements = 20; // limit to last 50 measurements
+    if (latencyMeasurements.length > maxMeasurements) {
+        latencyMeasurements.shift(); // Remove the oldest measurement
+    }
+
+    // Calculate the median
+    var medianLatency = calculateMedian(latencyMeasurements);
+
+    // Update the latency (ping) display in the UI
+    document.getElementById('latencyValue').innerText = medianLatency.toString().padStart(3, '0');
+    document.getElementById('latencyContainer').style.display = 'block'; // Show the latency (ping) display
+    curLatency = medianLatency;
+    maxLatency = data.max_latency;
+
+    // console.log(curLatency, data.max_latency, latencyMeasurements.length, curLatency > data.max_latency, latencyMeasurements.length >= data.min_ping_measurements, data.min_ping_measurements);
+    // if (curLatency > data.max_latency && latencyMeasurements.length >= data.min_ping_measurements) {
+    //     console.log("invalid_ping")
+    //     socket.emit("invalid_ping", {"ping": curLatency, "num_measurements": latencyMeasurements.length})
+    // }
+});
+
+function calculateMedian(arr) {
+    const sortedArr = arr.slice().sort((a, b) => a - b);
+    const mid = Math.floor(sortedArr.length / 2);
+    let median;
+
+    if (sortedArr.length % 2 !== 0) {
+        median = sortedArr[mid];
+    } else {
+        median = (sortedArr[mid - 1] + sortedArr[mid]) / 2;
+    }
+
+    // Round to the nearest integer
+    median = Math.round(median);
+
+    // Format as a two-digit number
+    return median;
+}
+
+
+function sendPing() {
+    window.lastPingTime = Date.now();
+    socket.emit('ping', {ping_ms: curLatency});
+}
+
+// Send a ping every second
+setInterval(sendPing, 1000);
+
+// Check if we're enabling the start button
+setInterval(() => {
+    if (latencyMeasurements.length > 5 && curLatency > maxLatency) {
+        $("#instructions").hide();
+        $("#startButton").hide();
+        $("#startButton").attr("disabled", true);
+        $('#errorText').show()
+        $('#errorText').text(`Sorry, your connection is too slow for this app. Please make sure you have a strong internet connection to ensure a good experience for all players in the game. This page will refresh if your connection improves.`);
+    } else if (latencyMeasurements.length <= 5) {
+        $("#startButton").hide();
+        $("#startButton").attr("disabled", true);
+    } else {
+        $('#errorText').hide()
+        $("#startButton").show();
+        $("#startButton").attr("disabled", false);
+    }
+}, 
+1000)
+
+
 $(function() {
     $('#startButton').click( () => {
         $("#startButton").hide();
@@ -234,48 +313,9 @@ socket.on('environment_state', function(data) {
     $('#hudText').text(data.hud_text)
 
     addStateToBuffer(data);
-    // Emit pong with timestamp every 10 steps
-    if (data.step % 10 == 0) {
-        socket.emit("pong", { timestamp: Date.now() });
-    }
 });
 
 
-var latencyMeasurements = [];
-socket.on('pong_response', function(data) {
-    var latency = Date.now() - data.timestamp;
-    latencyMeasurements.push(latency);
-
-    var maxMeasurements = 50; // limit to last 50 measurements
-    if (latencyMeasurements.length > maxMeasurements) {
-        latencyMeasurements.shift(); // Remove the oldest measurement
-    }
-
-    // Calculate the median
-    var medianLatency = calculateMedian(latencyMeasurements);
-
-    // Update the latency (ping) display in the UI
-    document.getElementById('latencyValue').innerText = medianLatency;
-    document.getElementById('latencyContainer').style.display = 'block'; // Show the latency (ping) display
-});
-
-function calculateMedian(arr) {
-    const sortedArr = arr.slice().sort((a, b) => a - b);
-    const mid = Math.floor(sortedArr.length / 2);
-    let median;
-
-    if (sortedArr.length % 2 !== 0) {
-        median = sortedArr[mid];
-    } else {
-        median = (sortedArr[mid - 1] + sortedArr[mid]) / 2;
-    }
-
-    // Round to the nearest integer
-    median = Math.round(median);
-
-    // Format as a two-digit number
-    return median.toString().padStart(3, '0');
-}
 
 socket.on('end_game', function(data) {
     console.log("game ended!")
