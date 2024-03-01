@@ -82,7 +82,7 @@ config = (
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
-    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=10)
+    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=100)
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",
