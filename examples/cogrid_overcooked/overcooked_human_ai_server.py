@@ -82,7 +82,7 @@ config = (
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
-    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=100, max_ping=1)
+    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=100, max_ping=150)
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",
@@ -96,7 +96,7 @@ config = (
         final_page_header_text="Overcooked",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         end_game_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_agZ3V7Uj4jfVweG",
-        waitroom_timeout=5 * 60_000,  # 2 minutes in waitroom
+        waitroom_timeout=5 * 60_000,  # 5 minutes in waitroom
         waitroom_timeout_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_bIskl3fFOPC6ayy",
     )
 )

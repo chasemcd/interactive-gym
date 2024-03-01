@@ -281,7 +281,8 @@ def get_waiting_game() -> None | remote_game.RemoteGame:
 
 def _cleanup_game(game: remote_game.RemoteGame):
     if FREE_MAP[game.game_id]:
-        raise ValueError("Freeing a free game!")
+        print("Attempting to free a free game! Exiting cleanup.")
+        return
 
     for subject_id in game.human_players.values():
         if subject_id is utils.Available:
@@ -327,12 +328,15 @@ def _leave_game(subject_id) -> bool:
         if game_was_active and game_is_empty:
             exit_status = utils.GameExitStatus.ActiveNoPlayers
             game.tear_down()
+            print("cleanup at exit")
             _cleanup_game(game)
 
         # If the game wasn't active and there are no players,
         # cleanup the traces of the game.
         elif game_is_empty:
             exit_status = utils.GameExitStatus.InactiveNoPlayers
+            print("cleanup at empty")
+
             _cleanup_game(game)
 
         # if the game was not active and not empty, redirect the players back to the waitroom.
@@ -355,6 +359,8 @@ def _leave_game(subject_id) -> bool:
             print("plyyer exited with other players active")
             exit_status = utils.GameExitStatus.ActiveWithOtherPlayers
             game.tear_down()
+            print("cleanup at active and empty")
+
             _cleanup_game(game)
 
         else:
@@ -618,32 +624,6 @@ def pong(data):
     )
 
 
-@socketio.on("invalid_ping")
-def invalid_ping_redirect(data):
-
-    if data["num_measurements"] <= CONFIG.min_ping_measurements:
-        return
-
-    subject_id = flask.request.sid
-    game = _get_existing_game(subject_id)
-
-    if game is not None:
-        socketio.emit(
-            "end_game",
-            {},
-            room=game.game_id,
-        )
-    else:
-        socketio.emit(
-            "end_game_redirect",
-            {
-                "redirect_url": CONFIG.waitroom_timeout_redirect_url,
-                "redirect_timeout": CONFIG.redirect_timeout,
-            },
-            room=subject_id,
-        )
-
-
 def run_game(game: remote_game.RemoteGame):
     end_status = [remote_game.GameStatus.Inactive, remote_game.GameStatus.Done]
 
@@ -720,6 +700,7 @@ def run_game(game: remote_game.RemoteGame):
         for human_player_name in game.human_players.values():
             PROCESSED_SUBJECT_NAMES.append(human_player_name)
 
+        print("cleanup at end")
         _cleanup_game(game)
 
 

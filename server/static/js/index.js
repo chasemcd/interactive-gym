@@ -1,5 +1,5 @@
 var socket = io();
-
+var start_pressed = false;
 
 
 
@@ -24,12 +24,6 @@ socket.on('pong', function(data) {
     document.getElementById('latencyContainer').style.display = 'block'; // Show the latency (ping) display
     curLatency = medianLatency;
     maxLatency = data.max_latency;
-
-    // console.log(curLatency, data.max_latency, latencyMeasurements.length, curLatency > data.max_latency, latencyMeasurements.length >= data.min_ping_measurements, data.min_ping_measurements);
-    // if (curLatency > data.max_latency && latencyMeasurements.length >= data.min_ping_measurements) {
-    //     console.log("invalid_ping")
-    //     socket.emit("invalid_ping", {"ping": curLatency, "num_measurements": latencyMeasurements.length})
-    // }
 });
 
 function calculateMedian(arr) {
@@ -60,7 +54,7 @@ function sendPing() {
 setInterval(sendPing, 1000);
 
 // Check if we're enabling the start button
-setInterval(() => {
+var refreshStartButton = setInterval(() => {
     if (latencyMeasurements.length > 5 && curLatency > maxLatency) {
         $("#instructions").hide();
         $("#startButton").hide();
@@ -74,15 +68,16 @@ setInterval(() => {
         $('#errorText').hide()
         $("#startButton").show();
         $("#startButton").attr("disabled", false);
+        clearInterval(refreshStartButton);
     }
-}, 
-1000)
+}, 1000)
 
 
 $(function() {
     $('#startButton').click( () => {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
+        start_pressed = true;
         socket.emit("join", {session_id: window.sessionId});
 
     })
@@ -321,9 +316,9 @@ socket.on('end_game', function(data) {
     console.log("game ended!")
     // Hide game data and display game-over html
     graphics_end();
-    $('#hudText').hide()
-    disable_key_listener()
-    socket.emit("leave_game", {session_id: window.sessionId})
+    $('#hudText').hide();
+    disable_key_listener();
+    socket.emit("leave_game", {session_id: window.sessionId});
 
     $('#finalPageHeaderText').show()
     $('#finalPageText').show()
