@@ -2,6 +2,7 @@ import collections
 import dataclasses
 import queue
 import threading
+import eventlet
 import typing
 import numpy as np
 from gymnasium import spaces
@@ -26,7 +27,8 @@ class RemoteGame:
         self.config = config
         self.status = GameStatus.Inactive
         self.lock = threading.Lock()
-        self.reset_event = threading.Event()
+        self.reset_event: eventlet.event.Event | None = None
+        self.set_reset_event()
 
         # Players and actions
         self.pending_actions = None
@@ -62,6 +64,10 @@ class RemoteGame:
         self.prev_actions: dict[str | int, str | int] = {}
 
         self._build()
+
+    def set_reset_event(self) -> None:
+        """Reinitialize the reset event."""
+        self.reset_event = eventlet.event.Event()
 
     def _build_env(self) -> None:
         self.env = self.config.env_creator(

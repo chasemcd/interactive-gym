@@ -8,6 +8,7 @@ import uuid
 import itertools
 import atexit
 import secrets
+import eventlet
 
 
 import flask
@@ -162,7 +163,7 @@ def join_or_create_game(data):
             USER_ROOMS[subject_id] = game.game_id
 
             # add unique event to sync resets across players
-            RESET_EVENTS[game.game_id][subject_id] = threading.Event()
+            RESET_EVENTS[game.game_id][subject_id] = eventlet.event.Event()
 
             available_human_player_ids = game.get_available_human_player_ids()
 
@@ -602,14 +603,14 @@ def handle_reset_complete(data):
 
     # Set the event for the corresponding player
     try:
-        RESET_EVENTS[game_id][subject_id].set()
-    except:
+        RESET_EVENTS[game_id][subject_id].send()
+    except KeyError:
         print("keyerror!!!", subject_id)
         print(RESET_EVENTS[game_id].keys())
 
     # Check if all players have completed their reset
-    if all(event.is_set() for event in RESET_EVENTS[game_id].values()):
-        game.reset_event.set()  # Signal to the game loop that reset is complete
+    if all(event.ready() for event in RESET_EVENTS[game_id].values()):
+        game.reset_event.send()  # Signal to the game loop that reset is complete
 
 
 @socketio.on("ping")
@@ -658,6 +659,7 @@ def run_game(game: remote_game.RemoteGame):
         if game.status == remote_game.GameStatus.Reset:
             if CONFIG.callback is not None:
                 CONFIG.callback.on_episode_end(game)
+            print("emitting reset")
             socketio.emit(
                 "game_reset",
                 {
@@ -668,14 +670,19 @@ def run_game(game: remote_game.RemoteGame):
                 room=game.game_id,
             )
 
-            game.reset_event.wait()
+            print("funished emitting for reset event")
 
-            # Clear the events for each player
-            for event in RESET_EVENTS[game.game_id].values():
-                event.clear()
+            game.reset_event.wait()
+            print("funished waiting for reset event")
+
+            # Replace the events for each player with new eventlet.event.Event instances
+            for player_id in RESET_EVENTS[game.game_id].keys():
+                RESET_EVENTS[game.game_id][player_id] = eventlet.event.Event()
+
+            print("reset events cleared")
 
             # Clear the game reset event
-            game.reset_event.clear()
+            game.set_reset_event()
 
             with game.lock:
                 game.reset()
@@ -685,6 +692,7 @@ def run_game(game: remote_game.RemoteGame):
             render_game(game)
 
             socketio.sleep(1 / game.config.fps)
+            print("reset fin")
 
     with game.lock:
         if game.status != remote_game.GameStatus.Inactive:
