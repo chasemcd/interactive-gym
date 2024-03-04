@@ -7,6 +7,7 @@ import typing
 import numpy as np
 from gymnasium import spaces
 import uuid
+import time
 
 from configurations import remote_config
 from configurations import configuration_constants
@@ -87,13 +88,19 @@ class RemoteGame:
                 ), "Must provide a method to load policies via policy name to RemoteConfig!"
                 self.bot_players[agent_id] = self.config.load_policy_fn(policy_id)
 
-                # TODO(chase): put this in a separate function
-                # self.bot_threads[agent_id] = threading.Thread(
-                #     target=self.policy_consumer, args=(agent_id,)
-                # )
+    def _init_bot_threads(self):
+        # TODO(chase): put this in a separate function
+        for agent_id in self.bot_players.keys():
+            self.bot_threads[agent_id] = eventlet.spawn(
+                self.policy_consumer, agent_id=agent_id
+            )
 
     def policy_consumer(self, agent_id: str | int) -> None:
         while self.status == GameStatus.Active:
+
+            # Game hangs if we don't do this
+            time.sleep(1 / self.config.fps)
+
             try:
                 state = self.state_queues[agent_id].get(block=False)
             except queue.Empty:
@@ -101,6 +108,7 @@ class RemoteGame:
 
             policy = self.bot_players[agent_id]
             action = self.config.policy_inference_fn(state, policy)
+            print(action)
             self.enqueue_action(agent_id, action)
 
     def get_available_human_player_ids(self) -> list[str]:
@@ -149,7 +157,7 @@ class RemoteGame:
         self.status = GameStatus.Inactive
 
         for bot_thread in self.bot_threads.values():
-            bot_thread.join()
+            bot_thread.kill()
 
         for q in self.pending_actions.values():
             q.queue.clear()
@@ -159,10 +167,12 @@ class RemoteGame:
         if self.status != GameStatus.Active:
             return
 
+        print("attempting queue")
         try:
             self.pending_actions[subject_id].put(action, block=False)
         except queue.Full:
             pass
+        print("queue done")
 
     def add_player(self, player_id: str | int, identifier: str | int) -> None:
         available_ids = self.get_available_human_player_ids()
@@ -248,12 +258,12 @@ class RemoteGame:
             # If we have a specified policy, pop an action from the pending actions queue
             # if there are any
             # TODO(Chase): figure out why this was hanging
-            # elif self.pending_actions[pid].qsize() > 0:
-            #     player_actions[pid] = self.pending_actions[pid].get(block=False)
-            elif self.tick_num % self.config.frame_skip == 0:
-                player_actions[pid] = self.config.policy_inference_fn(
-                    self.obs[pid], bot
-                )
+            elif self.pending_actions[pid].qsize() > 0:
+                player_actions[pid] = self.pending_actions[pid].get(block=False)
+            # elif self.tick_num % self.config.frame_skip == 0:
+            #     player_actions[pid] = self.config.policy_inference_fn(
+            #         self.obs[pid], bot
+            #     )
 
         self.prev_actions = player_actions
         try:
@@ -271,9 +281,8 @@ class RemoteGame:
             rewards if isinstance(rewards, dict) else {"reward": rewards}
         )
 
-        # print("queuing obs")
-        # if self.tick_num % self.config.frame_skip == 0:
-        #     self.enqueue_observations()
+        if self.tick_num % self.config.frame_skip == 0:
+            self.enqueue_observations()
 
         if not isinstance(rewards, dict):
             self.episode_rewards[0] += rewards
@@ -301,7 +310,6 @@ class RemoteGame:
         if self.status != GameStatus.Active:
             return
 
-        a = "b"
         for pid, obs in self.obs.items():
             if pid not in self.bot_players:
                 continue
@@ -324,10 +332,11 @@ class RemoteGame:
         self.obs, _ = self.env.reset(seed=seed)
         self.status = GameStatus.Active
 
+        self._init_bot_threads()
+
         self.tick_num = 0
 
-        # if self.tick_num % self.config.frame_skip == 0:
-        #     self.enqueue_observations()
+        self.enqueue_observations()
 
         self.episode_num += 1
         self.episode_rewards = collections.defaultdict(lambda: 0)
