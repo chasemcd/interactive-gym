@@ -1,3 +1,7 @@
+import eventlet
+
+eventlet.monkey_patch()
+
 from cogrid.envs import registry
 
 from configurations import remote_config
@@ -35,7 +39,7 @@ POLICY_MAPPING = {
 
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
-    return registry.make("Overcooked-V0", render_mode="rgb_array")
+    return registry.make("Overcooked-V0", render_mode=None)
 
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)

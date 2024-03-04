@@ -1,3 +1,7 @@
+import eventlet
+
+eventlet.monkey_patch()
+
 from slime_volleyball import slimevolley_env
 
 from configurations import remote_config
