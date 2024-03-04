@@ -1,3 +1,7 @@
+import eventlet
+
+eventlet.monkey_patch()
+
 from cogrid.envs import registry
 
 from configurations import remote_config
