@@ -21,10 +21,15 @@ def read_files(data_path: str) -> pd.DataFrame:
 
 
 def calc_bonuses(df: pd.DataFrame) -> None:
-    df = df[["agent-0_identifier", "episode_num", "agent-0_reward"]]
-    df = df.groupby(by=["agent-0_identifier", "episode_num"]).sum(numeric_only=True)
+    df = df[["agent-0_identifier", "agent-0_reward"]]
+    df["count"] = 1
+    df = df.groupby(["agent-0_identifier"]).sum()
+
+    df = df[df["count"] == 20000]
+
+    df["agent-0_reward"] = df["agent-0_reward"]
     df["bonus"] = df["agent-0_reward"] * 0.02
-    df.to_csv("data/overcooked/bonuses.csv")
+    df.to_csv("data/overcooked/bonuses_total.csv")
 
 
 if __name__ == "__main__":
