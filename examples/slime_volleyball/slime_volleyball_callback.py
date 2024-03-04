@@ -21,6 +21,9 @@ class SlimeVolleyballCallback(callback.GameCallback):
     def on_episode_start(self, remote_game: RemoteGame) -> None:
         self.start_times[remote_game.game_uuid] = time.time()
 
+    def on_episode_end(self, remote_game: RemoteGame) -> None:
+        self.save_and_clear_data(remote_game)
+
     def on_game_tick_start(self, remote_game: RemoteGame) -> None:
         """
         At the beginning of the tick() call, we'll log the current state of the game.
@@ -43,10 +46,7 @@ class SlimeVolleyballCallback(callback.GameCallback):
         self.actions[remote_game.game_uuid].append(actions)
         self.rewards[remote_game.game_uuid].append(rewards)
 
-    def on_game_end(self, remote_game: RemoteGame) -> None:
-
-        print("game ending!")
-
+    def save_and_clear_data(self, remote_game: RemoteGame) -> None:
         full_data_dicts = []
 
         # merge the list of dicts
@@ -61,23 +61,25 @@ class SlimeVolleyballCallback(callback.GameCallback):
 
         game_data = pd.DataFrame(full_data_dicts)
         data_dir = f"data/slime_volleyball/"
-
-        print(
-            "writing data to",
-            os.path.join(
-                os.getcwd(), os.path.join(data_dir, f"{remote_game.game_uuid}.csv")
-            ),
+        save_file_path = os.path.join(
+            data_dir,
+            f"{remote_game.game_uuid}-episode-{remote_game.episode_num}.csv",
         )
+        print("writing data to", save_file_path)
+
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
 
-        game_data.to_csv(os.path.join(data_dir, f"{remote_game.game_uuid}.csv"))
+        game_data.to_csv(save_file_path)
 
         # clear out data
         del self.start_times[remote_game.game_uuid]
         del self.states[remote_game.game_uuid]
         del self.actions[remote_game.game_uuid]
         del self.rewards[remote_game.game_uuid]
+
+    def on_game_end(self, remote_game: RemoteGame) -> None:
+        self.save_and_clear_data(remote_game)
 
     def gen_game_data(self, remote_game: RemoteGame) -> dict[str, typing.Any]:
         data = {
