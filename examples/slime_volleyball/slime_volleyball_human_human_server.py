@@ -70,7 +70,7 @@ config = (
         num_episodes=50,
         callback=slime_volleyball_callback.SlimeVolleyballCallback(),
     )
-    .hosting(port=5704, host="0.0.0.0", max_concurrent_games=100, max_ping=125)
+    .hosting(port=5704, host="0.0.0.0", max_concurrent_games=100, max_ping=90)
     .user_experience(
         page_title="Slime Volleyball",
         welcome_header_text="Slime Volleyball",
