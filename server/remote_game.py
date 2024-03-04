@@ -108,7 +108,6 @@ class RemoteGame:
 
             policy = self.bot_players[agent_id]
             action = self.config.policy_inference_fn(state, policy)
-            print(action)
             self.enqueue_action(agent_id, action)
 
     def get_available_human_player_ids(self) -> list[str]:
@@ -167,12 +166,10 @@ class RemoteGame:
         if self.status != GameStatus.Active:
             return
 
-        print("attempting queue")
         try:
             self.pending_actions[subject_id].put(action, block=False)
         except queue.Full:
             pass
-        print("queue done")
 
     def add_player(self, player_id: str | int, identifier: str | int) -> None:
         available_ids = self.get_available_human_player_ids()
