@@ -58,7 +58,8 @@ var refreshStartButton = setInterval(() => {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
         $('#errorText').show()
-        $('#errorText').text("Sorry, your connection is too slow for this application. Please make sure you have a strong internet connection to ensure a good experience for all players in the game. This page will refresh if your connection improves.");
+        $('#errorText').text("Sorry, your connection is too slow for this application. Please make sure you have a strong internet connection to ensure a good experience for all players in the game.");
+        clearInterval(refreshStartButton);
     } else if (latencyMeasurements.length <= 5) {
         $("#startButton").show();
         $("#startButton").attr("disabled", true);

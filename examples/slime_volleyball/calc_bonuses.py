@@ -34,6 +34,7 @@ def calc_bonuses(df: pd.DataFrame) -> None:
     df["action_is_noop"] = df["agent_left_action"] == 0
     df["max_episode_num"] = df.groupby("game_uuid")["episode_num"].transform("max")
     df = df[df.max_episode_num == 50]
+    df = df.drop(columns=["max_episode_num"])
     df["count"] = 1
     df["agent_left_reward"] = df["agent_left_reward"].apply(lambda x: max(0, x))
 
