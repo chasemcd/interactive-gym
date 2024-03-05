@@ -362,6 +362,12 @@ def _leave_game(subject_id) -> bool:
             game.tear_down()
             print("cleanup at active and empty")
 
+            socketio.emit(
+                "end_game",
+                {"message": "Your game ended because the other player disconnected."},
+                room=game.game_id,
+            )
+
             _cleanup_game(game)
 
         else:

@@ -324,6 +324,12 @@ socket.on('end_game', function(data) {
     $("#gamePageText").hide();
     $("#gameContainer").hide();
 
+    if (data.message != undefined) {
+        $('#errorText').text(data.message);
+        $('#errorText').show();
+    }
+
+
 
     socket.emit('end_game_request_redirect', {waitroom_timeout: false})
 });
