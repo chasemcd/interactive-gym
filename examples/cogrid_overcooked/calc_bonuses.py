@@ -27,7 +27,7 @@ def calc_bonuses(df: pd.DataFrame) -> None:
     df["action_is_noop"] = df["agent-0_action"] == 6.0
 
     df.rename(
-        columns={"agent-0_identifier": "mturk_id", "agent-0_reward": "score"},
+        columns={"agent-0_identifier": "mturk_id_", "agent-0_reward": "score"},
         inplace=True,
     )
 
