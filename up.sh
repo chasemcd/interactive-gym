@@ -100,4 +100,4 @@ for ((i=0; i<num_instances; i++)); do
   nohup python -m $server_module_path --port $port > log_$port.txt 2>&1 &
 done
 
-echo "Started $num_instances instances on ports $start_port - $(($start_port + $num_instances - 1))."
+echo "Started $num_instances instances on host $public_ip, ports $start_port - $(($start_port + $num_instances - 1))."
