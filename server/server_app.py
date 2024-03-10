@@ -9,6 +9,7 @@ import itertools
 import atexit
 import secrets
 import eventlet
+import redis
 
 
 import flask
@@ -87,8 +88,22 @@ app = flask.Flask(__name__, template_folder=os.path.join("static", "templates"))
 app.config["SECRET_KEY"] = "secret!"
 
 app.config["DEBUG"] = os.getenv("FLASK_ENV", "production") == "development"
+
+# check if redis is available to use for message queue
+redis_host = "127.0.0.1"
+try:
+    print("Using redis for message queue...")
+    redis.Redis(redis_host, socket_connect_timeout=1).ping()
+    message_queue = f"redis://{redis_host}:6379/0"
+except redis.exceptions.ConnectionError:
+    print("Redis is not available for message queue. Proceeding without it...")
+    message_queue = None
+
 socketio = flask_socketio.SocketIO(
-    app, cors_allowed_origins="*", logger=app.config["DEBUG"]
+    app,
+    cors_allowed_origins="*",
+    # logger=app.config["DEBUG"],
+    message_queue=message_queue,
 )
 
 
@@ -806,5 +821,4 @@ def run(config):
         log_output=app.config["DEBUG"],
         port=CONFIG.port,
         host=CONFIG.host,
-        allow_unsafe_werkzeug=True,
     )

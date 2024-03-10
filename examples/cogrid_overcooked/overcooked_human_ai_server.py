@@ -11,16 +11,8 @@ from examples.cogrid_overcooked import overcooked_utils
 from examples.cogrid_overcooked import overcooked_callback
 from utils import onnx_inference_utils
 
-"""
-This is an example script for running MountainCar-v0 in
-a local server. Simply run the script and navigate
-to http://127.0.0.1:8000 in your browser. 
+import argparse
 
-MountainCar-v0 has three actions: do nothing, accelerate left
-and accelerate right. We set "do nothing" to be the default
-for when there is no key pressed. Accelerating left and right
-are the left and right arrow keys, respectively.  
-"""
 
 MoveUp = 0
 MoveDown = 1
@@ -52,15 +44,6 @@ action_mapping = {
     "q": Toggle,
 }
 
-
-def dummy_query_fn(*args, **kwargs):
-    return 6
-
-
-def dummy_load_fn(bot, *args, **kwargs):
-    return bot
-
-
 config = (
     remote_config.RemoteConfig()
     .policies(
@@ -86,7 +69,7 @@ config = (
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
-    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=100, max_ping=100)
+    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=20, max_ping=100)
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",
@@ -107,4 +90,12 @@ config = (
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--port", type=int, default=5701, help="Port number to listen on"
+    )
+    args = parser.parse_args()
+
+    config.hosting(port=args.port)
+
     server_app.run(config)
