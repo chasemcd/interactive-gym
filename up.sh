@@ -11,6 +11,7 @@ num_instances=1
 start_port=5701
 start_redis=0
 start_nginx=0
+public_ip=$(curl -s ifconfig.me)
 server_module_path=""
 nginx_config_template="configurations/interactive-gym-nginx.conf"
 
@@ -70,7 +71,7 @@ if [ "$start_nginx" -eq 1 ]; then
   upstream_servers=""
   for ((i=0; i<num_instances; i++)); do
     port=$(($start_port + $i))
-    upstream_servers+="server 127.0.0.1:$port;\n"
+    upstream_servers+="server $public_ip:$port;\n"
   done
 
   # Replace upstream block in interactive-gym-nginx.conf.conf
