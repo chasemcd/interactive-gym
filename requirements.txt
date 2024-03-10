@@ -1,6 +1,5 @@
 absl-py==2.0.0
 aiosignal==1.3.1
-asttokens @ file:///home/conda/feedstock_root/build_artifacts/asttokens_1698341106958/work
 async-timeout==4.0.3
 attrs==23.2.0
 bidict==0.22.1
