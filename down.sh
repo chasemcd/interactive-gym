@@ -4,9 +4,6 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 
-# Kill all background processes related to the specified Python module
-echo "Killing all background processes for the module..."
-pkill -f "$server_module_path"
 
 # Assign the first argument to server_module_path
 server_module_path="$1"
@@ -19,6 +16,8 @@ sudo service redis-server stop
 echo "Stopping Nginx..."
 sudo systemctl stop nginx
 
-
+# Kill all background processes related to the specified Python module
+echo "Killing all background processes for the module..."
+pkill -f "$server_module_path"
 
 echo "All services and processes have been stopped."
