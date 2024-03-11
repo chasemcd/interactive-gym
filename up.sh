@@ -56,6 +56,7 @@ echo "Number of instances: $num_instances"
 echo "Start Redis: $start_redis"
 echo "Start Nginx: $start_nginx"
 echo "Server Module Path: $server_module_path"
+echo "Server IP: $public_ip"
 
 # Start Redis server if requested
 if [ "$start_redis" -eq 1 ]; then

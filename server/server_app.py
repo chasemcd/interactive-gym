@@ -523,7 +523,7 @@ def on_disconnect():
     subject_id = flask.request.sid
     game = _get_existing_game(subject_id)
     logging.info(
-        f"Subject {subject_id} disconnected, Game ID: {game.game_id}.",
+        f"Subject {subject_id} disconnected, Game ID: {game.game_id if game is not None else 'None'}.",
     )
 
     if subject_id not in SUBJECTS:
