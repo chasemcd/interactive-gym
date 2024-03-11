@@ -88,7 +88,6 @@ if [ "$start_nginx" -eq 1 ]; then
 
     # Instead of overwriting the nginx_config_template, move the modified configuration directly to /etc/nginx/conf.d/
     echo "Copying Nginx configuration to /etc/nginx/conf.d/"
-    cat $temp_nginx_conf
     sudo mv "$temp_nginx_conf" "/etc/nginx/conf.d/$(basename $nginx_config_template)"
 
 

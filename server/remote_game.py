@@ -12,7 +12,9 @@ import time
 from configurations import remote_config
 from configurations import configuration_constants
 from server import utils
-from absl import logging
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -136,12 +138,9 @@ class RemoteGame:
                 break
 
         if player_id is None:
-            logging.warning(
-                f"Attempted to remove {subject_id} but player wasn't found."
-            )
+            logger.warning(f"Attempted to remove {subject_id} but player wasn't found.")
             return
 
-        print("Setting", player_id, "to Available")
         self.human_players[player_id] = utils.Available
 
     def is_ready_to_start(self) -> bool:

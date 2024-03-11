@@ -82,7 +82,7 @@ class RemoteConfig:
         self.reset_timeout: int = 3000
 
         # logging
-        self.logfile: str = "./log"
+        self.logfile: str = "./server_log.log"
 
     def logging(self, logfile: str | None = None):
         if logfile is not None:

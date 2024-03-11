@@ -14,13 +14,15 @@ import redis
 
 import flask
 import flask_socketio
-from absl import logging
+
+import logging
+
 
 try:
     import cv2
 except ImportError:
     cv2 = None
-    logging.warn(
+    print(
         "cv2 not installed. This is required if you're not "
         "defining a rendering function and want to (inefficiently) "
         "have the canvas display whatever is returned from `env.render()`."
@@ -31,7 +33,27 @@ from configurations import remote_config
 from configurations import configuration_constants
 from server import utils
 
+
 CONFIG = remote_config.RemoteConfig()
+
+
+def setup_logger(name, log_file, level=logging.INFO):
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    handler = logging.FileHandler(log_file)
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+
+    return logger
+
+
+# TODO(chase): logfile should be able to be updated when the CONFIG is updated
+logger = setup_logger(__name__, CONFIG.logfile)
+
 
 # Data structure to save subjects by their socket id
 SUBJECTS = utils.ThreadSafeDict()
@@ -92,11 +114,11 @@ app.config["DEBUG"] = os.getenv("FLASK_ENV", "production") == "development"
 # check if redis is available to use for message queue
 redis_host = "127.0.0.1"
 try:
-    print("Using redis for message queue...")
+    logger.info("Using redis for message queue...")
     redis.Redis(redis_host, socket_connect_timeout=1).ping()
     message_queue = f"redis://{redis_host}:6379/0"
 except redis.exceptions.ConnectionError:
-    print("Redis is not available for message queue. Proceeding without it...")
+    logger.info("Redis is not available for message queue. Proceeding without it...")
     message_queue = None
 
 socketio = flask_socketio.SocketIO(
@@ -132,7 +154,9 @@ def _create_game() -> None:
     """
     game, err = try_create_game()
     if game is None:
-        print("create game gailed")
+        logger.warning(
+            f"Create game failed for subject ID {flask.request.sid} with error {err.__repr__()}"
+        )
         socketio.emit(
             "create_game_failed", {"error": err.__repr__()}, room=flask.request.sid
         )
@@ -149,11 +173,11 @@ def join_or_create_game(data):
     subject_id = flask.request.sid
     client_session_id = data.get("session_id")
 
-    print("pressing_start")
-
     # Validate session
     if not is_valid_session(client_session_id):
-        print(subject_id, "invalid_session")
+        logger.warning(
+            f"Invalid session for {subject_id}. Got {client_session_id} but expected {SERVER_SESSION_ID}"
+        )
         flask_socketio.emit(
             "invalid_session",
             {"message": "Session is invalid. Please reconnect."},
@@ -164,16 +188,17 @@ def join_or_create_game(data):
     with SUBJECTS[subject_id]:
         # already in a game so don't join a new one
         if _get_existing_game(subject_id) is not None:
-            print(f"Subject {subject_id} already in a game.")
+            logger.warning(
+                f"Subject {subject_id} in a game but attempted to join another."
+            )
             return
 
         game = _create_or_join_game()
         if game is None:  # there was an error that is now displayed
-            print("game is None")
             return
 
         with game.lock:
-            print(f"Subject {subject_id} joining room {game.game_id}")
+            logger.info(f"Subject {subject_id} joining room {game.game_id}")
             flask_socketio.join_room(game.game_id)
             USER_ROOMS[subject_id] = game.game_id
 
@@ -232,7 +257,7 @@ def join_or_create_game(data):
 
             # If there is a real waiting room
             else:
-                print("Going to wait room")
+                logger.info(f"{subject_id} entering waiting room.")
                 remaining_wait_time = (
                     WAITROOM_TIMEOUTS[game.game_id] - time.time()
                 ) * 1000  # convert seconds to ms
@@ -249,7 +274,7 @@ def join_or_create_game(data):
 
 def start_game(game: remote_game.RemoteGame) -> None:
     """Helper function with the logic to begin a game."""
-    print("Game ready, starting!")
+    logger.info(f"Game {game.game_id} ready, starting!")
     ACTIVE_GAMES.add(game.game_id)
     socketio.emit(
         "start_game",
@@ -277,8 +302,6 @@ def _create_or_join_game() -> remote_game.RemoteGame:
     if game is not None:
         return game
 
-    print("No waiting game, creating new one...")
-
     # Lastly, we'll make a new game and retrieve that
     _create_game()  # adds to waiting game
     game = get_waiting_game()
@@ -297,7 +320,9 @@ def get_waiting_game() -> None | remote_game.RemoteGame:
 
 def _cleanup_game(game: remote_game.RemoteGame):
     if FREE_MAP[game.game_id]:
-        print("Attempting to free a free game! Exiting cleanup.")
+        logger.warning(
+            f"Attempting to free a free game (ID {game.game_id})! Exiting cleanup."
+        )
         return
 
     for subject_id in game.human_players.values():
@@ -325,7 +350,6 @@ def _leave_game(subject_id) -> bool:
     """Removes the subject with `subject_id` from any current game."""
     game = _get_existing_game(subject_id)
 
-    print(game, "game on leave game")
     if game is None:
         return False
 
@@ -344,14 +368,12 @@ def _leave_game(subject_id) -> bool:
         if game_was_active and game_is_empty:
             exit_status = utils.GameExitStatus.ActiveNoPlayers
             game.tear_down()
-            print("cleanup at exit")
             _cleanup_game(game)
 
         # If the game wasn't active and there are no players,
         # cleanup the traces of the game.
         elif game_is_empty:
             exit_status = utils.GameExitStatus.InactiveNoPlayers
-            print("cleanup at empty")
 
             _cleanup_game(game)
 
@@ -372,10 +394,8 @@ def _leave_game(subject_id) -> bool:
         # elif game_was_active and game.is_ready_to_start():
         #     raise ValueError("This shouldn't happen without spectators.")
         elif game_was_active and not game_is_empty:
-            print("plyyer exited with other players active")
             exit_status = utils.GameExitStatus.ActiveWithOtherPlayers
             game.tear_down()
-            print("cleanup at active and empty")
 
             socketio.emit(
                 "end_game",
@@ -431,10 +451,10 @@ def user_index(subject_name):
 @socketio.on("register_subject_name")
 def register_subject_name(data):
     """Ties the subject name in the URL to the flask request sid"""
-    print("registering subject name", data["subject_name"])
     subject_name = data["subject_name"]
     sid = flask.request.sid
     SUBJECT_ID_MAP[sid] = subject_name
+    logging.info(f"Registered subject ID {sid} with name {subject_name}")
 
 
 def is_valid_session(client_session_id):
@@ -460,7 +480,7 @@ def on_connect():
 def on_leave(data):
     subject_id = flask.request.sid
     client_session_id = data.get("session_id")
-    print(subject_id, "kleaving")
+    logging.info(f"Participant {SUBJECT_ID_MAP[subject_id]} leaving game.")
 
     # Validate session
     if not is_valid_session(client_session_id):
@@ -473,7 +493,6 @@ def on_leave(data):
 
     with SUBJECTS[subject_id]:
         game = _get_existing_game(subject_id=subject_id)
-        print(game, "game on leaving")
         if game is not None:
             game_id = game.game_id
         else:
@@ -503,11 +522,8 @@ def on_leave(data):
 def on_disconnect():
     subject_id = flask.request.sid
     game = _get_existing_game(subject_id)
-    print(
-        "Subject",
-        subject_id,
-        "disconnected, Game ID:",
-        game.game_id if game is not None else "No existing game.",
+    logging.info(
+        f"Subject {subject_id} disconnected, Game ID: {game.game_id}.",
     )
 
     if subject_id not in SUBJECTS:
@@ -626,8 +642,9 @@ def handle_reset_complete(data):
     try:
         RESET_EVENTS[game_id][subject_id].send()
     except KeyError:
-        print("keyerror!!!", subject_id)
-        print(RESET_EVENTS[game_id].keys())
+        logging.warning(
+            f"KeyError in RESET_EVENTS for game {game_id}, subject {SUBJECT_ID_MAP[subject_id]}"
+        )
 
     # Check if all players have completed their reset
     if all(event.ready() for event in RESET_EVENTS[game_id].values()):
@@ -680,7 +697,6 @@ def run_game(game: remote_game.RemoteGame):
         if game.status == remote_game.GameStatus.Reset:
             if CONFIG.callback is not None:
                 CONFIG.callback.on_episode_end(game)
-            print("emitting reset")
             socketio.emit(
                 "game_reset",
                 {
@@ -691,16 +707,11 @@ def run_game(game: remote_game.RemoteGame):
                 room=game.game_id,
             )
 
-            print("funished emitting for reset event")
-
             game.reset_event.wait()
-            print("funished waiting for reset event")
 
             # Replace the events for each player with new eventlet.event.Event instances
             for player_id in RESET_EVENTS[game.game_id].keys():
                 RESET_EVENTS[game.game_id][player_id] = eventlet.event.Event()
-
-            print("reset events cleared")
 
             # Clear the game reset event
             game.set_reset_event()
@@ -713,7 +724,6 @@ def run_game(game: remote_game.RemoteGame):
             render_game(game)
 
             socketio.sleep(1 / game.config.fps)
-            print("reset fin")
 
     with game.lock:
         if game.status != remote_game.GameStatus.Inactive:
@@ -729,13 +739,11 @@ def run_game(game: remote_game.RemoteGame):
         for human_player_name in game.human_players.values():
             PROCESSED_SUBJECT_NAMES.append(human_player_name)
 
-        print("cleanup at end")
         _cleanup_game(game)
 
 
 @socketio.on("end_game_request_redirect")
 def on_request_redirect(data):
-    print("redirect requested")
     subject_id = flask.request.sid
 
     waitroom_timeout = data.get("waitroom_timeout")

@@ -2,6 +2,7 @@ import eventlet
 
 eventlet.monkey_patch()
 
+import argparse
 from slime_volleyball import slimevolley_env
 
 from configurations import remote_config
@@ -93,6 +94,13 @@ config = (
     )
 )
 
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--port", type=int, default=5701, help="Port number to listen on"
+    )
+    args = parser.parse_args()
+
+    config.hosting(port=args.port)
+
     server_app.run(config)

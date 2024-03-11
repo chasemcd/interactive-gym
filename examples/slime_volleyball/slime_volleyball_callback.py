@@ -9,6 +9,10 @@ import pandas as pd
 from server import callback
 from server.remote_game import RemoteGame
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class SlimeVolleyballCallback(callback.GameCallback):
 
@@ -65,7 +69,7 @@ class SlimeVolleyballCallback(callback.GameCallback):
             data_dir,
             f"{remote_game.game_uuid}-episode-{remote_game.episode_num}.csv",
         )
-        print("writing data to", save_file_path)
+        logger.info(f"writing data to {save_file_path}")
 
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)

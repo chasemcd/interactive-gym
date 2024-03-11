@@ -2,6 +2,7 @@ import eventlet
 
 eventlet.monkey_patch()
 
+import argparse
 from cogrid.envs import registry
 
 from configurations import remote_config
@@ -10,17 +11,6 @@ from configurations import configuration_constants
 from examples.cogrid_overcooked import overcooked_utils
 from examples.cogrid_overcooked import overcooked_callback
 
-
-"""
-This is an example script for running MountainCar-v0 in
-a local server. Simply run the script and navigate
-to http://127.0.0.1:8000 in your browser. 
-
-MountainCar-v0 has three actions: do nothing, accelerate left
-and accelerate right. We set "do nothing" to be the default
-for when there is no key pressed. Accelerating left and right
-are the left and right arrow keys, respectively.  
-"""
 
 MoveUp = 0
 MoveDown = 1
@@ -92,6 +82,13 @@ config = (
     )
 )
 
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--port", type=int, default=5701, help="Port number to listen on"
+    )
+    args = parser.parse_args()
+
+    config.hosting(port=args.port)
+
     server_app.run(config)
