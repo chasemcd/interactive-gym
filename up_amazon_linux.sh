@@ -77,6 +77,7 @@ if [ "$start_nginx" -eq 1 ]; then
 
   # Copy modified configuration to /etc/nginx/conf.d/
   echo "Copying Nginx configuration..."
+  cat $nginx_config_template
   sudo cp $nginx_config_template /etc/nginx/conf.d/
 
   # Start or reload Nginx
