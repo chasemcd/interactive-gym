@@ -25,13 +25,13 @@ Noop = 6
 
 POLICY_MAPPING = {
     "agent-0": configuration_constants.PolicyTypes.Human,
-    "agent-1": "examples/cogrid_overcooked/policies/model.onnx",
+    "agent-1": "examples/cogrid_overcooked/policies/cramped_room_model.onnx",
 }
 
 
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
-    return registry.make("Overcooked-V0", render_mode=None)
+    return registry.make("Overcooked-CrampedRoom-V0", render_mode=None)
 
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
@@ -58,8 +58,8 @@ config = (
         env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
         assets_to_preload=overcooked_utils.overcooked_preload_assets_spec(),
         hud_text_fn=overcooked_utils.hud_text_fn,
-        game_width=overcooked_utils.TILE_SIZE * 9,
-        game_height=overcooked_utils.TILE_SIZE * 10,
+        game_width=overcooked_utils.TILE_SIZE * 7,
+        game_height=overcooked_utils.TILE_SIZE * 6,
         background="#e6b453",
     )
     .gameplay(
@@ -69,7 +69,7 @@ config = (
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
-    .hosting(port=5703, host="0.0.0.0", max_concurrent_games=20, max_ping=100)
+    .hosting(host="0.0.0.0", max_concurrent_games=20, max_ping=100)
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",

@@ -29,7 +29,7 @@ POLICY_MAPPING = {
 
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
-    return registry.make("Overcooked-V0", render_mode=None)
+    return registry.make("Overcooked-CrampedRoom-V0", render_mode=None)
 
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
@@ -63,7 +63,7 @@ config = (
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
-    .hosting(port=5705, host="0.0.0.0", max_concurrent_games=100, max_ping=100)
+    .hosting(host="0.0.0.0", max_concurrent_games=100, max_ping=100)
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="server/static/templates/overcooked_instructions.html",
