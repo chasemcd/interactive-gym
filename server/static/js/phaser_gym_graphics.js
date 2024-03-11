@@ -44,7 +44,29 @@ class GraphicsManager {
         game_config.parent = graphics_config.parent;
         game_config.fps = graphics_config.fps;
         this.game = new Phaser.Game(game_config);
+        // TODO(chase): Figure out proper resizing. Sprites must be resized as well but they aren't if we do this. 
+        // this.resizeGame();
+
+        // // Add a resize event listener to adjust the game size dynamically
+        // window.addEventListener('resize', this.resizeGame.bind(this));
     }
+
+    // resizeGame() {
+    //     // Example resize logic: Adjust game size while maintaining aspect ratio
+    //     let width = window.innerWidth;
+    //     let height = window.innerHeight;
+    //     let gameRatio = this.game.config.width / this.game.config.height;
+    //     let newWidth = width;
+    //     let newHeight = width / gameRatio;
+
+    //     if (newHeight > height) {
+    //         newHeight = height;
+    //         newWidth = height * gameRatio;
+    //     }
+
+    //     this.game.scale.resize(newWidth, newHeight);
+    // }
+
 }
 
 
