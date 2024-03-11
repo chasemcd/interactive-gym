@@ -59,15 +59,15 @@ echo "Server Module Path: $server_module_path"
 # Start Redis server if requested
 if [ "$start_redis" -eq 1 ]; then
     echo "Starting Redis server..."
-    sudo amazon-linux-extras install redis6 -y
-    sudo systemctl start redis
-    sudo systemctl enable redis
+    sudo dnf install redis6 -y
+    sudo systemctl start redis6
+    sudo systemctl enable redis6
 fi
 
 # Prepare and start Nginx with dynamic configuration
 if [ "$start_nginx" -eq 1 ]; then
   echo "Preparing Nginx configuration..."
-  sudo amazon-linux-extras install nginx1 -y
+  sudo dnf install nginx -y
 
   # Generate upstream block
   upstream_servers=""
