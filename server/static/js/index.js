@@ -360,6 +360,12 @@ socket.on('request_pressed_keys', function(data) {
 function enable_key_listener(input_mode) {
     pressedKeys = {};
     $(document).on('keydown', function(event) {
+        // List of keys to prevent default behavior for (scroll the window)
+        var keysToPreventDefault = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ']; // Includes space (' ')
+
+        if (keysToPreventDefault.includes(event.key)) {
+            event.preventDefault(); // Prevent default behavior for specified keys
+        }
 
         // If we're using the single keystroke input method, we just send the key when it's pressed.
         // This means no composite actions. 
