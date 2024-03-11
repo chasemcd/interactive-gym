@@ -11,8 +11,10 @@ public_ip=$(curl -s ifconfig.me)
 server_module_path=""
 nginx_config_template="configurations/interactive-gym-nginx.conf"
 
+
 # Process command line options
-while getopts ":n:rb-:" opt; do
+# Process command line options
+while getopts ":n:rbl-:" opt; do
   case ${opt} in
     n )
       num_instances=$OPTARG
@@ -22,6 +24,9 @@ while getopts ":n:rb-:" opt; do
       ;;
     b )
       start_nginx=1
+      ;;
+    l )
+      public_ip="127.0.0.1"
       ;;
     - )
       case "${OPTARG}" in
@@ -36,10 +41,11 @@ while getopts ":n:rb-:" opt; do
       esac
       ;;
     \? )
-      echo "Usage: cmd [-n number_of_instances] [-r] [-b] [--module path_to_python_module]"
+      echo "Usage: cmd [-n number_of_instances] [-r] [-b] [-l] [--module path_to_python_module]"
       echo "  -n: Number of Flask instances to start"
       echo "  -r: Start Redis queue service"
       echo "  -b: Start Nginx for load balancing"
+      echo "  -l: Run only on localhost (127.0.0.1)"
       echo "  --module: Path to the Python app module."
       exit 1
       ;;
@@ -54,7 +60,6 @@ echo "Server Module Path: $server_module_path"
 # Start Redis server if requested
 if [ "$start_redis" -eq 1 ]; then
     echo "Starting Redis server..."
-    sudo dnf install redis6 -y
     sudo systemctl start redis6
     sudo systemctl enable redis6
 fi
@@ -62,33 +67,37 @@ fi
 # Prepare and start Nginx with dynamic configuration
 if [ "$start_nginx" -eq 1 ]; then
   echo "Preparing Nginx configuration..."
-  sudo dnf install nginx -y
+    # Generate upstream block with ip_hash
+    upstream_block="upstream flaskapp {\n    ip_hash;\n"
+    for ((i=0; i<num_instances; i++)); do
+        port=$(($start_port + $i))
+        upstream_block+="    server $public_ip:$port;\n"
+    done
+    upstream_block+="}\n"
 
-  # Generate upstream block
-  upstream_servers=""
-  for ((i=0; i<num_instances; i++)); do
-    port=$(($start_port + $i))
-    upstream_servers+="server $public_ip:$port;\n"
-  done
+    # Create a new temporary nginx configuration file
+    temp_nginx_conf=$(mktemp)
 
-  # Replace upstream block in interactive-gym-nginx.conf
-  awk -v upstream="$upstream_servers" '/upstream flaskapp {/{flag=1; print; next} /}/{flag=0} flag{next} {print}' $nginx_config_template > temp_nginx.conf && mv temp_nginx.conf $nginx_config_template
-  sed -i "/upstream flaskapp {/a $upstream_servers" $nginx_config_template
+    # Process the original Nginx configuration template
+    # To replace the existing upstream block and preserve the rest of the configuration
+    awk -v replacement="$upstream_block" '
+      $0 ~ /^upstream flaskapp \{/ { inside = 1; print replacement; next }
+      $0 ~ /^\}/ && inside { inside = 0; next }
+      !inside { print }
+    ' $nginx_config_template > "$temp_nginx_conf"
 
-  # Copy modified configuration to /etc/nginx/conf.d/
-  echo "Copying Nginx configuration..."
-  cat $nginx_config_template
-  sudo cp $nginx_config_template /etc/nginx/conf.d/
+    # Instead of overwriting the nginx_config_template, move the modified configuration directly to /etc/nginx/conf.d/
+    echo "Copying Nginx configuration to /etc/nginx/conf.d/"
+    cat $temp_nginx_conf
+    sudo mv "$temp_nginx_conf" "/etc/nginx/conf.d/$(basename $nginx_config_template)"
+
 
   # Start or reload Nginx
   echo "Starting Nginx for load balancing..."
-  sudo systemctl start nginx
+  sudo systemctl restart nginx || sudo systemctl start nginx
   sudo systemctl enable nginx
-  sudo nginx -t 
-  sudo systemctl reload nginx
+  sudo nginx -t && sudo systemctl reload nginx
 fi
-
-
 
 
 # Start the Flask app instances
