@@ -33,6 +33,8 @@ class RemoteGame:
         self.reset_event: eventlet.event.Event | None = None
         self.set_reset_event()
 
+        self.document_focus_status = collections.defaultdict(lambda: True)
+
         # Players and actions
         self.pending_actions = None
         self.reset_pending_actions()
@@ -143,6 +145,9 @@ class RemoteGame:
 
         self.human_players[player_id] = utils.Available
 
+        if subject_id in self.document_focus_status:
+            del self.document_focus_status[subject_id]
+
     def is_ready_to_start(self) -> bool:
         ready = self.is_at_player_capacity()
         return ready
@@ -177,6 +182,11 @@ class RemoteGame:
         ), f"Player ID is not available! Available IDs are: {available_ids}"
 
         self.human_players[player_id] = identifier
+
+    def update_document_focus_status(
+        self, player_identifier: str | int, hidden_status: bool
+    ) -> None:
+        self.document_focus_status[player_identifier] = hidden_status
 
     def tick(self) -> None:
 

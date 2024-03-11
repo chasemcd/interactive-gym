@@ -69,6 +69,9 @@ class OvercookedCallback(callback.GameCallback):
         for agent_id, player_name in remote_game.human_players.items():
             data[f"{agent_id}_identifier"] = player_name
             data[f"{agent_id}_is_human"] = True
+            data[f"{agent_id}_doc_in_focus"] = remote_game.document_focus_status[
+                player_name
+            ]
 
         for agent_id, bot_id in remote_game.bot_players.items():
             data[f"{agent_id}_identifier"] = bot_id

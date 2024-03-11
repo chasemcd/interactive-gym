@@ -653,6 +653,7 @@ def handle_reset_complete(data):
 
 @socketio.on("ping")
 def pong(data):
+    sid = flask.request.sid
     socketio.emit(
         "pong",
         {
@@ -661,6 +662,15 @@ def pong(data):
         },
         room=flask.request.sid,
     )
+
+    # also track if the user isn't focused on their window.
+    game = _get_existing_game(sid)
+    if game is None:
+        return
+
+    document_in_focus = data["document_in_focus"]
+    player_name = SUBJECT_ID_MAP[sid]
+    game.update_document_focus_status(player_name, document_in_focus)
 
 
 def run_game(game: remote_game.RemoteGame):

@@ -7,6 +7,26 @@ var latencyMeasurements = [];
 var curLatency;
 var maxLatency;
 
+var documentInFocus = false;
+document.addEventListener("visibilitychange", function() {
+  if (document.hidden) {
+    documentInFocus = false;
+    // alert("Please return to the game tab to avoid interruptions and to facilitate a good experience for all players.");
+  } else {
+    documentInFocus = true;
+  }
+});
+
+window.addEventListener('focus', function() {
+    // The window has gained focus
+    documentInFocus = true;
+});
+
+window.addEventListener('blur', function() {
+    // The window has lost focus
+    documentInFocus = false;
+});
+
 socket.on('pong', function(data) {
     var latency = Date.now() - window.lastPingTime;
     latencyMeasurements.push(latency);
@@ -45,7 +65,7 @@ function calculateMedian(arr) {
 
 function sendPing() {
     window.lastPingTime = Date.now();
-    socket.emit('ping', {ping_ms: curLatency});
+    socket.emit('ping', {ping_ms: curLatency, document_in_focus: documentInFocus});
 }
 
 // Send a ping every second
@@ -398,3 +418,5 @@ function disable_key_listener() {
         $(document).off('keyup');
         pressedKeys = {};
 }
+
+
