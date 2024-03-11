@@ -70,7 +70,7 @@ if [ "$start_nginx" -eq 1 ]; then
     upstream_servers+="server $public_ip:$port;\n"
   done
 
-  # Replace upstream block in interactive-gym-nginx.conf.conf
+  # Replace upstream block in interactive-gym-nginx.conf
   awk -v upstream="$upstream_servers" '/upstream flaskapp {/{flag=1; print; next} /}/{flag=0} flag{next} {print}' $nginx_config_template > temp_nginx.conf && mv temp_nginx.conf $nginx_config_template
   sed -i "/upstream flaskapp {/a $upstream_servers" $nginx_config_template
 
