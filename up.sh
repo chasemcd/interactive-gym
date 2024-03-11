@@ -2,10 +2,6 @@
 #   ./up.sh [path_to_server_module] -n [number of instances] -> will begin on port 5701
 # e.g., ./up.sh --module examples.cogrid_overcooked.overcooked_human_ai_server -n 3 -b -r
 
-# Start Redis for message queues
-sudo service redis-server start
-
-
 # Initialize default values
 num_instances=1
 start_port=5701
