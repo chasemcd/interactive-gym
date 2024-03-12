@@ -367,6 +367,10 @@ def _leave_game(subject_id) -> bool:
         # we can cleanly end it.
         if game_was_active and game_is_empty:
             exit_status = utils.GameExitStatus.ActiveNoPlayers
+            logger.info(
+                f"Subject {subject_id} left game {game.game_id} with exit status {exit_status}. Cleaning up."
+            )
+
             game.tear_down()
             _cleanup_game(game)
 
@@ -374,12 +378,17 @@ def _leave_game(subject_id) -> bool:
         # cleanup the traces of the game.
         elif game_is_empty:
             exit_status = utils.GameExitStatus.InactiveNoPlayers
-
+            logger.info(
+                f"Subject {subject_id} left game {game.game_id} with exit status {exit_status}. Cleaning up."
+            )
             _cleanup_game(game)
 
         # if the game was not active and not empty, redirect the players back to the waitroom.
         elif not game_was_active:
             exit_status = utils.GameExitStatus.InactiveWithOtherPlayers
+            logger.info(
+                f"Subject {subject_id} left game {game.game_id} with exit status {exit_status}. Cleaning up."
+            )
             remaining_wait_time = (WAITROOM_TIMEOUTS[game.game_id] - time.time()) * 1000
             # TODO(chase): check if we need this?
             socketio.emit(
