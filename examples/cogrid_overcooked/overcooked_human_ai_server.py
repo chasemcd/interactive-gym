@@ -66,7 +66,7 @@ config = (
     .gameplay(
         default_action=Noop,
         action_mapping=action_mapping,
-        num_episodes=20,
+        num_episodes=21,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
