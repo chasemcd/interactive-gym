@@ -430,7 +430,7 @@ def _cleanup_game(game: remote_game.RemoteGame):
         WAITING_GAMES.remove(game.game_id)
         assert game.game_id not in WAITING_GAMES
     else:
-        logger.info("On _cleanup, {game.game_id} was not waiting.")
+        logger.info(f"On _cleanup, {game.game_id} was not waiting.")
 
     # FREE_MAP[game.game_id] = True
 
