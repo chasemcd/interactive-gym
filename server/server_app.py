@@ -1,6 +1,5 @@
 import base64
 import os
-import queue
 import random
 import threading
 import time
@@ -9,6 +8,7 @@ import itertools
 import atexit
 import secrets
 import eventlet
+from eventlet import queue
 import redis
 
 
@@ -90,10 +90,10 @@ USER_ROOMS = utils.ThreadSafeDict()
 # FREE_MAP = utils.ThreadSafeDict()
 
 # Number of games allowed
-MAX_CONCURRENT_GAMES = 1
+MAX_CONCURRENT_GAMES: int | None = 1
 
 # Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
-FREE_IDS = queue.Queue(maxsize=MAX_CONCURRENT_GAMES)
+FREE_IDS: queue.Queue | None = None  # queue.Queue(maxsize=MAX_CONCURRENT_GAMES)
 
 # holds reset events so we only continue in game loop when triggered
 RESET_EVENTS = utils.ThreadSafeDict()
@@ -103,17 +103,20 @@ SERVER_SESSION_ID = secrets.token_urlsafe(16)
 
 
 # Utility to add a new game id to the available games
-def add_new_game_id() -> None:
+def add_new_game_id() -> str:
     """Adds a new UUID game ID to FREE_IDS and RESET_EVENTS"""
-    game_id = str(uuid.uuid4())
-    FREE_IDS.put(game_id)
-    # FREE_MAP[i] = True
-    RESET_EVENTS[game_id] = utils.ThreadSafeDict()
+    game_id = None
+    try:
+        game_id = str(uuid.uuid4())
+        FREE_IDS.put(game_id, block=False)
+        RESET_EVENTS[game_id] = utils.ThreadSafeDict()
+    except queue.Full:
+        logger.warning(
+            f"Tried to add a new game id to FREE_IDS, but it's full. (size {FREE_IDS.qsize()})"
+        )
+        pass
 
-
-# Initialize our ID tracking data
-for i in range(MAX_CONCURRENT_GAMES):
-    add_new_game_id()
+    return game_id
 
 
 #######################
@@ -147,7 +150,6 @@ def try_create_game() -> (
 ):
     try:
         game_id = FREE_IDS.get(block=False)
-        # assert FREE_MAP[game_id], "Game ID already in use!"
         game = remote_game.RemoteGame(config=CONFIG, game_id=game_id)
     except queue.Empty:
         err = RuntimeError("Server at maximum capacity.")
@@ -166,7 +168,6 @@ def _create_game() -> None:
     If creation fails, we emit the create_game_failed event.
     """
     game, err = try_create_game()
-    print(game, err)
     if game is None:
         logger.warning(
             f"Create game failed for subject ID {flask.request.sid} with error {err.__repr__()}"
@@ -379,8 +380,6 @@ def _create_or_join_game() -> remote_game.RemoteGame:
 
 
 def get_waiting_game() -> None | remote_game.RemoteGame:
-    print(WAITING_GAMES)
-    print(GAMES)
     if WAITING_GAMES:
         return GAMES.get(WAITING_GAMES[0], None)
 
@@ -388,7 +387,7 @@ def get_waiting_game() -> None | remote_game.RemoteGame:
 
 
 def _cleanup_game(game: remote_game.RemoteGame):
-    global WAITING_GAMES
+    global WAITING_GAMES, ACTIVE_GAMES, GAMES, RESET_EVENTS
     # if FREE_MAP[game.game_id]:
     #     logger.warning(
     #         f"Attempting to free a free game (ID {game.game_id})! Exiting cleanup."
@@ -432,24 +431,25 @@ def _cleanup_game(game: remote_game.RemoteGame):
     else:
         logger.info(f"On _cleanup, {game.game_id} was not waiting.")
 
-    # FREE_MAP[game.game_id] = True
-
-    # Delete the old game reference
-    print(f"Deleting RESET EVENT for {game.game_id}")
-    del GAMES[game.game_id]
-    del RESET_EVENTS[game.game_id]
-
     if game.game_id in ACTIVE_GAMES:
         ACTIVE_GAMES.remove(game.game_id)
 
+    old_game_id = game.game_id
+    del RESET_EVENTS[old_game_id]
+    del GAMES[old_game_id]
+    logger.info(f"Successfully cleared out game: {old_game_id}")
+
     # Add a new game_id to FREE_IDS
-    add_new_game_id()
+    new_game_id = add_new_game_id()
+
+    logger.info(f"Successfully added a new game_id to available games: {new_game_id}.")
 
 
 def remove_participant_from_game(
     game: remote_game.RemoteGame, subject_id: int | str
 ) -> None:
     """Remove a participant from a game and clean up the artifacts"""
+    global USER_ROOMS, RESET_EVENTS
     flask_socketio.leave_room(game.game_id)
     del USER_ROOMS[subject_id]
     del RESET_EVENTS[game.game_id][subject_id]
@@ -648,6 +648,7 @@ def on_leave(data):
 
 @socketio.on("disconnect")
 def on_disconnect():
+    global SUBJECTS
     subject_id = flask.request.sid
     game = _get_existing_game(subject_id)
 
@@ -666,10 +667,22 @@ def on_disconnect():
         )
         return
 
+    logger.info(
+        f"Calling _leave_game for {subject_id} ({SUBJECT_ID_MAP[subject_id]}).",
+    )
     with SUBJECTS[subject_id]:
         _leave_game(subject_id)
 
+    logger.info(
+        f"Removing subject {subject_id} ({SUBJECT_ID_MAP[subject_id]}) from SUBJECTS.",
+    )
+
     del SUBJECTS[subject_id]
+
+    if subject_id in SUBJECTS:
+        logger.warning(
+            f"Tried to remove {subject_id} ({SUBJECT_ID_MAP[subject_id]}) but it's still in SUBJECTS."
+        )
 
 
 @socketio.on("send_pressed_keys")
@@ -808,11 +821,6 @@ def pong(data):
     document_in_focus = data["document_in_focus"]
     player_name = SUBJECT_ID_MAP[sid]
     game.update_document_focus_status(player_name, document_in_focus)
-
-    if random.random() < 0.1:
-        logger.info(
-            f"{time.ctime(time.time())}, there are {len(ACTIVE_GAMES)} active games, {len(WAITING_GAMES)} waiting games, {len(GAMES)} total games, and {len(SUBJECTS)} participants."
-        )
 
 
 def run_game(game: remote_game.RemoteGame):
@@ -960,6 +968,15 @@ def on_exit():
         socketio.emit("end_game", {}, room=game_id)
 
 
+def periodic_log() -> None:
+    """Log information at specified 5s interval"""
+    while True:
+        logger.info(
+            f"{time.ctime(time.time())}, there are {len(ACTIVE_GAMES)} active games, {len(WAITING_GAMES)} waiting games, {len(GAMES)} total games, and {len(SUBJECTS)} participants."
+        )
+        eventlet.sleep(5)
+
+
 def run(config):
     global app, CONFIG, FREE_IDS, MAX_CONCURRENT_GAMES, logger
     CONFIG = config
@@ -975,6 +992,8 @@ def run(config):
         add_new_game_id()
 
     atexit.register(on_exit)
+
+    eventlet.spawn_n(periodic_log)
 
     socketio.run(
         app,
