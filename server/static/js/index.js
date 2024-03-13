@@ -204,30 +204,45 @@ socket.on("single_player_waiting_room", function(data) {
     $("#instructions").hide();
 
 
-    var timer = Math.floor(data.s_remaining / 1000); // Convert milliseconds to seconds
-
+    var simulater_timer = Math.floor(data.ms_remaining / 1000); // Convert milliseconds to seconds
+    var single_player_timer = Math.floor(data.wait_duration_s); // already in second
 
     // Update the text immediately to reflect the current state
-    updateWaitroomText(data, timer);
+    updateWaitroomText(data, simulater_timer);
 
     // Set up a new interval
-    waitroomInterval = setInterval(function () {
-        timer--;
-        updateWaitroomText(data, timer);
+    singlePlayerWaitroomInterval = setInterval(function () {
+        simulater_timer--;
+        single_player_timer--;
+        updateWaitroomText(data, simulater_timer);
 
-        // Stop the timer if it reaches zero
-        if (timer <= 0) {
+        if (single_player_timer <= 0) {
             clearInterval(singlePlayerWaitroomInterval);
-            $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
-            console.log("Single player waitroom timed out!")
-            socket.emit("leave_game", {session_id: window.sessionId})
-            socket.emit('end_game_request_redirect', {waitroom_timeout: true})
+            socket.emit('single_player_waiting_room_end', {})
         }
+
+        // // Stop the timer if it reaches zero
+        // if (simulater_timer <= 0) {
+        //     clearInterval(singlePlayerWaitroomInterval);
+        //     $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
+        //     console.log("Single player waitroom timed out!")
+        //     socket.emit("leave_game", {session_id: window.sessionId})
+        //     socket.emit('end_game_request_redirect', {waitroom_timeout: true})
+        // }
     }, 1000);
     $("#waitroomText").show();
 
 })
 
+
+socket.on("single_player_waiting_room_failure", function(data) {
+    
+    $("#waitroomText").text("Sorry, you were matched with a player but they disconnected before the game could start. You will be redirected shortly...");
+    console.log("Leaving game due to waiting room failure (other player left)...")
+    socket.emit("leave_game", {session_id: window.sessionId})
+    socket.emit('end_game_request_redirect', {waitroom_timeout: true})
+
+})
 
 
 

@@ -44,15 +44,21 @@ def setup_logger(name, log_file, level=logging.INFO):
     handler = logging.FileHandler(log_file)
     handler.setFormatter(formatter)
 
+    # Create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setFormatter(formatter)  # Setting the formatter for the console handler as well
+
     logger = logging.getLogger(name)
     logger.setLevel(level)
     logger.addHandler(handler)
+    logger.addHandler(ch)
+    logger.propagate = False
 
     return logger
 
 
 # TODO(chase): logfile should be able to be updated when the CONFIG is updated
-logger = setup_logger(__name__, CONFIG.logfile)
+logger = None  # setup_logger(__name__, CONFIG.logfile)
 
 
 # Data structure to save subjects by their socket id
@@ -64,8 +70,7 @@ GAMES = utils.ThreadSafeDict()
 # Games that are currently being played
 ACTIVE_GAMES = utils.ThreadSafeSet()
 
-# Queue of games IDs that are waiting for additional players to join. Note that some of these IDs might
-# be stale (i.e. if FREE_MAP[id] = True)
+# Queue of games IDs that are waiting for additional players to join.
 WAITING_GAMES = []
 WAITROOM_TIMEOUTS = utils.ThreadSafeDict()
 
@@ -82,7 +87,7 @@ PROCESSED_SUBJECT_NAMES = []
 USER_ROOMS = utils.ThreadSafeDict()
 
 # Bitmap that indicates whether ID is currently in use. Game with ID=i is "freed" by setting FREE_MAP[i] = True
-FREE_MAP = utils.ThreadSafeDict()
+# FREE_MAP = utils.ThreadSafeDict()
 
 # Number of games allowed
 MAX_CONCURRENT_GAMES = 1
@@ -93,14 +98,23 @@ FREE_IDS = queue.Queue(maxsize=MAX_CONCURRENT_GAMES)
 # holds reset events so we only continue in game loop when triggered
 RESET_EVENTS = utils.ThreadSafeDict()
 
-# Initialize our ID tracking data
-for i in range(MAX_CONCURRENT_GAMES):
-    FREE_IDS.put(i)
-    FREE_MAP[i] = True
-    RESET_EVENTS[i] = utils.ThreadSafeDict()
-
 # Generate a unique identifier for the server session
 SERVER_SESSION_ID = secrets.token_urlsafe(16)
+
+
+# Utility to add a new game id to the available games
+def add_new_game_id() -> None:
+    """Adds a new UUID game ID to FREE_IDS and RESET_EVENTS"""
+    game_id = str(uuid.uuid4())
+    FREE_IDS.put(game_id)
+    # FREE_MAP[i] = True
+    RESET_EVENTS[game_id] = utils.ThreadSafeDict()
+
+
+# Initialize our ID tracking data
+for i in range(MAX_CONCURRENT_GAMES):
+    add_new_game_id()
+
 
 #######################
 # Flask Configuration #
@@ -114,11 +128,10 @@ app.config["DEBUG"] = os.getenv("FLASK_ENV", "production") == "development"
 # check if redis is available to use for message queue
 redis_host = "127.0.0.1"
 try:
-    logger.info("Using redis for message queue...")
     redis.Redis(redis_host, socket_connect_timeout=1).ping()
     message_queue = f"redis://{redis_host}:6379/0"
 except redis.exceptions.ConnectionError:
-    logger.info("Redis is not available for message queue. Proceeding without it...")
+    print("Redis is not available for message queue. Proceeding without it...")
     message_queue = None
 
 socketio = flask_socketio.SocketIO(
@@ -134,7 +147,7 @@ def try_create_game() -> (
 ):
     try:
         game_id = FREE_IDS.get(block=False)
-        assert FREE_MAP[game_id], "Game ID already in use!"
+        # assert FREE_MAP[game_id], "Game ID already in use!"
         game = remote_game.RemoteGame(config=CONFIG, game_id=game_id)
     except queue.Empty:
         err = RuntimeError("Server at maximum capacity.")
@@ -143,7 +156,7 @@ def try_create_game() -> (
         return None, e
     else:
         GAMES[game_id] = game
-        FREE_MAP[game_id] = False
+        # FREE_MAP[game_id] = False
         return game, None
 
 
@@ -153,6 +166,7 @@ def _create_game() -> None:
     If creation fails, we emit the create_game_failed event.
     """
     game, err = try_create_game()
+    print(game, err)
     if game is None:
         logger.warning(
             f"Create game failed for subject ID {flask.request.sid} with error {err.__repr__()}"
@@ -198,7 +212,9 @@ def join_or_create_game(data):
             return
 
         with game.lock:
-            logger.info(f"Subject {subject_id} joining room {game.game_id}")
+            logger.info(
+                f"Subject {SUBJECT_ID_MAP[subject_id]} joining room {game.game_id}"
+            )
             flask_socketio.join_room(game.game_id)
             USER_ROOMS[subject_id] = game.game_id
 
@@ -223,58 +239,109 @@ def join_or_create_game(data):
             # we're in a simulated waiting room before starting the game.
             if game.is_ready_to_start():
                 WAITING_GAMES.remove(game.game_id)
+                assert game.game_id not in WAITING_GAMES
 
             # If the game is ready to start and we're simulating a
             # waiting room
             if game.is_ready_to_start() and CONFIG.simulate_waiting_room:
 
                 human_player_display = len(game.human_players)
+
                 if len(game.bot_players) > 0:
                     human_player_display += len(game.bot_players) - 1
                 else:
                     human_player_display -= 1
 
+                # Subtract 1 off of the remaining to avoid timing issues
+                max_randomized_wait_time = int(
+                    WAITROOM_TIMEOUTS[game.game_id] - time.time() - 1
+                )
+                randomized_wait_time = random.choice(
+                    range(*CONFIG.waitroom_time_randomization_interval_s)
+                )
+
+                if randomized_wait_time <= 0:
+                    start_game(game)
+                    return
+                elif randomized_wait_time > max_randomized_wait_time:
+                    randomized_wait_time = max_randomized_wait_time
+
+                logger.info(
+                    f"Sending subject {subject_id} to single player waiting room for {randomized_wait_time} seconds (max was {max_randomized_wait_time})."
+                )
                 socketio.emit(
                     "single_player_waiting_room",
                     {
                         # Remove one from cur_num to make it look like we need 1 more
                         "cur_num_players": human_player_display,
                         "players_needed": 1,
-                        "s_remaining": CONFIG.waitroom_timeout,
+                        "ms_remaining": CONFIG.waitroom_timeout,
+                        "wait_duration_s": randomized_wait_time,
                     },
                     room=subject_id,
                 )
-
-                randomized_wait_time = random.choice(
-                    range(*CONFIG.waitroom_time_randomization_interval_s)
-                )
-                socketio.sleep(seconds=randomized_wait_time)
-
-                start_game(game)
 
             elif game.is_ready_to_start():
                 start_game(game)
 
             # If there is a real waiting room
             else:
-                logger.info(f"{subject_id} entering waiting room.")
-                remaining_wait_time = (
-                    WAITROOM_TIMEOUTS[game.game_id] - time.time()
-                ) * 1000  # convert seconds to ms
-                socketio.emit(
-                    "waiting_room",
-                    {
-                        "cur_num_players": game.cur_num_human_players(),
-                        "players_needed": len(game.get_available_human_player_ids()),
-                        "ms_remaining": remaining_wait_time,
-                    },
-                    room=subject_id,
-                )
+                send_participant_to_waiting_room(game=game, subject_id=subject_id)
+
+
+@socketio.on("single_player_waiting_room_end")
+def on_single_play_wait_room_end(data):
+    subject_id = flask.request.sid
+
+    with SUBJECTS[subject_id]:
+        game = _get_existing_game(subject_id)
+
+        if game is None:
+            logger.warning(
+                f"Subject {subject_id} ended single player waiting room but they aren't associated with a game!"
+            )
+            # TODO(chase): raise an error
+            return
+
+        # We check again just in case a player left during the waiting room timeout
+        if game.is_ready_to_start():
+            logger.info("Single player waiting room ended and game is ready.")
+            start_game(game)
+        else:
+            # Add the game back to WAITING_GAMES
+            logger.info(
+                f"Subject {SUBJECT_ID_MAP[subject_id]} was in simulated waiting room but the game is no longer ready to start. Ending the game for them."
+            )
+            socketio.emit(
+                "single_player_waiting_room_failure",
+                {},
+                room=game.game_id,
+            )
+
+
+def send_participant_to_waiting_room(
+    game: remote_game.RemoteGame, subject_id: str | int
+) -> None:
+    logger.info(f"{SUBJECT_ID_MAP[subject_id]} entering waiting room.")
+    remaining_wait_time = (
+        WAITROOM_TIMEOUTS[game.game_id] - time.time()
+    ) * 1000  # convert seconds to ms
+    socketio.emit(
+        "waiting_room",
+        {
+            "cur_num_players": game.cur_num_human_players(),
+            "players_needed": len(game.get_available_human_player_ids()),
+            "ms_remaining": remaining_wait_time,
+        },
+        room=subject_id,
+    )
 
 
 def start_game(game: remote_game.RemoteGame) -> None:
     """Helper function with the logic to begin a game."""
-    logger.info(f"Game {game.game_id} ready, starting!")
+    logger.info(
+        f"Game {game.game_id} is starting with subjects: {[sid for sid in game.human_players.values()]}"
+    )
     ACTIVE_GAMES.add(game.game_id)
     socketio.emit(
         "start_game",
@@ -312,6 +379,8 @@ def _create_or_join_game() -> remote_game.RemoteGame:
 
 
 def get_waiting_game() -> None | remote_game.RemoteGame:
+    print(WAITING_GAMES)
+    print(GAMES)
     if WAITING_GAMES:
         return GAMES.get(WAITING_GAMES[0], None)
 
@@ -319,31 +388,72 @@ def get_waiting_game() -> None | remote_game.RemoteGame:
 
 
 def _cleanup_game(game: remote_game.RemoteGame):
-    if FREE_MAP[game.game_id]:
-        logger.warning(
-            f"Attempting to free a free game (ID {game.game_id})! Exiting cleanup."
-        )
-        return
+    global WAITING_GAMES
+    # if FREE_MAP[game.game_id]:
+    #     logger.warning(
+    #         f"Attempting to free a free game (ID {game.game_id})! Exiting cleanup."
+    #     )
+    #     return
 
-    for subject_id in game.human_players.values():
-        if subject_id is utils.Available:
+    # Remote all remaining human players from the game
+    for player_name in game.human_players.values():
+        subject_id = None
+        for sid, p_name in SUBJECT_ID_MAP.items():
+            if p_name == player_name:
+                subject_id = sid
+                break
+
+        if player_name is utils.Available:
             continue
-        del USER_ROOMS[subject_id]
-        del RESET_EVENTS[game.game_id][subject_id]
 
+        if subject_id is None:
+            logger.warning(
+                f"Tried to find subject ID for player name {player_name} but it doesn't exist in SUBJECT_ID_MAP"
+            )
+
+        logger.info(
+            f"In _cleanup_game, removing {player_name} from USER_ROOMS and their reset event from RESET_EVENTS (game id: {game.game_id})"
+        )
+
+        remove_participant_from_game(game, subject_id)
+
+    game.tear_down()
+
+    # Close the socketio room
     socketio.close_room(game.game_id)
 
-    try:
+    # If the game was still in the waiting room, remove it.
+    if game.game_id in WAITING_GAMES:
+        logger.info(
+            f"On _cleanup, {game.game_id} was waiting. Removing from WAITING_GAMES"
+        )
         WAITING_GAMES.remove(game.game_id)
-    except:
-        pass
+        assert game.game_id not in WAITING_GAMES
+    else:
+        logger.info("On _cleanup, {game.game_id} was not waiting.")
 
-    FREE_MAP[game.game_id] = True
-    FREE_IDS.put(game.game_id)
+    # FREE_MAP[game.game_id] = True
+
+    # Delete the old game reference
+    print(f"Deleting RESET EVENT for {game.game_id}")
     del GAMES[game.game_id]
+    del RESET_EVENTS[game.game_id]
 
     if game.game_id in ACTIVE_GAMES:
         ACTIVE_GAMES.remove(game.game_id)
+
+    # Add a new game_id to FREE_IDS
+    add_new_game_id()
+
+
+def remove_participant_from_game(
+    game: remote_game.RemoteGame, subject_id: int | str
+) -> None:
+    """Remove a participant from a game and clean up the artifacts"""
+    flask_socketio.leave_room(game.game_id)
+    del USER_ROOMS[subject_id]
+    del RESET_EVENTS[game.game_id][subject_id]
+    game.remove_human_player(SUBJECT_ID_MAP[subject_id])
 
 
 def _leave_game(subject_id) -> bool:
@@ -351,14 +461,13 @@ def _leave_game(subject_id) -> bool:
     game = _get_existing_game(subject_id)
 
     if game is None:
+        logger.info(f"{SUBJECT_ID_MAP[subject_id]} left and game is None.")
         return False
 
-    with game.lock:
+    logger.info(f"{SUBJECT_ID_MAP[subject_id]} leaving game {game.game_id}")
 
-        flask_socketio.leave_room(game.game_id)
-        del USER_ROOMS[subject_id]
-        del RESET_EVENTS[game.game_id][subject_id]
-        game.remove_human_player(SUBJECT_ID_MAP[subject_id])
+    with game.lock:
+        remove_participant_from_game(game, subject_id=subject_id)
 
         game_was_active = game.game_id in ACTIVE_GAMES
         game_is_empty = game.cur_num_human_players() == 0
@@ -368,10 +477,8 @@ def _leave_game(subject_id) -> bool:
         if game_was_active and game_is_empty:
             exit_status = utils.GameExitStatus.ActiveNoPlayers
             logger.info(
-                f"Subject {subject_id} left game {game.game_id} with exit status {exit_status}. Cleaning up."
+                f"Subject {SUBJECT_ID_MAP[subject_id]} left game {game.game_id} with exit status {exit_status}. Cleaning up."
             )
-
-            game.tear_down()
             _cleanup_game(game)
 
         # If the game wasn't active and there are no players,
@@ -379,36 +486,48 @@ def _leave_game(subject_id) -> bool:
         elif game_is_empty:
             exit_status = utils.GameExitStatus.InactiveNoPlayers
             logger.info(
-                f"Subject {subject_id} left game {game.game_id} with exit status {exit_status}. Cleaning up."
+                f"Subject {SUBJECT_ID_MAP[subject_id]} left game {game.game_id} with exit status {exit_status}. Cleaning up."
             )
             _cleanup_game(game)
 
-        # if the game was not active and not empty, redirect the players back to the waitroom.
+        # if the game was not active and not empty, the remaining players are still in the waiting room.
         elif not game_was_active:
             exit_status = utils.GameExitStatus.InactiveWithOtherPlayers
             logger.info(
-                f"Subject {subject_id} left game {game.game_id} with exit status {exit_status}. Cleaning up."
+                f"Subject {SUBJECT_ID_MAP[subject_id]} left game {game.game_id} with exit status {exit_status}. Keeping remaining players in the waiting room."
             )
-            remaining_wait_time = (WAITROOM_TIMEOUTS[game.game_id] - time.time()) * 1000
-            # TODO(chase): check if we need this?
-            socketio.emit(
-                "waiting_room",
-                {
-                    "cur_num_players": game.cur_num_human_players(),
-                    "players_needed": len(game.get_available_human_player_ids()),
-                    "ms_remaining": remaining_wait_time,  # convert to ms remaining
-                },
-                room=game.game_id,
-            )
+
+            # If the game isn't already a waiting game, add it back (e.g., participant left in simulated waiting room.)
+            if game.game_id not in WAITING_GAMES:
+                logger.info(
+                    f"Adding {game.game_id} back to WAITING GAMES since a subject left."
+                )
+                WAITING_GAMES.append(game.game_id)
+            # send_participant_to_waiting_room(game, subject_id=game.game_id)
+            # remaining_wait_time = (WAITROOM_TIMEOUTS[game.game_id] - time.time()) * 1000
+            # # TODO(chase): check if we need this?
+            # socketio.emit(
+            #     "waiting_room",
+            #     {
+            #         "cur_num_players": game.cur_num_human_players(),
+            #         "players_needed": len(game.get_available_human_player_ids()),
+            #         "ms_remaining": remaining_wait_time,  # convert to ms remaining
+            #     },
+            #     room=game.game_id,
+            # )
+
         # elif game_was_active and game.is_ready_to_start():
         #     raise ValueError("This shouldn't happen without spectators.")
         elif game_was_active and not game_is_empty:
             exit_status = utils.GameExitStatus.ActiveWithOtherPlayers
-            game.tear_down()
-
+            logger.info(
+                f"Subject {SUBJECT_ID_MAP[subject_id]} left game {game.game_id} with exit status {exit_status}. Cleaning up."
+            )
             socketio.emit(
                 "end_game",
-                {"message": "Your game ended because the other player disconnected."},
+                {
+                    "message": "You were matched with a partner but your game ended because the other player disconnected."
+                },
                 room=game.game_id,
             )
 
@@ -463,7 +582,7 @@ def register_subject_name(data):
     subject_name = data["subject_name"]
     sid = flask.request.sid
     SUBJECT_ID_MAP[sid] = subject_name
-    logging.info(f"Registered subject ID {sid} with name {subject_name}")
+    logger.info(f"Registered subject ID {sid} with name {subject_name}")
 
 
 def is_valid_session(client_session_id):
@@ -489,7 +608,7 @@ def on_connect():
 def on_leave(data):
     subject_id = flask.request.sid
     client_session_id = data.get("session_id")
-    logging.info(f"Participant {SUBJECT_ID_MAP[subject_id]} leaving game.")
+    logger.info(f"Participant {SUBJECT_ID_MAP[subject_id]} leaving game.")
 
     # Validate session
     if not is_valid_session(client_session_id):
@@ -531,11 +650,20 @@ def on_leave(data):
 def on_disconnect():
     subject_id = flask.request.sid
     game = _get_existing_game(subject_id)
-    logging.info(
-        f"Subject {subject_id} disconnected, Game ID: {game.game_id if game is not None else 'None'}.",
-    )
+
+    try:
+        logger.info(
+            f"Subject {SUBJECT_ID_MAP[subject_id]} disconnected, Game ID: {game.game_id if game is not None else 'None'}.",
+        )
+    except KeyError:
+        logger.warning(
+            f"Subject {subject_id} disconnected, but they aren't in SUBJECT_ID_MAP."
+        )
 
     if subject_id not in SUBJECTS:
+        logger.warning(
+            f"Subject {subject_id} disconnected, but they aren't in SUBJECTS."
+        )
         return
 
     with SUBJECTS[subject_id]:
@@ -681,6 +809,11 @@ def pong(data):
     player_name = SUBJECT_ID_MAP[sid]
     game.update_document_focus_status(player_name, document_in_focus)
 
+    if random.random() < 0.1:
+        logger.info(
+            f"{time.ctime(time.time())}, there are {len(ACTIVE_GAMES)} active games, {len(WAITING_GAMES)} waiting games, {len(GAMES)} total games, and {len(SUBJECTS)} participants."
+        )
+
 
 def run_game(game: remote_game.RemoteGame):
     end_status = [remote_game.GameStatus.Inactive, remote_game.GameStatus.Done]
@@ -745,6 +878,7 @@ def run_game(game: remote_game.RemoteGame):
             socketio.sleep(1 / game.config.fps)
 
     with game.lock:
+        logger.info(f"Game loop ended for {game.game_id}, ending and cleaning up.")
         if game.status != remote_game.GameStatus.Inactive:
             game.tear_down()
 
@@ -827,19 +961,18 @@ def on_exit():
 
 
 def run(config):
-    global app, CONFIG, FREE_IDS, MAX_CONCURRENT_GAMES, FREE_MAP
+    global app, CONFIG, FREE_IDS, MAX_CONCURRENT_GAMES, logger
     CONFIG = config
     MAX_CONCURRENT_GAMES = CONFIG.max_concurrent_games
 
     # Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
     FREE_IDS = queue.Queue(maxsize=CONFIG.max_concurrent_games)
 
-    # Initialize our ID tracking data
-    # TODO(chase): Starting at 1 fixed broadcasting to players on the instructions page. Is the default room 0?
-    for i in range(1, CONFIG.max_concurrent_games + 1):
-        FREE_IDS.put(i)
-        FREE_MAP[i] = True
-        RESET_EVENTS[i] = utils.ThreadSafeDict()
+    logger = setup_logger(__name__, CONFIG.logfile)
+
+    # Initialize our game ID tracking data
+    for _ in range(CONFIG.max_concurrent_games):
+        add_new_game_id()
 
     atexit.register(on_exit)
 

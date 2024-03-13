@@ -26,7 +26,7 @@ class GameStatus:
 
 
 class RemoteGame:
-    def __init__(self, config: remote_config.RemoteConfig, game_id: int):
+    def __init__(self, config: remote_config.RemoteConfig, game_id: int | None = None):
         self.config = config
         self.status = GameStatus.Inactive
         self.lock = threading.Lock()
@@ -49,13 +49,13 @@ class RemoteGame:
         # Game environment
         self.env = None
         self.obs: np.ndarray | dict[str, typing.Any] | None = None
-        self.game_id = game_id
+        self.game_uuid: str = str(uuid.uuid4())
+        self.game_id: int | str = game_id if game_id is not None else self.game_uuid
         assert (
             game_id is not None
         ), f"Must pass valid game id! Got {game_id} but expected an int."
 
         self.tick_num: int = 0
-        self.game_uuid: str = str(uuid.uuid4())
         self.episode_num: int = 0
         self.episode_rewards = collections.defaultdict(lambda: 0)
         self.total_rewards = collections.defaultdict(lambda: 0)  # score across episodes
