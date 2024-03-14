@@ -388,11 +388,6 @@ def get_waiting_game() -> None | remote_game.RemoteGame:
 
 def _cleanup_game(game: remote_game.RemoteGame):
     global WAITING_GAMES, ACTIVE_GAMES, GAMES, RESET_EVENTS
-    # if FREE_MAP[game.game_id]:
-    #     logger.warning(
-    #         f"Attempting to free a free game (ID {game.game_id})! Exiting cleanup."
-    #     )
-    #     return
 
     # Remote all remaining human players from the game
     for player_name in game.human_players.values():
@@ -449,11 +444,12 @@ def remove_participant_from_game(
     game: remote_game.RemoteGame, subject_id: int | str
 ) -> None:
     """Remove a participant from a game and clean up the artifacts"""
-    global USER_ROOMS, RESET_EVENTS
-    flask_socketio.leave_room(game.game_id)
-    del USER_ROOMS[subject_id]
-    del RESET_EVENTS[game.game_id][subject_id]
-    game.remove_human_player(SUBJECT_ID_MAP[subject_id])
+    with app.app_context():
+        global USER_ROOMS, RESET_EVENTS
+        flask_socketio.leave_room(game.game_id)
+        del USER_ROOMS[subject_id]
+        del RESET_EVENTS[game.game_id][subject_id]
+        game.remove_human_player(SUBJECT_ID_MAP[subject_id])
 
 
 def _leave_game(subject_id) -> bool:
@@ -854,9 +850,14 @@ def run_game(game: remote_game.RemoteGame):
             socketio.emit("request_pressed_keys", {})
         socketio.sleep(1 / game.config.fps)
 
-        if game.status == remote_game.GameStatus.Reset:
+        if (
+            game.status == remote_game.GameStatus.Reset
+            or game.status == remote_game.GameStatus.Done
+        ):
             if CONFIG.callback is not None:
                 CONFIG.callback.on_episode_end(game)
+
+        if game.status == remote_game.GameStatus.Reset:
             socketio.emit(
                 "game_reset",
                 {
