@@ -2,6 +2,7 @@ import eventlet
 
 eventlet.monkey_patch()
 
+from datetime import datetime
 from slime_volleyball import slimevolley_env
 import argparse
 from configurations import remote_config
@@ -107,6 +108,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    config.hosting(port=args.port)
+    config.hosting(port=args.port).logging(
+        logfile=f'./{datetime.now().strftime("%y_%m_%d")}_slimevb_human_ai_port_{args.port}.log'
+    )
 
     server_app.run(config)
