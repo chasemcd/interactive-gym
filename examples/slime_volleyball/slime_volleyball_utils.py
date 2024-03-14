@@ -60,7 +60,7 @@ def hud_text_fn(game: remote_game.RemoteGame) -> str:
     """Function to create HUD text to display"""
     left_red_score = game.total_positive_rewards["agent_left"]
     right_blue_score = game.total_positive_rewards["agent_right"]
-    return f"Red Points: {int(left_red_score)} | Blue Points {int(right_blue_score)} | Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
+    return f"Red Points: {int(left_red_score)} | Blue Points {int(right_blue_score)}"
 
 
 Y_OFFSET = 0.018
