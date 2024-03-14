@@ -49,9 +49,6 @@ class OvercookedCallback(callback.GameCallback):
         self.actions[remote_game.game_uuid].append(actions)
         self.rewards[remote_game.game_uuid].append(rewards)
 
-    def on_game_end(self, remote_game: RemoteGame):
-        self.save_and_clear_data(remote_game)
-
     def gen_game_data(self, remote_game: RemoteGame) -> dict[str, typing.Any]:
         data = {
             "game_uuid": remote_game.game_uuid,
