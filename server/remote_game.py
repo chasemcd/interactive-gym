@@ -327,4 +327,3 @@ class RemoteGame:
 
         self.episode_num += 1
         self.episode_rewards = collections.defaultdict(lambda: 0)
-        print("reset for episode", self.episode_num)
