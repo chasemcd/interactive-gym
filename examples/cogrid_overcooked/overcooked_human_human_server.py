@@ -4,7 +4,7 @@ eventlet.monkey_patch()
 
 import argparse
 from cogrid.envs import registry
-
+from datetime import datetime
 from configurations import remote_config
 from server import server_app
 from configurations import configuration_constants
@@ -89,6 +89,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    config.hosting(port=args.port)
-
+    config.hosting(port=args.port).logging(
+        logfile=f'./{datetime.now().strftime("%y_%m_%d")}_human_ai_port_{args.port}.log'
+    )
     server_app.run(config)
