@@ -82,9 +82,6 @@ class SlimeVolleyballCallback(callback.GameCallback):
         del self.actions[remote_game.game_uuid]
         del self.rewards[remote_game.game_uuid]
 
-    def on_game_end(self, remote_game: RemoteGame) -> None:
-        self.save_and_clear_data(remote_game)
-
     def gen_game_data(self, remote_game: RemoteGame) -> dict[str, typing.Any]:
         data = {
             "game_uuid": remote_game.game_uuid,
