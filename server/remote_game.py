@@ -212,24 +212,10 @@ class RemoteGame:
 
             player_actions[pid] = action
 
-        #     if self.pending_actions[sid].qsize() > 0:
-
-        # if self.config.action_population_method:
-        #     default_action = self.pending_actions
-        # player_actions = {
-        #     pid: (
-        #         self.pending_actions[sid].get(block=False)
-        #         if self.pending_actions[sid].qsize() > 0
-        #         else self.config.default_action
-        #     )
-        #     for pid, sid in self.human_players.items()
-        # }
-
         # Bot actions
         for pid, bot in self.bot_players.items():
 
             # set default action
-            # TODO(chase): add option for this to be the previous action
             if (
                 self.config.action_population_method
                 == configuration_constants.ActionSettings.PreviousSubmittedAction
@@ -263,13 +249,8 @@ class RemoteGame:
 
             # If we have a specified policy, pop an action from the pending actions queue
             # if there are any
-            # TODO(Chase): figure out why this was hanging
             elif self.pending_actions[pid].qsize() > 0:
                 player_actions[pid] = self.pending_actions[pid].get(block=False)
-            # elif self.tick_num % self.config.frame_skip == 0:
-            #     player_actions[pid] = self.config.policy_inference_fn(
-            #         self.obs[pid], bot
-            #     )
 
         self.prev_actions = player_actions
         try:
@@ -346,3 +327,4 @@ class RemoteGame:
 
         self.episode_num += 1
         self.episode_rewards = collections.defaultdict(lambda: 0)
+        print("reset for episode", self.episode_num)
