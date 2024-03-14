@@ -970,12 +970,12 @@ def on_exit():
 
 
 def periodic_log() -> None:
-    """Log information at specified 5s interval"""
+    """Log information at specified 30s interval"""
     while True:
         logger.info(
             f"{time.ctime(time.time())}, there are {len(ACTIVE_GAMES)} active games, {len(WAITING_GAMES)} waiting games, {len(GAMES)} total games, and {len(SUBJECTS)} participants."
         )
-        eventlet.sleep(5)
+        eventlet.sleep(30)
 
 
 def run(config):
