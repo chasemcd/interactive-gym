@@ -40,7 +40,8 @@ def calc_bonuses(df: pd.DataFrame) -> None:
     df["count"] = 1
     df["action_is_noop"] = df["agent-0_action"] == 6.0
     df["max_episode_num"] = df.groupby("game_uuid")["episode_num"].transform("max")
-    df = df[df.max_episode_num == 20]
+    # df = df[df["agent-0_identifier"] == "29255f7c-19f0-4fd4-bf63-d3f926ca8915"]
+    df = df[df.max_episode_num >= 20]
     df["agent-0_doc_in_focus"] = df["agent-0_doc_in_focus"].astype(int)
 
     df.rename(
