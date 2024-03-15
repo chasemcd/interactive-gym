@@ -101,6 +101,7 @@ class SlimeVolleyballCallback(callback.GameCallback):
             data[f"{agent_id}_doc_in_focus"] = remote_game.document_focus_status[
                 player_name
             ]
+            data[f"{agent_id}_cur_ping"] = remote_game.current_ping[player_name]
 
         for agent_id, bot_id in remote_game.bot_players.items():
             data[f"{agent_id}_identifier"] = bot_id

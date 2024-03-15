@@ -815,8 +815,11 @@ def pong(data):
         return
 
     document_in_focus = data["document_in_focus"]
+    ping_ms = data["ping_ms"]
     player_name = SUBJECT_ID_MAP[sid]
-    game.update_document_focus_status(player_name, document_in_focus)
+    game.update_document_focus_status_and_ping(
+        player_identifier=player_name, hidden_status=document_in_focus, ping=ping_ms
+    )
 
 
 def run_game(game: remote_game.RemoteGame):

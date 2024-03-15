@@ -33,7 +33,10 @@ class RemoteGame:
         self.reset_event: eventlet.event.Event | None = None
         self.set_reset_event()
 
-        self.document_focus_status = collections.defaultdict(lambda: True)
+        self.document_focus_status: dict[str | int, bool] = collections.defaultdict(
+            lambda: True
+        )
+        self.current_ping: dict[str | int, int] = collections.defaultdict(lambda: 0)
 
         # Players and actions
         self.pending_actions = None
@@ -147,6 +150,7 @@ class RemoteGame:
 
         if subject_id in self.document_focus_status:
             del self.document_focus_status[subject_id]
+            del self.current_ping[subject_id]
 
     def is_ready_to_start(self) -> bool:
         ready = self.is_at_player_capacity()
@@ -183,10 +187,11 @@ class RemoteGame:
 
         self.human_players[player_id] = identifier
 
-    def update_document_focus_status(
-        self, player_identifier: str | int, hidden_status: bool
+    def update_document_focus_status_and_ping(
+        self, player_identifier: str | int, hidden_status: bool, ping: int
     ) -> None:
         self.document_focus_status[player_identifier] = hidden_status
+        self.current_ping[player_identifier] = ping
 
     def tick(self) -> None:
 
