@@ -444,12 +444,14 @@ def remove_participant_from_game(
     game: remote_game.RemoteGame, subject_id: int | str
 ) -> None:
     """Remove a participant from a game and clean up the artifacts"""
+    global USER_ROOMS, RESET_EVENTS
+
     with app.app_context():
-        global USER_ROOMS, RESET_EVENTS
         flask_socketio.leave_room(game.game_id)
-        del USER_ROOMS[subject_id]
-        del RESET_EVENTS[game.game_id][subject_id]
-        game.remove_human_player(SUBJECT_ID_MAP[subject_id])
+
+    del USER_ROOMS[subject_id]
+    del RESET_EVENTS[game.game_id][subject_id]
+    game.remove_human_player(SUBJECT_ID_MAP[subject_id])
 
 
 def _leave_game(subject_id) -> bool:
@@ -465,7 +467,10 @@ def _leave_game(subject_id) -> bool:
     with game.lock:
         remove_participant_from_game(game, subject_id=subject_id)
 
-        game_was_active = game.game_id in ACTIVE_GAMES
+        game_was_active = game.game_id in ACTIVE_GAMES and game.status in [
+            remote_game.GameStatus.Active,
+            remote_game.GameStatus.Reset,
+        ]
         game_is_empty = game.cur_num_human_players() == 0
 
         # If the game was running but there are no other players,
@@ -519,11 +524,14 @@ def _leave_game(subject_id) -> bool:
             logger.info(
                 f"Subject {SUBJECT_ID_MAP[subject_id]} left game {game.game_id} with exit status {exit_status}. Cleaning up."
             )
+
             socketio.emit(
                 "end_game",
-                {
-                    "message": "You were matched with a partner but your game ended because the other player disconnected."
-                },
+                (
+                    {
+                        "message": "You were matched with a partner but your game ended because the other player disconnected."
+                    }
+                ),
                 room=game.game_id,
             )
 
@@ -904,7 +912,7 @@ def run_game(game: remote_game.RemoteGame):
         for human_player_name in game.human_players.values():
             PROCESSED_SUBJECT_NAMES.append(human_player_name)
 
-        _cleanup_game(game)
+        # _cleanup_game(game)
 
 
 @socketio.on("end_game_request_redirect")
