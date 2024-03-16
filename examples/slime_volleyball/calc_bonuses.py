@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-DATA_PATH = "data/slime_volleyball/"
+DATA_PATH = "data/slime_vb_human_ai"
 
 
 def read_files(data_path: str) -> pd.DataFrame:
@@ -32,9 +32,9 @@ def calc_bonuses(df: pd.DataFrame) -> None:
         ]
     ]
     df["action_is_noop"] = df["agent_left_action"] == 0
-    df["max_episode_num"] = df.groupby("game_uuid")["episode_num"].transform("max")
-    df = df[df.max_episode_num == 50]
-    df = df.drop(columns=["max_episode_num"])
+    # df["max_episode_num"] = df.groupby("game_uuid")["episode_num"].transform("max")
+    # df = df[df.max_episode_num == 50]
+    # df = df.drop(columns=["max_episode_num"])
     df["count"] = 1
     df["agent_left_reward"] = df["agent_left_reward"].apply(lambda x: max(0, x))
 
@@ -42,6 +42,11 @@ def calc_bonuses(df: pd.DataFrame) -> None:
         columns={"agent_left_identifier": "mturk_id", "agent_left_reward": "score"},
         inplace=True,
     )
+    df = df[
+        df.mturk_id.apply(
+            lambda x: len(str(x)) in [12, 13, 14, 15] and str(x)[0] == "A"
+        )
+    ]
 
     result = df.groupby("mturk_id").sum(numeric_only=True).reset_index()
 
@@ -49,7 +54,7 @@ def calc_bonuses(df: pd.DataFrame) -> None:
 
     result.drop(columns=["agent_left_action", "action_is_noop"], inplace=True)
 
-    result["bonus"] = result["score"] * 0.03
+    result["bonus"] = result["score"] * 0.05
     result["bonus"] = result["bonus"].apply(lambda x: min(x, 1.5))
     result.to_csv("data/slime_vb_human_ai_bonuses.csv")
 
