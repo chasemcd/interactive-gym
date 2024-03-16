@@ -5,7 +5,7 @@ var game_config = {
         noAudio: true
     },
     resolution: window.devicePixelRatio,
-    pauseOnBlur: false,
+    // pauseOnBlur: false,
 };
 
 var game_graphics;
