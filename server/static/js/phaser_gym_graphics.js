@@ -90,7 +90,6 @@ class GymScene extends Phaser.Scene {
         this.assets_to_preload.forEach(obj_config => {
             if (obj_config.object_type == "img_spec") {
                 this.load.image(obj_config.name, obj_config.img_path)
-
             } else if (obj_config.object_type == "spritesheet") {
                 this.load.spritesheet(obj_config.name, obj_config.img_path, {frameWidth: obj_config.frame_width, frameHeight: obj_config.frame_height})
             } else if (obj_config.object_type == "atlas_spec") {

@@ -179,30 +179,30 @@ def generate_slime_agent_objects(
     resolution: int = 30,
 ):
     objects = []
-    # points = []
-    # for i in range(resolution + 1):
-    #     ang = math.pi - math.pi * i / resolution
-    #     points.append(
-    #         (to_x(math.cos(ang) * radius + x), to_y(math.sin(ang) * radius + y))
-    #     )
-
-    # objects.append(
-    #     object_contexts.Polygon(
-    #         uuid=f"{identifier}_body", color=color, points=points, depth=-1
-    #     )
-    # )
+    points = []
+    for i in range(resolution + 1):
+        ang = math.pi - math.pi * i / resolution
+        points.append(
+            (to_x(math.cos(ang) * radius + x), to_y(math.sin(ang) * radius + y))
+        )
 
     objects.append(
-        object_contexts.Sprite(
-            uuid=f"{identifier}_body_sprite",
-            image_name="slime_blue.png" if "right" in identifier else "slime_red.png",
-            x=to_x(x - radius),
-            y=to_y(y) - 30 / config.game_height,
-            height=30,
-            width=36,
-            depth=0,
+        object_contexts.Polygon(
+            uuid=f"{identifier}_body", color=color, points=points, depth=-1
         )
     )
+
+    # objects.append(
+    #     object_contexts.Sprite(
+    #         uuid=f"{identifier}_body_sprite",
+    #         image_name="slime_blue.png" if "right" in identifier else "slime_red.png",
+    #         x=to_x(x - radius),
+    #         y=to_y(y) - 30 / config.game_height,
+    #         height=30,
+    #         width=36,
+    #         depth=0,
+    #     )
+    # )
 
     # Eyes that track the ball!
     angle = math.pi * 60 / 180
