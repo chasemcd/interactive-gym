@@ -314,9 +314,7 @@ def on_single_play_wait_room_end(data):
                 f"Subject {SUBJECT_ID_MAP[subject_id]} was in simulated waiting room but the game is no longer ready to start. Ending the game for them."
             )
             socketio.emit(
-                "single_player_waiting_room_failure",
-                {},
-                room=game.game_id,
+                "single_player_waiting_room_failure", {}, room=game.game_id,
             )
 
 
@@ -345,9 +343,7 @@ def start_game(game: remote_game.RemoteGame) -> None:
     )
     ACTIVE_GAMES.add(game.game_id)
     socketio.emit(
-        "start_game",
-        {"config": CONFIG.to_dict(serializable=True)},
-        room=game.game_id,
+        "start_game", {"config": CONFIG.to_dict(serializable=True)}, room=game.game_id,
     )
     socketio.start_background_task(run_game, game)
 
@@ -638,9 +634,7 @@ def on_leave(data):
             if CONFIG.callback is not None:
                 CONFIG.callback.on_game_end(game)
             socketio.emit(
-                "end_game",
-                {},
-                room=game_id,
+                "end_game", {}, room=game_id,
             )
 
             # track players that have already been in a game
@@ -844,7 +838,7 @@ def run_game(game: remote_game.RemoteGame):
     if CONFIG.input_mode == configuration_constants.InputModes.PressedKeys:
         socketio.emit("request_pressed_keys", {})
 
-    socketio.sleep(1 / game.config.fps)
+    eventlet.sleep(1 / game.config.fps)
 
     while game.status not in end_status:
 
@@ -906,9 +900,7 @@ def run_game(game: remote_game.RemoteGame):
         if CONFIG.callback is not None:
             CONFIG.callback.on_game_end(game)
         socketio.emit(
-            "end_game",
-            {},
-            room=game.game_id,
+            "end_game", {}, room=game.game_id,
         )
         for human_player_name in game.human_players.values():
             PROCESSED_SUBJECT_NAMES.append(human_player_name)
@@ -1009,8 +1001,5 @@ def run(config):
     eventlet.spawn_n(periodic_log)
 
     socketio.run(
-        app,
-        log_output=app.config["DEBUG"],
-        port=CONFIG.port,
-        host=CONFIG.host,
+        app, log_output=app.config["DEBUG"], port=CONFIG.port, host=CONFIG.host,
     )
