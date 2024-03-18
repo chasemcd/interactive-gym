@@ -75,6 +75,7 @@ config = (
         action_mapping=action_mapping,
         num_episodes=30,
         callback=slime_volleyball_callback.SlimeVolleyballCallback(),
+        reset_freeze_s=1,
     )
     .hosting(port=5704, host="0.0.0.0", max_concurrent_games=100, max_ping=60)
     .user_experience(

@@ -869,6 +869,7 @@ def run_game(game: remote_game.RemoteGame):
                 CONFIG.callback.on_episode_end(game)
 
         if game.status == remote_game.GameStatus.Reset:
+            eventlet.sleep(CONFIG.reset_freeze_s)
             socketio.emit(
                 "game_reset",
                 {

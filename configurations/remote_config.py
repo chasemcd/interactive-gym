@@ -80,6 +80,7 @@ class RemoteConfig:
         self.final_page_header_text: str = ""
         self.instructions: str = ""  # can pass html
         self.reset_timeout: int = 3000
+        self.reset_freeze_s: int = 0
 
         # logging
         self.logfile: str = "./server_log.log"
@@ -218,6 +219,7 @@ class RemoteConfig:
         action_population_method: str | None = None,
         input_mode: str | None = None,
         callback: None = None,  # TODO(chase): add callback typehint without circular import
+        reset_freeze_s: int | None = None,
     ):
         if action_mapping is not None:
             # ensure the composite action tuples are sorted
@@ -250,6 +252,9 @@ class RemoteConfig:
 
         if callback is not None:
             self.callback = callback
+
+        if reset_freeze_s is not None:
+            self.reset_freeze_s = reset_freeze_s
 
         return self
 

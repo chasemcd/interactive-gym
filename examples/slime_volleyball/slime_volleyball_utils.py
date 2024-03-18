@@ -155,9 +155,10 @@ def slime_volleyball_env_to_rendering(
         env=env,
     )
 
+    terminateds, _ = env.get_terminateds_truncateds()
     ball = object_contexts.Circle(
         uuid="ball",
-        color="#000000",
+        color="#000000" if not terminateds["__all__"] else "#AAFF00",
         x=env.game.ball.x / constants.REF_W + 0.5,
         y=1 - env.game.ball.y / constants.REF_W,
         radius=env.game.ball.r * config.game_width / constants.REF_W,
