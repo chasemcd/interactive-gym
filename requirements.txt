@@ -1,0 +1,11 @@
+absl_py==2.0.0
+cogrid @ git+https://github.com/chasemcd/cogrid.git
+eventlet==0.36.1
+Flask==3.0.3
+Flask_SocketIO==5.3.6
+gymnasium==0.29.1
+numpy==1.26.4
+onnxruntime==1.16.3
+opencv_python==4.9.0.80
+pandas==2.2.2
+scipy==1.13.0
