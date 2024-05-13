@@ -9,9 +9,9 @@ from gymnasium import spaces
 import uuid
 import time
 
-from configurations import remote_config
-from configurations import configuration_constants
-from server import utils
+from interactive_gym.configurations import remote_config
+from interactive_gym.configurations import configuration_constants
+from interactive_gym.server import utils
 from absl import logging
 
 

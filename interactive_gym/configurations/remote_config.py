@@ -2,7 +2,7 @@ import copy
 import json
 import typing
 
-from configurations import configuration_constants
+from interactive_gym.configurations import configuration_constants
 
 
 class RemoteConfig:

@@ -1,4 +1,4 @@
-from server import remote_game
+from interactive_gym.server import remote_game
 
 
 class GameCallback:

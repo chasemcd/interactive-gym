@@ -1,9 +1,9 @@
 import gymnasium as gym
 
-from configurations import remote_config
-from configurations import configuration_constants
-from examples.mountaincar import mountaincar_utils
-from server import server_app
+from interactive_gym.configurations import remote_config
+from interactive_gym.configurations import configuration_constants
+from interactive_gym.examples.mountaincar import mountaincar_utils
+from interactive_gym.server import server_app
 
 """
 This is an example script for running MountainCar-v0 in
@@ -27,7 +27,10 @@ def env_creator(*args, **kwargs):
 
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
-action_mapping = {"ArrowLeft": LEFT_ACCELERATION, "ArrowRight": RIGHT_ACCELERATION}
+action_mapping = {
+    "ArrowLeft": LEFT_ACCELERATION,
+    "ArrowRight": RIGHT_ACCELERATION,
+}
 
 config = (
     remote_config.RemoteConfig()

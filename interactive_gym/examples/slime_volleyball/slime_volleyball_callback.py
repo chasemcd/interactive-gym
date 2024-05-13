@@ -6,8 +6,8 @@ import os
 from slime_volleyball import slimevolley_env
 import pandas as pd
 
-from server import callback
-from server.remote_game import RemoteGame
+from interactive_gym.server import callback
+from interactive_gym.server.remote_game import RemoteGame
 
 
 class SlimeVolleyballCallback(callback.GameCallback):
@@ -28,7 +28,9 @@ class SlimeVolleyballCallback(callback.GameCallback):
         """
         At the beginning of the tick() call, we'll log the current state of the game.
         """
-        self.states[remote_game.game_uuid].append(self.gen_game_data(remote_game))
+        self.states[remote_game.game_uuid].append(
+            self.gen_game_data(remote_game)
+        )
 
     def on_game_tick_end(self, remote_game: RemoteGame) -> None:
         """
@@ -86,7 +88,8 @@ class SlimeVolleyballCallback(callback.GameCallback):
             "game_uuid": remote_game.game_uuid,
             "game_id": remote_game.game_id,
             "episode_num": remote_game.episode_num,
-            "episode_s_elapsed": time.time() - self.start_times[remote_game.game_uuid],
+            "episode_s_elapsed": time.time()
+            - self.start_times[remote_game.game_uuid],
             "tick_num": remote_game.tick_num,
         }
 

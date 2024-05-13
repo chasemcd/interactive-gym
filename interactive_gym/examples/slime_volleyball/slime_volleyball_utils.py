@@ -3,11 +3,11 @@ import os
 
 import gymnasium as gym
 import numpy as np
-from configurations import object_contexts
+from interactive_gym.configurations import object_contexts
 from slime_volleyball import slimevolley_env
 from slime_volleyball.core import constants
-from configurations import remote_config
-from server import remote_game
+from interactive_gym.configurations import remote_config
+from interactive_gym.server import remote_game
 
 
 ASSET_PATH = "static/assets/slime_volleyball/sprites"
@@ -195,7 +195,9 @@ def generate_slime_agent_objects(
     objects.append(
         object_contexts.Sprite(
             uuid=f"{identifier}_body_sprite",
-            image_name="slime_blue.png" if "right" in identifier else "slime_red.png",
+            image_name=(
+                "slime_blue.png" if "right" in identifier else "slime_red.png"
+            ),
             x=to_x(x - radius),
             y=to_y(y) - 30 / config.game_height,
             height=30,
