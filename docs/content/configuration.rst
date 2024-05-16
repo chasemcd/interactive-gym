@@ -1,5 +1,5 @@
 Configuration 
 ==============
 
-.. automodule:: congifurations.remote_config
+.. automodule:: interactive_gym.congifurations.remote_config
     :members:
