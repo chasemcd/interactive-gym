@@ -1,6 +1,10 @@
 Interactive Gym
 ================
 
+.. image:: docs/interactive_gym_logo.png
+    :alt: Interactive Gym Logo
+    :align: center
+
 Interactive Gym is a library that provides a simple interface for creating interactive, browser-based experiments from simulation environments. 
 
 Structure
