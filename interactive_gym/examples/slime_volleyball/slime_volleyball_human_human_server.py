@@ -78,7 +78,7 @@ config = (
     .user_experience(
         page_title="Slime Volleyball",
         welcome_header_text="Slime Volleyball",
-        instructions_html_file="server/static/templates/slime_volleyball_instructions.html",
+        instructions_html_file="interactive_gym/server/static/templates/slime_volleyball_instructions.html",
         game_header_text="Slime Volleyball",
         game_page_html_fn=slime_volleyball_utils.slime_volleyball_game_page_header_fn,
         waitroom_time_randomization_interval_s=(

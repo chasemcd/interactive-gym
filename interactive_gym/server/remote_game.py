@@ -54,7 +54,9 @@ class RemoteGame:
         self.game_uuid: str = str(uuid.uuid4())
         self.episode_num: int = 0
         self.episode_rewards = collections.defaultdict(lambda: 0)
-        self.total_rewards = collections.defaultdict(lambda: 0)  # score across episodes
+        self.total_rewards = collections.defaultdict(
+            lambda: 0
+        )  # score across episodes
         self.total_positive_rewards = collections.defaultdict(
             lambda: 0
         )  # sum of positives
@@ -86,7 +88,9 @@ class RemoteGame:
                 assert (
                     self.config.load_policy_fn is not None
                 ), "Must provide a method to load policies via policy name to RemoteConfig!"
-                self.bot_players[agent_id] = self.config.load_policy_fn(policy_id)
+                self.bot_players[agent_id] = self.config.load_policy_fn(
+                    policy_id
+                )
 
     def _init_bot_threads(self):
         # TODO(chase): put this in a separate function
@@ -124,7 +128,11 @@ class RemoteGame:
 
     def cur_num_human_players(self) -> int:
         return len(
-            [pid for pid, sid in self.human_players.items() if sid != utils.Available]
+            [
+                pid
+                for pid, sid in self.human_players.items()
+                if sid != utils.Available
+            ]
         )
 
     def remove_human_player(self, subject_id) -> None:
@@ -292,8 +300,10 @@ class RemoteGame:
                 self.total_negative_rewards[k] += min(0, v)
 
         if isinstance(terminateds, dict):
-            terminateds = terminateds["__all__"]
-            truncateds = truncateds["__all__"]
+            terminateds = all([v for v in terminateds.values()])
+            truncateds = all(
+                [v for v in truncateds.values()]
+            )  # truncateds["__all__"]
 
         self.tick_num += 1
         if terminateds or truncateds:
@@ -317,10 +327,14 @@ class RemoteGame:
                 pass
 
     def reset_pending_actions(self) -> None:
-        self.pending_actions = collections.defaultdict(lambda: queue.Queue(maxsize=1))
+        self.pending_actions = collections.defaultdict(
+            lambda: queue.Queue(maxsize=1)
+        )
 
     def reset_state_queues(self) -> None:
-        self.state_queues = collections.defaultdict(lambda: queue.Queue(maxsize=1))
+        self.state_queues = collections.defaultdict(
+            lambda: queue.Queue(maxsize=1)
+        )
 
     def reset(self, seed: int | None = None) -> None:
         self.reset_pending_actions()

@@ -25,10 +25,10 @@ except ImportError:
         "have the canvas display whatever is returned from `env.render()`."
     )
 
-from server import remote_game
-from configurations import remote_config
-from configurations import configuration_constants
-from server import utils
+from interactive_gym.server import remote_game
+from interactive_gym.configurations import remote_config
+from interactive_gym.configurations import configuration_constants
+from interactive_gym.server import utils
 
 CONFIG = remote_config.RemoteConfig()
 
@@ -119,7 +119,9 @@ def _create_game() -> None:
     if game is None:
         print("create game gailed")
         socketio.emit(
-            "create_game_failed", {"error": err.__repr__()}, room=flask.request.sid
+            "create_game_failed",
+            {"error": err.__repr__()},
+            room=flask.request.sid,
         )
         return
 
@@ -169,12 +171,18 @@ def join_or_create_game(data):
 
             # will be the name entered in the url, e.g., MTurk ID or uuid
             player_name = SUBJECT_ID_MAP[subject_id]
-            game.add_player(random.choice(available_human_player_ids), player_name)
+            game.add_player(
+                random.choice(available_human_player_ids), player_name
+            )
 
             if CONFIG.game_page_html_fn is not None:
                 socketio.emit(
                     "update_game_page_text",
-                    {"game_page_text": CONFIG.game_page_html_fn(game, player_name)},
+                    {
+                        "game_page_text": CONFIG.game_page_html_fn(
+                            game, player_name
+                        )
+                    },
                     room=subject_id,
                 )
 
@@ -225,7 +233,9 @@ def join_or_create_game(data):
                     "waiting_room",
                     {
                         "cur_num_players": game.cur_num_human_players(),
-                        "players_needed": len(game.get_available_human_player_ids()),
+                        "players_needed": len(
+                            game.get_available_human_player_ids()
+                        ),
                         "ms_remaining": remaining_wait_time,
                     },
                     room=subject_id,
@@ -343,13 +353,17 @@ def _leave_game(subject_id) -> bool:
         # if the game was not active and not empty, redirect the players back to the waitroom.
         elif not game_was_active:
             exit_status = utils.GameExitStatus.InactiveWithOtherPlayers
-            remaining_wait_time = (WAITROOM_TIMEOUTS[game.game_id] - time.time()) * 1000
+            remaining_wait_time = (
+                WAITROOM_TIMEOUTS[game.game_id] - time.time()
+            ) * 1000
             # TODO(chase): check if we need this?
             socketio.emit(
                 "waiting_room",
                 {
                     "cur_num_players": game.cur_num_human_players(),
-                    "players_needed": len(game.get_available_human_player_ids()),
+                    "players_needed": len(
+                        game.get_available_human_player_ids()
+                    ),
                     "ms_remaining": remaining_wait_time,  # convert to ms remaining
                 },
                 room=game.game_id,
@@ -364,7 +378,9 @@ def _leave_game(subject_id) -> bool:
 
             socketio.emit(
                 "end_game",
-                {"message": "Your game ended because the other player disconnected."},
+                {
+                    "message": "Your game ended because the other player disconnected."
+                },
                 room=game.game_id,
             )
 
@@ -380,7 +396,9 @@ def _leave_game(subject_id) -> bool:
 def index(*args):
     """If no subject ID provided, generate a UUID and re-route them."""
     subject_name = str(uuid.uuid4())
-    return flask.redirect(flask.url_for("user_index", subject_name=subject_name))
+    return flask.redirect(
+        flask.url_for("user_index", subject_name=subject_name)
+    )
 
 
 @app.route("/<subject_name>")
@@ -394,7 +412,9 @@ def user_index(subject_name):
     instructions_html = ""
     if CONFIG.instructions_html_file is not None:
         try:
-            with open(CONFIG.instructions_html_file, "r", encoding="utf-8") as f:
+            with open(
+                CONFIG.instructions_html_file, "r", encoding="utf-8"
+            ) as f:
                 instructions_html = f.read()
         except FileNotFoundError:
             instructions_html = f"<p> Unable to load instructions file {CONFIG.instructions_html_file}.</p>"
@@ -565,12 +585,15 @@ def generate_composite_action(pressed_keys) -> list[tuple[str]]:
 
     # TODO(chase): set this in the config so we don't recalculate every time
     max_composite_action_size = max(
-        [len(k) for k in CONFIG.action_mapping.keys() if isinstance(k, tuple)] + [0]
+        [len(k) for k in CONFIG.action_mapping.keys() if isinstance(k, tuple)]
+        + [0]
     )
 
     if max_composite_action_size > 1:
         composite_actions = [
-            action for action in CONFIG.action_mapping if isinstance(action, tuple)
+            action
+            for action in CONFIG.action_mapping
+            if isinstance(action, tuple)
         ]
 
         composites = [
@@ -736,7 +759,10 @@ def on_request_redirect(data):
 
     socketio.emit(
         "end_game_redirect",
-        {"redirect_url": redirect_url, "redirect_timeout": CONFIG.redirect_timeout},
+        {
+            "redirect_url": redirect_url,
+            "redirect_timeout": CONFIG.redirect_timeout,
+        },
         room=subject_id,
     )
 
@@ -749,7 +775,9 @@ def render_game(game: remote_game.RemoteGame):
         state = CONFIG.env_to_state_fn(game.env, CONFIG)
     else:
         # Generate a base64 image of the game and send it to display
-        assert cv2 is not None, "Must install cv2 to use default image rendering!"
+        assert (
+            cv2 is not None
+        ), "Must install cv2 to use default image rendering!"
         assert (
             game.env.render_mode == "rgb_array"
         ), "Env must be using render more rgb_array!"
@@ -757,7 +785,9 @@ def render_game(game: remote_game.RemoteGame):
         _, encoded_image = cv2.imencode(".png", game_image)
         encoded_image = base64.b64encode(encoded_image).decode()
 
-    hud_text = CONFIG.hud_text_fn(game) if CONFIG.hud_text_fn is not None else None
+    hud_text = (
+        CONFIG.hud_text_fn(game) if CONFIG.hud_text_fn is not None else None
+    )
 
     # TODO(chase): this emits the same state to every player in a room, but we may want
     #   to have different observations for each player. Figure that out (maybe state is a dict

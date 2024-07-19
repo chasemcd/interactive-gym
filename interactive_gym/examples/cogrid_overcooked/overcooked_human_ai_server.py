@@ -4,12 +4,12 @@ eventlet.monkey_patch()
 
 from cogrid.envs import registry
 
-from configurations import remote_config
-from server import server_app
-from configurations import configuration_constants
-from examples.cogrid_overcooked import overcooked_utils
-from examples.cogrid_overcooked import overcooked_callback
-from utils import onnx_inference_utils
+from interactive_gym.configurations import remote_config
+from interactive_gym.server import server_app
+from interactive_gym.configurations import configuration_constants
+from interactive_gym.examples.cogrid_overcooked import overcooked_utils
+from interactive_gym.examples.cogrid_overcooked import overcooked_callback
+from interactive_gym.utils import onnx_inference_utils
 
 """
 This is an example script for running MountainCar-v0 in
@@ -32,8 +32,8 @@ Noop = 6
 
 
 POLICY_MAPPING = {
-    "agent-0": configuration_constants.PolicyTypes.Human,
-    "agent-1": "examples/cogrid_overcooked/policies/model.onnx",
+    0: configuration_constants.PolicyTypes.Human,
+    1: "interactive_gym/examples/cogrid_overcooked/policies/model.onnx",
 }
 
 
@@ -89,7 +89,7 @@ config = (
     .hosting(port=5703, host="0.0.0.0", max_concurrent_games=100, max_ping=100)
     .user_experience(
         page_title="Overcooked",
-        instructions_html_file="server/static/templates/overcooked_instructions.html",
+        instructions_html_file="interactive_gym/server/static/templates/overcooked_instructions.html",
         waitroom_time_randomization_interval_s=(
             5,
             25,

@@ -1,12 +1,12 @@
 import os
 
 from cogrid.envs import overcooked
-from cogrid.envs import overcooked_grid_objects
+from cogrid.envs.overcooked import overcooked_grid_objects
 from cogrid.core import grid_object
 
-from configurations import remote_config
-from configurations import object_contexts
-from server import remote_game
+from interactive_gym.configurations import remote_config
+from interactive_gym.configurations import object_contexts
+from interactive_gym.server import remote_game
 
 ASSET_PATH = "static/assets/overcooked/sprites"
 TILE_SIZE = 45
@@ -30,10 +30,10 @@ def overcooked_game_page_header_fn(
 
     assert player_id is not None
 
-    if "1" in player_id:
-        html_path = "server/static/templates/overcooked_agent_1_header.html"
+    if player_id == 1:
+        html_path = "interactive_gym/server/static/templates/overcooked_agent_1_header.html"
     else:
-        html_path = "server/static/templates/overcooked_agent_0_header.html"
+        html_path = "interactive_gym/server/static/templates/overcooked_agent_0_header.html"
 
     try:
         with open(html_path, "r", encoding="utf-8") as f:
@@ -45,7 +45,9 @@ def overcooked_game_page_header_fn(
     return header_html
 
 
-def get_x_y(pos: tuple[int, int], game_height: int, game_width: int) -> tuple[int, int]:
+def get_x_y(
+    pos: tuple[int, int], game_height: int, game_width: int
+) -> tuple[int, int]:
     col, row = pos
     x = row * TILE_SIZE / game_width
     y = col * TILE_SIZE / game_height
@@ -55,7 +57,9 @@ def get_x_y(pos: tuple[int, int], game_height: int, game_width: int) -> tuple[in
 def hud_text_fn(game: remote_game.RemoteGame) -> str:
     """Function to create HUD text to display"""
     score = int(
-        list(game.episode_rewards.values())[0] if len(game.episode_rewards) > 0 else 0
+        list(game.episode_rewards.values())[0]
+        if len(game.episode_rewards) > 0
+        else 0
     )
     return f"Score: {score:03d}   |    Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
 
@@ -82,13 +86,12 @@ def overcooked_preload_assets_spec() -> (
         img_path=os.path.join(ASSET_PATH, "objects.png"),
         atlas_path=os.path.join(ASSET_PATH, "objects.json"),
     )
-    # soups = object_contexts.MultiAtlasSpec(
-    #     name="soups",
-    #     img_path=os.path.join(ASSET_PATH, "soups.png"),
-    #     atlas_path=os.path.join(ASSET_PATH, "soups.json"),
-    # )
 
-    return [terrain.as_dict(), chefs.as_dict(), objects.as_dict()]  # , soups.as_dict()]
+    return [
+        terrain.as_dict(),
+        chefs.as_dict(),
+        objects.as_dict(),
+    ]  # , soups.as_dict()]
 
 
 def overcooked_env_to_render_fn(
@@ -279,7 +282,9 @@ def generate_objects(
     return objs
 
 
-def temp_object_creation(obj: grid_object.GridObj, config: remote_config.RemoteConfig):
+def temp_object_creation(
+    obj: grid_object.GridObj, config: remote_config.RemoteConfig
+):
     if isinstance(obj, overcooked_grid_objects.Pot):
         x, y = get_x_y(obj.pos, config.game_height, config.game_width)
         if not obj.objects_in_pot:

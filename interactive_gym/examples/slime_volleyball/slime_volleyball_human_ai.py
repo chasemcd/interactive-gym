@@ -32,7 +32,7 @@ RIGHT = 5
 
 POLICY_MAPPING = {
     "agent_left": configuration_constants.PolicyTypes.Human,
-    "agent_right": "examples/slime_volleyball/policies/model.onnx",
+    "agent_right": "interactive_gym/examples/slime_volleyball/policies/model.onnx",
 }
 
 
@@ -84,7 +84,7 @@ config = (
     .user_experience(
         page_title="Slime Volleyball",
         welcome_header_text="Slime Volleyball",
-        instructions_html_file="server/static/templates/slime_volleyball_instructions.html",
+        instructions_html_file="interactive_gym/server/static/templates/slime_volleyball_instructions.html",
         game_header_text="Slime Volleyball",
         game_page_html_fn=slime_volleyball_utils.slime_volleyball_game_page_header_fn,
         final_page_header_text="Slime Volleyball",

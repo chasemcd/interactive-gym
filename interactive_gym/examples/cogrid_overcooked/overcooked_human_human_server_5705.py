@@ -32,8 +32,8 @@ Noop = 6
 
 
 POLICY_MAPPING = {
-    "agent-0": configuration_constants.PolicyTypes.Human,
-    "agent-1": configuration_constants.PolicyTypes.Human,
+    0: configuration_constants.PolicyTypes.Human,
+    1: configuration_constants.PolicyTypes.Human,
 }
 
 
@@ -76,7 +76,7 @@ config = (
     .hosting(port=5705, host="0.0.0.0", max_concurrent_games=100, max_ping=100)
     .user_experience(
         page_title="Overcooked",
-        instructions_html_file="server/static/templates/overcooked_instructions.html",
+        instructions_html_file="interactive_gym/server/static/templates/overcooked_instructions.html",
         welcome_header_text="Overcooked",
         game_header_text="Overcooked",
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
