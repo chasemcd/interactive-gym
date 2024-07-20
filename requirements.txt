@@ -9,7 +9,6 @@ certifi==2023.11.17
 charset-normalizer==3.3.2
 click==8.1.7
 cloudpickle==3.0.0
-cogrid @ git+https://github.com/chasemcd/cogrid.git@5f4b77f542896b31b9a668bc09b549841e60ea49
 coloredlogs==15.0.1
 dm-tree==0.1.8
 dnspython==2.6.1
@@ -69,7 +68,7 @@ rpds-py==0.17.1
 scikit-image==0.22.0
 scipy==1.12.0
 simple-websocket==1.0.0
-slime-volleyball @ git+https://github.com/chasemcd/slimevolleygym.git@25d8a5973d269389b936ab86f1bd349449082473
+slime-volleyball @ git+https://github.com/chasemcd/slimevolleygym.git
 sympy==1.12
 tensorboardX==2.6.2.2
 tifffile==2023.12.9
@@ -81,3 +80,4 @@ Werkzeug==3.0.1
 wsproto==1.2.0
 zope.event==5.0
 zope.interface==6.2
+cogrid @ git+https://github.com/chasemcd/cogrid.git
