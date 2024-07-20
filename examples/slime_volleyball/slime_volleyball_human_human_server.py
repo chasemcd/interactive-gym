@@ -2,8 +2,10 @@ import eventlet
 
 eventlet.monkey_patch()
 
+import argparse
 from slime_volleyball import slimevolley_env
 
+from datetime import datetime
 from configurations import remote_config
 from configurations import configuration_constants
 from server import server_app
@@ -71,10 +73,11 @@ config = (
     .gameplay(
         default_action=NOOP,
         action_mapping=action_mapping,
-        num_episodes=50,
+        num_episodes=30,
         callback=slime_volleyball_callback.SlimeVolleyballCallback(),
+        reset_freeze_s=1,
     )
-    .hosting(port=5704, host="0.0.0.0", max_concurrent_games=100, max_ping=90)
+    .hosting(port=5704, host="0.0.0.0", max_concurrent_games=100, max_ping=60)
     .user_experience(
         page_title="Slime Volleyball",
         welcome_header_text="Slime Volleyball",
@@ -93,6 +96,15 @@ config = (
     )
 )
 
-
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--port", type=int, default=5701, help="Port number to listen on"
+    )
+    args = parser.parse_args()
+
+    config.hosting(port=args.port).logging(
+        logfile=f'./{datetime.now().strftime("%y_%m_%d")}_slimevb_human_human_port_{args.port}.log'
+    )
+
     server_app.run(config)

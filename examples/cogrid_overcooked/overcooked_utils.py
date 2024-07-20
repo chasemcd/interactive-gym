@@ -41,7 +41,6 @@ def overcooked_game_page_header_fn(
     except FileNotFoundError:
         header_html = f"<p> Unable to load header file {html_path}.</p>"
 
-    print("rendering_header", html_path)
     return header_html
 
 
