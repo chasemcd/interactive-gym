@@ -1,14 +1,18 @@
-import typing
-import time
-import collections
-import os
+from __future__ import annotations
 
-from cogrid import cogrid_env
+import collections
+import logging
+import os
+import time
+import typing
+
 import pandas as pd
+from cogrid import cogrid_env
 
 from interactive_gym.server import callback
 from interactive_gym.server.remote_game import RemoteGame
-from interactive_gym.server import utils
+
+logger = logging.getLogger(__name__)
 
 
 class OvercookedCallback(callback.GameCallback):
@@ -29,9 +33,7 @@ class OvercookedCallback(callback.GameCallback):
         """
         At the beginning of the tick() call, we'll log the current state of the game.
         """
-        self.states[remote_game.game_uuid].append(
-            self.gen_game_data(remote_game)
-        )
+        self.states[remote_game.game_uuid].append(self.gen_game_data(remote_game))
 
     def on_game_tick_end(self, remote_game: RemoteGame) -> None:
         """
@@ -49,16 +51,12 @@ class OvercookedCallback(callback.GameCallback):
         self.actions[remote_game.game_uuid].append(actions)
         self.rewards[remote_game.game_uuid].append(rewards)
 
-    def on_game_end(self, remote_game: RemoteGame):
-        self.save_and_clear_data(remote_game)
-
     def gen_game_data(self, remote_game: RemoteGame) -> dict[str, typing.Any]:
         data = {
             "game_uuid": remote_game.game_uuid,
             "game_id": remote_game.game_id,
             "episode_num": remote_game.episode_num,
-            "episode_s_elapsed": time.time()
-            - self.start_times[remote_game.game_uuid],
+            "episode_s_elapsed": time.time() - self.start_times[remote_game.game_uuid],
             "tick_num": remote_game.tick_num,
         }
 
@@ -70,6 +68,10 @@ class OvercookedCallback(callback.GameCallback):
         for agent_id, player_name in remote_game.human_players.items():
             data[f"{agent_id}_identifier"] = player_name
             data[f"{agent_id}_is_human"] = True
+            data[f"{agent_id}_doc_in_focus"] = remote_game.document_focus_status[
+                player_name
+            ]
+            data[f"{agent_id}_cur_ping"] = remote_game.current_ping[player_name]
 
         for agent_id, bot_id in remote_game.bot_players.items():
             data[f"{agent_id}_identifier"] = bot_id
@@ -98,7 +100,7 @@ class OvercookedCallback(callback.GameCallback):
             f"{remote_game.game_uuid}-episode-{remote_game.episode_num}.csv",
         )
 
-        print("writing data to", save_file_path)
+        logger.info(f"writing data to {save_file_path}")
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
 

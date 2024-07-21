@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import os
+
 import gymnasium as gym
 import numpy as np
 
@@ -84,11 +87,7 @@ def mountaincar_to_render_state(env: gym.Env, *args, **kwargs) -> list[dict]:
     xs = _normalize_x(xs)
     xys = list(zip((xs), ys))
     line = object_contexts.Line(
-        uuid="ground_line",
-        color="#964B00",
-        points=xys,
-        width=1,
-        fill_below=True,
+        uuid="ground_line", color="#964B00", points=xys, width=1, fill_below=True
     )
 
     seconds_left = (env._max_episode_steps - env._elapsed_steps) / FPS

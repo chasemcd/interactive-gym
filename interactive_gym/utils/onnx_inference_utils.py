@@ -1,20 +1,19 @@
 """
 This file provides utilities to inference an ONNX model that has been exported via RLLib. Note that
 the structure of the input may change if you've exported with something other than RLLib, so you
-may need to reconfigure these if you've done your own export. 
+may need to reconfigure these if you've done your own export.
 """
 
-import numpy as np
+from __future__ import annotations
 
+import numpy as np
 
 from interactive_gym.utils import inference_utils
 
 try:
     import onnxruntime as ort
 except ImportError:
-    raise ImportError(
-        "Must `pip install onnxruntime` to use the ONNX inference utils!"
-    )
+    raise ImportError("Must `pip install onnxruntime` to use the ONNX inference utils!")
 
 
 ORT_SESSIONS: dict[str, ort.InferenceSession] = {}
@@ -55,8 +54,6 @@ def onnx_model_inference_fn(
 def load_onnx_policy_fn(onnx_model_path: str) -> str:
     """Initialize the ORT session and return the string to access it"""
     if ORT_SESSIONS.get(onnx_model_path) is None:
-        ORT_SESSIONS[onnx_model_path] = ort.InferenceSession(
-            onnx_model_path, None
-        )
+        ORT_SESSIONS[onnx_model_path] = ort.InferenceSession(onnx_model_path, None)
 
     return onnx_model_path

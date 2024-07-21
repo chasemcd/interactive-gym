@@ -7,6 +7,26 @@ var latencyMeasurements = [];
 var curLatency;
 var maxLatency;
 
+var documentInFocus = false;
+document.addEventListener("visibilitychange", function() {
+  if (document.hidden) {
+    documentInFocus = false;
+    // alert("Please return to the game tab to avoid interruptions and to facilitate a good experience for all players.");
+  } else {
+    documentInFocus = true;
+  }
+});
+
+window.addEventListener('focus', function() {
+    // The window has gained focus
+    documentInFocus = true;
+});
+
+window.addEventListener('blur', function() {
+    // The window has lost focus
+    documentInFocus = false;
+});
+
 socket.on('pong', function(data) {
     var latency = Date.now() - window.lastPingTime;
     latencyMeasurements.push(latency);
@@ -45,7 +65,7 @@ function calculateMedian(arr) {
 
 function sendPing() {
     window.lastPingTime = Date.now();
-    socket.emit('ping', {ping_ms: curLatency});
+    socket.emit('ping', {ping_ms: curLatency, document_in_focus: documentInFocus});
 }
 
 // Send a ping every second
@@ -53,14 +73,14 @@ setInterval(sendPing, 1000);
 
 // Check if we're enabling the start button
 var refreshStartButton = setInterval(() => {
-    if (latencyMeasurements.length > 5 && curLatency > maxLatency) {
+    if (maxLatency != null && latencyMeasurements.length > 5 && curLatency > maxLatency) {
         $("#instructions").hide();
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
         $('#errorText').show()
         $('#errorText').text("Sorry, your connection is too slow for this application. Please make sure you have a strong internet connection to ensure a good experience for all players in the game.");
         clearInterval(refreshStartButton);
-    } else if (latencyMeasurements.length <= 5) {
+    } else if (maxLatency != null && latencyMeasurements.length <= 5) {
         $("#startButton").show();
         $("#startButton").attr("disabled", true);
     } else {
@@ -184,30 +204,45 @@ socket.on("single_player_waiting_room", function(data) {
     $("#instructions").hide();
 
 
-    var timer = Math.floor(data.s_remaining / 1000); // Convert milliseconds to seconds
-
+    var simulater_timer = Math.floor(data.ms_remaining / 1000); // Convert milliseconds to seconds
+    var single_player_timer = Math.floor(data.wait_duration_s); // already in second
 
     // Update the text immediately to reflect the current state
-    updateWaitroomText(data, timer);
+    updateWaitroomText(data, simulater_timer);
 
     // Set up a new interval
-    waitroomInterval = setInterval(function () {
-        timer--;
-        updateWaitroomText(data, timer);
+    singlePlayerWaitroomInterval = setInterval(function () {
+        simulater_timer--;
+        single_player_timer--;
+        updateWaitroomText(data, simulater_timer);
 
-        // Stop the timer if it reaches zero
-        if (timer <= 0) {
+        if (single_player_timer <= 0) {
             clearInterval(singlePlayerWaitroomInterval);
-            $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
-            console.log("Single player waitroom timed out!")
-            socket.emit("leave_game", {session_id: window.sessionId})
-            socket.emit('end_game_request_redirect', {waitroom_timeout: true})
+            socket.emit('single_player_waiting_room_end', {})
         }
+
+        // // Stop the timer if it reaches zero
+        // if (simulater_timer <= 0) {
+        //     clearInterval(singlePlayerWaitroomInterval);
+        //     $("#waitroomText").text("Sorry, could not find enough players. You will be redirected shortly...");
+        //     console.log("Single player waitroom timed out!")
+        //     socket.emit("leave_game", {session_id: window.sessionId})
+        //     socket.emit('end_game_request_redirect', {waitroom_timeout: true})
+        // }
     }, 1000);
     $("#waitroomText").show();
 
 })
 
+
+socket.on("single_player_waiting_room_failure", function(data) {
+
+    $("#waitroomText").text("Sorry, you were matched with a player but they disconnected before the game could start. You will be redirected shortly...");
+    console.log("Leaving game due to waiting room failure (other player left)...")
+    socket.emit("leave_game", {session_id: window.sessionId})
+    socket.emit('end_game_request_redirect', {waitroom_timeout: true})
+
+})
 
 
 
@@ -360,9 +395,15 @@ socket.on('request_pressed_keys', function(data) {
 function enable_key_listener(input_mode) {
     pressedKeys = {};
     $(document).on('keydown', function(event) {
+        // List of keys to prevent default behavior for (scroll the window)
+        var keysToPreventDefault = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ']; // Includes space (' ')
+
+        if (keysToPreventDefault.includes(event.key)) {
+            event.preventDefault(); // Prevent default behavior for specified keys
+        }
 
         // If we're using the single keystroke input method, we just send the key when it's pressed.
-        // This means no composite actions. 
+        // This means no composite actions.
         if (input_mode == "single_keystroke") {
             socket.emit('send_pressed_keys', {'pressed_keys': Array(event.key), session_id: window.sessionId});
             return;

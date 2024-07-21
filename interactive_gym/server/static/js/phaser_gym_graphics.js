@@ -5,6 +5,7 @@ var game_config = {
         noAudio: true
     },
     resolution: window.devicePixelRatio,
+    // pauseOnBlur: false,
 };
 
 var game_graphics;
@@ -44,7 +45,29 @@ class GraphicsManager {
         game_config.parent = graphics_config.parent;
         game_config.fps = graphics_config.fps;
         this.game = new Phaser.Game(game_config);
+        // TODO(chase): Figure out proper resizing. Sprites must be resized as well but they aren't if we do this.
+        // this.resizeGame();
+
+        // // Add a resize event listener to adjust the game size dynamically
+        // window.addEventListener('resize', this.resizeGame.bind(this));
     }
+
+    // resizeGame() {
+    //     // Example resize logic: Adjust game size while maintaining aspect ratio
+    //     let width = window.innerWidth;
+    //     let height = window.innerHeight;
+    //     let gameRatio = this.game.config.width / this.game.config.height;
+    //     let newWidth = width;
+    //     let newHeight = width / gameRatio;
+
+    //     if (newHeight > height) {
+    //         newHeight = height;
+    //         newWidth = height * gameRatio;
+    //     }
+
+    //     this.game.scale.resize(newWidth, newHeight);
+    // }
+
 }
 
 
@@ -67,7 +90,6 @@ class GymScene extends Phaser.Scene {
         this.assets_to_preload.forEach(obj_config => {
             if (obj_config.object_type == "img_spec") {
                 this.load.image(obj_config.name, obj_config.img_path)
-
             } else if (obj_config.object_type == "spritesheet") {
                 this.load.spritesheet(obj_config.name, obj_config.img_path, {frameWidth: obj_config.frame_width, frameHeight: obj_config.frame_height})
             } else if (obj_config.object_type == "atlas_spec") {
@@ -138,7 +160,7 @@ class GymScene extends Phaser.Scene {
         // NOTE: This approach is very inefficient and not good practice! It's oriented
         //  to testing or local experiments.
         if (game_state_objects == null && !(game_state_image == null)) {
-            
+
             // Remove the current image
             let oldImage;
 
@@ -183,7 +205,7 @@ class GymScene extends Phaser.Scene {
                     object_map = this.temp_object_map;
                 };
 
-                
+
                 // Check if we need to add a new object
                 if (!object_map.hasOwnProperty(game_obj.uuid)) {
                     this._addObject(game_obj, object_map);
@@ -298,10 +320,10 @@ class GymScene extends Phaser.Scene {
 
         if (
             object_config.tween == true &&
-            sprite.tween == null && 
+            sprite.tween == null &&
             (new_x !== sprite.x || new_y !== sprite.y)
             ) {
-                // sprite.tween = 
+                // sprite.tween =
             this.tweens.add({
                 targets: [sprite],
                 x: new_x,
@@ -313,12 +335,12 @@ class GymScene extends Phaser.Scene {
                 }
             })
         } else if (
-            sprite.tween == null && 
+            sprite.tween == null &&
             (new_x !== sprite.x || new_y !== sprite.y)
         ) {
             sprite.x = new_x;
             sprite.y = new_y;
-        } 
+        }
 
     }
 

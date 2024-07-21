@@ -1,14 +1,13 @@
+from __future__ import annotations
+
 import math
 import os
 
-import gymnasium as gym
-import numpy as np
-from interactive_gym.configurations import object_contexts
 from slime_volleyball import slimevolley_env
 from slime_volleyball.core import constants
-from interactive_gym.configurations import remote_config
-from interactive_gym.server import remote_game
 
+from interactive_gym.configurations import object_contexts, remote_config
+from interactive_gym.server import remote_game
 
 ASSET_PATH = "static/assets/slime_volleyball/sprites"
 
@@ -25,12 +24,16 @@ def slime_volleyball_game_page_header_fn(
     assert player_id is not None
 
     if player_id == "agent_right":
-        html_path = "interactive_gym/server/static/templates/slime_vb_agent_right_header.html"
+        html_path = (
+            "interactive_gym/server/static/templates/slime_vb_agent_right_header.html"
+        )
     else:
-        html_path = "interactive_gym/server/static/templates/slime_vb_agent_left_header.html"
+        html_path = (
+            "interactive_gym/server/static/templates/slime_vb_agent_left_header.html"
+        )
 
     try:
-        with open(html_path, "r", encoding="utf-8") as f:
+        with open(html_path, encoding="utf-8") as f:
             header_html = f.read()
     except FileNotFoundError:
         header_html = f"<p> Unable to load header file {html_path}.</p>"
@@ -60,7 +63,7 @@ def hud_text_fn(game: remote_game.RemoteGame) -> str:
     """Function to create HUD text to display"""
     left_red_score = game.total_positive_rewards["agent_left"]
     right_blue_score = game.total_positive_rewards["agent_right"]
-    return f"Red Points: {int(left_red_score)} | Blue Points {int(right_blue_score)} | Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
+    return f"Red Points: {int(left_red_score)} | Blue Points {int(right_blue_score)}"
 
 
 Y_OFFSET = 0.018
@@ -155,9 +158,10 @@ def slime_volleyball_env_to_rendering(
         env=env,
     )
 
+    terminateds, _ = env.get_terminateds_truncateds()
     ball = object_contexts.Circle(
         uuid="ball",
-        color="#000000",
+        color="#000000" if not terminateds["__all__"] else "#AAFF00",
         x=env.game.ball.x / constants.REF_W + 0.5,
         y=1 - env.game.ball.y / constants.REF_W,
         radius=env.game.ball.r * config.game_width / constants.REF_W,
@@ -179,32 +183,30 @@ def generate_slime_agent_objects(
     resolution: int = 30,
 ):
     objects = []
-    # points = []
-    # for i in range(resolution + 1):
-    #     ang = math.pi - math.pi * i / resolution
-    #     points.append(
-    #         (to_x(math.cos(ang) * radius + x), to_y(math.sin(ang) * radius + y))
-    #     )
-
-    # objects.append(
-    #     object_contexts.Polygon(
-    #         uuid=f"{identifier}_body", color=color, points=points, depth=-1
-    #     )
-    # )
+    points = []
+    for i in range(resolution + 1):
+        ang = math.pi - math.pi * i / resolution
+        points.append(
+            (to_x(math.cos(ang) * radius + x), to_y(math.sin(ang) * radius + y))
+        )
 
     objects.append(
-        object_contexts.Sprite(
-            uuid=f"{identifier}_body_sprite",
-            image_name=(
-                "slime_blue.png" if "right" in identifier else "slime_red.png"
-            ),
-            x=to_x(x - radius),
-            y=to_y(y) - 30 / config.game_height,
-            height=30,
-            width=36,
-            depth=0,
+        object_contexts.Polygon(
+            uuid=f"{identifier}_body", color=color, points=points, depth=-1
         )
     )
+
+    # objects.append(
+    #     object_contexts.Sprite(
+    #         uuid=f"{identifier}_body_sprite",
+    #         image_name="slime_blue.png" if "right" in identifier else "slime_red.png",
+    #         x=to_x(x - radius),
+    #         y=to_y(y) - 30 / config.game_height,
+    #         height=30,
+    #         width=36,
+    #         depth=0,
+    #     )
+    # )
 
     # Eyes that track the ball!
     angle = math.pi * 60 / 180
