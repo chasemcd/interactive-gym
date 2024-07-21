@@ -158,14 +158,4 @@ The Phaser integration and server implementation are inspired by and derived fro
 
 Installation
 ------------
-To install Interactive Gym, you can use the PyPi distribution:
-
-    .. code-block:: bash
-
-        pip install interactive-gym
-
-Or directly from the master branch:
-
-    .. code-block:: bash
-
-        pip install git+https://www.github.com/DDM-Lab/interactive-gym.git
+To use Interactive Gym, clone this repository. PyPi coming soon!
