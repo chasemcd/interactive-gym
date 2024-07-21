@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import copy
 import json
 import typing
 
 from interactive_gym.configurations import configuration_constants
 
+# from server import callback
+
 
 class RemoteConfig:
-    """The RemoteConfig class is used to configure all settings for the interactive task."""
-
     def __init__(self):
         self.env_creator: typing.Callable | None = None
         self.env_name: str | None = None
@@ -80,16 +82,12 @@ class RemoteConfig:
         self.final_page_header_text: str = ""
         self.instructions: str = ""  # can pass html
         self.reset_timeout: int = 3000
+        self.reset_freeze_s: int = 0
 
         # logging
-        self.logfile: str = "./log"
+        self.logfile: str = "./server_log.log"
 
-    def logging(self, logfile: str | None = None) -> "RemoteConfig":
-        """Set the settings for logging.
-
-        :param logfile: The .log file to log to, defaults to None
-        :type logfile: str | None, optional
-        """
+    def logging(self, logfile: str | None = None):
         if logfile is not None:
             self.logfile = logfile
 
@@ -99,20 +97,7 @@ class RemoteConfig:
         env_name: str | None = None,
         env_config: dict[str, typing.Any] | None = None,
         seed: int | None = None,
-    ) -> "RemoteConfig":
-        """Set the environment settings.
-
-        :param env_creator: A function that returns an instance of the environment, defaults to None
-        :type env_creator: typing.Callable | None, optional
-        :param env_name: The name of the environment, defaults to None
-        :type env_name: str | None, optional
-        :param env_config: The configuration to pass to the environment on initialization, defaults to None
-        :type env_config: dict[str, typing.Any] | None, optional
-        :param seed: Random seed to use for the environment, defaults to None
-        :type seed: int | None, optional
-        :return: The RemoteConfig instance.
-        :rtype: RemoteConfig
-        """
+    ):
         if env_creator is not None:
             self.env_creator = env_creator
 
@@ -141,36 +126,7 @@ class RemoteConfig:
         assets_dir: str | None = None,
         assets_to_preload: list[str] | None = None,
         animation_configs: list | None = None,
-    ) -> "RemoteConfig":
-        """_summary_
-
-        :param fps: _description_, defaults to None
-        :type fps: int | None, optional
-        :param env_to_state_fn: _description_, defaults to None
-        :type env_to_state_fn: typing.Callable | None, optional
-        :param preload_specs: _description_, defaults to None
-        :type preload_specs: list[dict[str, str  |  float  |  int]] | None, optional
-        :param hud_text_fn: _description_, defaults to None
-        :type hud_text_fn: typing.Callable | None, optional
-        :param location_representation: _description_, defaults to None
-        :type location_representation: str | None, optional
-        :param game_width: _description_, defaults to None
-        :type game_width: int | None, optional
-        :param game_height: _description_, defaults to None
-        :type game_height: int | None, optional
-        :param background: _description_, defaults to None
-        :type background: str | None, optional
-        :param state_init: _description_, defaults to None
-        :type state_init: list | None, optional
-        :param assets_dir: _description_, defaults to None
-        :type assets_dir: str | None, optional
-        :param assets_to_preload: _description_, defaults to None
-        :type assets_to_preload: list[str] | None, optional
-        :param animation_configs: _description_, defaults to None
-        :type animation_configs: list | None, optional
-        :return: _description_
-        :rtype: RemoteConfig
-        """
+    ):
         if env_to_state_fn is not None:
             self.env_to_state_fn = env_to_state_fn
 
@@ -227,9 +183,7 @@ class RemoteConfig:
             self.port = port
 
         if max_concurrent_games is not None:
-            assert (
-                max_concurrent_games >= 1
-            ), "Must have at least one concurrent game!"
+            assert max_concurrent_games >= 1, "Must have at least one concurrent game!"
             self.max_concurrent_games = max_concurrent_games
 
         if max_ping is not None:
@@ -267,6 +221,7 @@ class RemoteConfig:
         action_population_method: str | None = None,
         input_mode: str | None = None,
         callback: None = None,  # TODO(chase): add callback typehint without circular import
+        reset_freeze_s: int | None = None,
     ):
         if action_mapping is not None:
             # ensure the composite action tuples are sorted
@@ -300,6 +255,9 @@ class RemoteConfig:
         if callback is not None:
             self.callback = callback
 
+        if reset_freeze_s is not None:
+            self.reset_freeze_s = reset_freeze_s
+
         return self
 
     def user_experience(
@@ -328,9 +286,7 @@ class RemoteConfig:
             self.waitroom_timeout_redirect_url = waitroom_timeout_redirect_url
 
         if append_subject_name_to_redirect is not None:
-            self.append_subject_name_to_redirect = (
-                append_subject_name_to_redirect
-            )
+            self.append_subject_name_to_redirect = append_subject_name_to_redirect
 
         if game_page_html_fn is not None:
             self.game_page_html_fn = game_page_html_fn
@@ -407,9 +363,7 @@ def serialize_dict(data):
         }
     elif isinstance(data, list):
         # Use list comprehension to process each item
-        return [
-            serialize_dict(item) for item in data if is_json_serializable(item)
-        ]
+        return [serialize_dict(item) for item in data if is_json_serializable(item)]
     elif is_json_serializable(data):
         return data
     else:

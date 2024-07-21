@@ -1,18 +1,23 @@
+from __future__ import annotations
+
 import collections
 import dataclasses
+import logging
 import queue
 import threading
-import eventlet
+import time
 import typing
+import uuid
+
+import eventlet
 import numpy as np
 from gymnasium import spaces
-import uuid
-import time
 
-from interactive_gym.configurations import remote_config
-from interactive_gym.configurations import configuration_constants
+from interactive_gym.configurations import (configuration_constants,
+                                            remote_config)
 from interactive_gym.server import utils
-from absl import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -24,12 +29,17 @@ class GameStatus:
 
 
 class RemoteGame:
-    def __init__(self, config: remote_config.RemoteConfig, game_id: int):
+    def __init__(self, config: remote_config.RemoteConfig, game_id: int | None = None):
         self.config = config
         self.status = GameStatus.Inactive
         self.lock = threading.Lock()
         self.reset_event: eventlet.event.Event | None = None
         self.set_reset_event()
+
+        self.document_focus_status: dict[str | int, bool] = collections.defaultdict(
+            lambda: True
+        )
+        self.current_ping: dict[str | int, int] = collections.defaultdict(lambda: 0)
 
         # Players and actions
         self.pending_actions = None
@@ -45,13 +55,13 @@ class RemoteGame:
         # Game environment
         self.env = None
         self.obs: np.ndarray | dict[str, typing.Any] | None = None
-        self.game_id = game_id
+        self.game_uuid: str = str(uuid.uuid4())
+        self.game_id: int | str = game_id if game_id is not None else self.game_uuid
         assert (
             game_id is not None
         ), f"Must pass valid game id! Got {game_id} but expected an int."
 
         self.tick_num: int = 0
-        self.game_uuid: str = str(uuid.uuid4())
         self.episode_num: int = 0
         self.episode_rewards = collections.defaultdict(lambda: 0)
         self.total_rewards = collections.defaultdict(lambda: 0)  # score across episodes
@@ -136,13 +146,14 @@ class RemoteGame:
                 break
 
         if player_id is None:
-            logging.warning(
-                f"Attempted to remove {subject_id} but player wasn't found."
-            )
+            logger.warning(f"Attempted to remove {subject_id} but player wasn't found.")
             return
 
-        print("Setting", player_id, "to Available")
         self.human_players[player_id] = utils.Available
+
+        if subject_id in self.document_focus_status:
+            del self.document_focus_status[subject_id]
+            del self.current_ping[subject_id]
 
     def is_ready_to_start(self) -> bool:
         ready = self.is_at_player_capacity()
@@ -179,6 +190,12 @@ class RemoteGame:
 
         self.human_players[player_id] = identifier
 
+    def update_document_focus_status_and_ping(
+        self, player_identifier: str | int, hidden_status: bool, ping: int
+    ) -> None:
+        self.document_focus_status[player_identifier] = hidden_status
+        self.current_ping[player_identifier] = ping
+
     def tick(self) -> None:
 
         # If the queue is empty, we have a mechanism for deciding which action to submit
@@ -203,24 +220,10 @@ class RemoteGame:
 
             player_actions[pid] = action
 
-        #     if self.pending_actions[sid].qsize() > 0:
-
-        # if self.config.action_population_method:
-        #     default_action = self.pending_actions
-        # player_actions = {
-        #     pid: (
-        #         self.pending_actions[sid].get(block=False)
-        #         if self.pending_actions[sid].qsize() > 0
-        #         else self.config.default_action
-        #     )
-        #     for pid, sid in self.human_players.items()
-        # }
-
         # Bot actions
         for pid, bot in self.bot_players.items():
 
             # set default action
-            # TODO(chase): add option for this to be the previous action
             if (
                 self.config.action_population_method
                 == configuration_constants.ActionSettings.PreviousSubmittedAction
@@ -254,13 +257,8 @@ class RemoteGame:
 
             # If we have a specified policy, pop an action from the pending actions queue
             # if there are any
-            # TODO(Chase): figure out why this was hanging
             elif self.pending_actions[pid].qsize() > 0:
                 player_actions[pid] = self.pending_actions[pid].get(block=False)
-            # elif self.tick_num % self.config.frame_skip == 0:
-            #     player_actions[pid] = self.config.policy_inference_fn(
-            #         self.obs[pid], bot
-            #     )
 
         self.prev_actions = player_actions
         try:
@@ -292,8 +290,8 @@ class RemoteGame:
                 self.total_negative_rewards[k] += min(0, v)
 
         if isinstance(terminateds, dict):
-            terminateds = terminateds["__all__"]
-            truncateds = truncateds["__all__"]
+            terminateds = all([t for t in terminateds.values()])
+            truncateds = all([t for t in truncateds.values()])
 
         self.tick_num += 1
         if terminateds or truncateds:
@@ -305,6 +303,9 @@ class RemoteGame:
     def enqueue_observations(self) -> None:
         """Add self.obs to the state queues for all bots"""
         if self.status != GameStatus.Active:
+            return
+
+        if not self.bot_players:
             return
 
         for pid, obs in self.obs.items():

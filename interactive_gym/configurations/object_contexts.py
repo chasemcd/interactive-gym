@@ -1,3 +1,23 @@
+# *
+# game object dict
+#     {
+#         uuid: unique identifier
+#         image_loc: path to image
+#         sprite_sheet_loc: path to sprite sheet (if any)
+#         object_type: object type, if not using an image
+#         object_size: size of the object
+#         x: relative x position [0, 1], multiplied by screen width
+#         y: relative y position [0, 1], multiplied by screen height
+#         orientation: direction facing (if applicable/using sprite sheet)
+#         angle: should we rotate the sprite? In degrees.
+#         depth: object depth (other things render on top?).
+#         animation: name of the animation to play from a sprite sheet
+#         animations: a list of animations to initialize from the sprite sheet
+#                 format: anim = {key, frames, frameRate, repeat, hideOnComplete}
+#     }
+#  */
+from __future__ import annotations
+
 import dataclasses
 import typing
 
