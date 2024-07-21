@@ -7,7 +7,7 @@ may need to reconfigure these if you've done your own export.
 import numpy as np
 
 
-from utils import inference_utils
+from interactive_gym.utils import inference_utils
 
 try:
     import onnxruntime as ort

@@ -1,13 +1,11 @@
 import math
 import os
 
-import gymnasium as gym
-import numpy as np
-from configurations import object_contexts
+from interactive_gym.configurations import object_contexts
 from slime_volleyball import slimevolley_env
 from slime_volleyball.core import constants
-from configurations import remote_config
-from server import remote_game
+from interactive_gym.configurations import remote_config
+from interactive_gym.server import remote_game
 
 
 ASSET_PATH = "static/assets/slime_volleyball/sprites"
@@ -25,9 +23,13 @@ def slime_volleyball_game_page_header_fn(
     assert player_id is not None
 
     if player_id == "agent_right":
-        html_path = "server/static/templates/slime_vb_agent_right_header.html"
+        html_path = (
+            "interactive_gym/server/static/templates/slime_vb_agent_right_header.html"
+        )
     else:
-        html_path = "server/static/templates/slime_vb_agent_left_header.html"
+        html_path = (
+            "interactive_gym/server/static/templates/slime_vb_agent_left_header.html"
+        )
 
     try:
         with open(html_path, "r", encoding="utf-8") as f:

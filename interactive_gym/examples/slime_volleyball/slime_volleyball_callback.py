@@ -3,17 +3,18 @@ import time
 import collections
 import os
 
-from cogrid import cogrid_env
+from slime_volleyball import slimevolley_env
 import pandas as pd
 
-from server import callback
-from server.remote_game import RemoteGame
+from interactive_gym.server import callback
+from interactive_gym.server.remote_game import RemoteGame
+
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class OvercookedCallback(callback.GameCallback):
+class SlimeVolleyballCallback(callback.GameCallback):
 
     def __init__(self) -> None:
         self.start_times = {}
@@ -49,34 +50,6 @@ class OvercookedCallback(callback.GameCallback):
         self.actions[remote_game.game_uuid].append(actions)
         self.rewards[remote_game.game_uuid].append(rewards)
 
-    def gen_game_data(self, remote_game: RemoteGame) -> dict[str, typing.Any]:
-        data = {
-            "game_uuid": remote_game.game_uuid,
-            "game_id": remote_game.game_id,
-            "episode_num": remote_game.episode_num,
-            "episode_s_elapsed": time.time() - self.start_times[remote_game.game_uuid],
-            "tick_num": remote_game.tick_num,
-        }
-
-        env: cogrid_env.CoGridEnv = remote_game.env
-        for agent_id, agent in env.grid.grid_agents.items():
-            data[f"{agent_id}_pos"] = agent.pos
-            data[f"{agent_id}_dir"] = agent.dir
-
-        for agent_id, player_name in remote_game.human_players.items():
-            data[f"{agent_id}_identifier"] = player_name
-            data[f"{agent_id}_is_human"] = True
-            data[f"{agent_id}_doc_in_focus"] = remote_game.document_focus_status[
-                player_name
-            ]
-            data[f"{agent_id}_cur_ping"] = remote_game.current_ping[player_name]
-
-        for agent_id, bot_id in remote_game.bot_players.items():
-            data[f"{agent_id}_identifier"] = bot_id
-            data[f"{agent_id}_is_human"] = False
-
-        return data
-
     def save_and_clear_data(self, remote_game: RemoteGame) -> None:
         full_data_dicts = []
 
@@ -91,14 +64,13 @@ class OvercookedCallback(callback.GameCallback):
             full_data_dicts.append(state_data)
 
         game_data = pd.DataFrame(full_data_dicts)
-        data_dir = f"data/overcooked/"
-
+        data_dir = f"data/slime_volleyball/"
         save_file_path = os.path.join(
             data_dir,
             f"{remote_game.game_uuid}-episode-{remote_game.episode_num}.csv",
         )
-
         logger.info(f"writing data to {save_file_path}")
+
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
 
@@ -109,3 +81,30 @@ class OvercookedCallback(callback.GameCallback):
         del self.states[remote_game.game_uuid]
         del self.actions[remote_game.game_uuid]
         del self.rewards[remote_game.game_uuid]
+
+    def gen_game_data(self, remote_game: RemoteGame) -> dict[str, typing.Any]:
+        data = {
+            "game_uuid": remote_game.game_uuid,
+            "game_id": remote_game.game_id,
+            "episode_num": remote_game.episode_num,
+            "episode_s_elapsed": time.time() - self.start_times[remote_game.game_uuid],
+            "tick_num": remote_game.tick_num,
+        }
+
+        env: slimevolley_env.SlimeVolleyEnv = remote_game.env
+        data["agent_right_observation"] = env.game.agent_right.get_observation()
+        data["agent_left_observation"] = env.game.agent_right.get_observation()
+
+        for agent_id, player_name in remote_game.human_players.items():
+            data[f"{agent_id}_identifier"] = player_name
+            data[f"{agent_id}_is_human"] = True
+            data[f"{agent_id}_doc_in_focus"] = remote_game.document_focus_status[
+                player_name
+            ]
+            data[f"{agent_id}_cur_ping"] = remote_game.current_ping[player_name]
+
+        for agent_id, bot_id in remote_game.bot_players.items():
+            data[f"{agent_id}_identifier"] = bot_id
+            data[f"{agent_id}_is_human"] = False
+
+        return data

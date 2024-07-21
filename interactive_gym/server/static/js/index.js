@@ -73,14 +73,14 @@ setInterval(sendPing, 1000);
 
 // Check if we're enabling the start button
 var refreshStartButton = setInterval(() => {
-    if (latencyMeasurements.length > 5 && curLatency > maxLatency) {
+    if (maxLatency != null && latencyMeasurements.length > 5 && curLatency > maxLatency) {
         $("#instructions").hide();
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
         $('#errorText').show()
         $('#errorText').text("Sorry, your connection is too slow for this application. Please make sure you have a strong internet connection to ensure a good experience for all players in the game.");
         clearInterval(refreshStartButton);
-    } else if (latencyMeasurements.length <= 5) {
+    } else if (maxLatency != null && latencyMeasurements.length <= 5) {
         $("#startButton").show();
         $("#startButton").attr("disabled", true);
     } else {

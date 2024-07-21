@@ -6,4 +6,4 @@
 
 # Nginx
 
-1. Install `nginx`: `sudo apt install nginx`. Ensure it's running t
+1. Install `nginx`: `sudo apt install nginx`. Ensure it's running.

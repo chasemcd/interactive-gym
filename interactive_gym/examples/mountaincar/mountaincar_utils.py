@@ -2,7 +2,7 @@ import os
 import gymnasium as gym
 import numpy as np
 
-from configurations import object_contexts
+from interactive_gym.configurations import object_contexts
 
 ball_rotation = 0
 prev_x = None

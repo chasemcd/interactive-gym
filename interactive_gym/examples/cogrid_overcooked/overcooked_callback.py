@@ -3,18 +3,17 @@ import time
 import collections
 import os
 
-from slime_volleyball import slimevolley_env
+from cogrid import cogrid_env
 import pandas as pd
 
-from server import callback
-from server.remote_game import RemoteGame
-
+from interactive_gym.server import callback
+from interactive_gym.server.remote_game import RemoteGame
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class SlimeVolleyballCallback(callback.GameCallback):
+class OvercookedCallback(callback.GameCallback):
 
     def __init__(self) -> None:
         self.start_times = {}
@@ -50,38 +49,6 @@ class SlimeVolleyballCallback(callback.GameCallback):
         self.actions[remote_game.game_uuid].append(actions)
         self.rewards[remote_game.game_uuid].append(rewards)
 
-    def save_and_clear_data(self, remote_game: RemoteGame) -> None:
-        full_data_dicts = []
-
-        # merge the list of dicts
-        for state_data, action_data, reward_data in zip(
-            self.states[remote_game.game_uuid],
-            self.actions[remote_game.game_uuid],
-            self.rewards[remote_game.game_uuid],
-        ):
-            state_data.update(action_data)
-            state_data.update(reward_data)
-            full_data_dicts.append(state_data)
-
-        game_data = pd.DataFrame(full_data_dicts)
-        data_dir = f"data/slime_volleyball/"
-        save_file_path = os.path.join(
-            data_dir,
-            f"{remote_game.game_uuid}-episode-{remote_game.episode_num}.csv",
-        )
-        logger.info(f"writing data to {save_file_path}")
-
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-
-        game_data.to_csv(save_file_path)
-
-        # clear out data
-        del self.start_times[remote_game.game_uuid]
-        del self.states[remote_game.game_uuid]
-        del self.actions[remote_game.game_uuid]
-        del self.rewards[remote_game.game_uuid]
-
     def gen_game_data(self, remote_game: RemoteGame) -> dict[str, typing.Any]:
         data = {
             "game_uuid": remote_game.game_uuid,
@@ -91,9 +58,10 @@ class SlimeVolleyballCallback(callback.GameCallback):
             "tick_num": remote_game.tick_num,
         }
 
-        env: slimevolley_env.SlimeVolleyEnv = remote_game.env
-        data["agent_right_observation"] = env.game.agent_right.get_observation()
-        data["agent_left_observation"] = env.game.agent_right.get_observation()
+        env: cogrid_env.CoGridEnv = remote_game.env
+        for agent_id, agent in env.grid.grid_agents.items():
+            data[f"{agent_id}_pos"] = agent.pos
+            data[f"{agent_id}_dir"] = agent.dir
 
         for agent_id, player_name in remote_game.human_players.items():
             data[f"{agent_id}_identifier"] = player_name
@@ -108,3 +76,36 @@ class SlimeVolleyballCallback(callback.GameCallback):
             data[f"{agent_id}_is_human"] = False
 
         return data
+
+    def save_and_clear_data(self, remote_game: RemoteGame) -> None:
+        full_data_dicts = []
+
+        # merge the list of dicts
+        for state_data, action_data, reward_data in zip(
+            self.states[remote_game.game_uuid],
+            self.actions[remote_game.game_uuid],
+            self.rewards[remote_game.game_uuid],
+        ):
+            state_data.update(action_data)
+            state_data.update(reward_data)
+            full_data_dicts.append(state_data)
+
+        game_data = pd.DataFrame(full_data_dicts)
+        data_dir = f"data/overcooked/"
+
+        save_file_path = os.path.join(
+            data_dir,
+            f"{remote_game.game_uuid}-episode-{remote_game.episode_num}.csv",
+        )
+
+        logger.info(f"writing data to {save_file_path}")
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+
+        game_data.to_csv(save_file_path)
+
+        # clear out data
+        del self.start_times[remote_game.game_uuid]
+        del self.states[remote_game.game_uuid]
+        del self.actions[remote_game.game_uuid]
+        del self.rewards[remote_game.game_uuid]

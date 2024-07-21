@@ -1,9 +1,13 @@
+import eventlet
+
+eventlet.monkey_patch()
+
 import gymnasium as gym
 
-from configurations import remote_config
-from configurations import configuration_constants
-from examples.mountaincar import mountaincar_utils
-from server import server_app
+from interactive_gym.configurations import remote_config
+from interactive_gym.configurations import configuration_constants
+from interactive_gym.examples.mountaincar import mountaincar_utils
+from interactive_gym.server import server_app
 
 """
 This is an example script for running MountainCar-v0 in
@@ -58,7 +62,6 @@ config = (
         game_page_text="Use the left and right arrows to move the ball up the hill!",
         final_page_header_text="Interactive MountainCar-v0",
         final_page_text="Thanks for playing, you will be redirected shortly...",
-        redirect_url="https://www.cmu.edu/dietrich/sds/ddmlab",
         waitroom_timeout=120_000,  # 2 minutes in waitroom
     )
 )

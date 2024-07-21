@@ -1,12 +1,12 @@
 import os
 
 from cogrid.envs import overcooked
-from cogrid.envs import overcooked_grid_objects
+from cogrid.envs.overcooked import overcooked_grid_objects
 from cogrid.core import grid_object
 
-from configurations import remote_config
-from configurations import object_contexts
-from server import remote_game
+from interactive_gym.configurations import remote_config
+from interactive_gym.configurations import object_contexts
+from interactive_gym.server import remote_game
 
 ASSET_PATH = "static/assets/overcooked/sprites"
 TILE_SIZE = 45
@@ -30,10 +30,14 @@ def overcooked_game_page_header_fn(
 
     assert player_id is not None
 
-    if "1" in player_id:
-        html_path = "server/static/templates/overcooked_agent_1_header.html"
+    if player_id == 1:
+        html_path = (
+            "interactive_gym/server/static/templates/overcooked_agent_1_header.html"
+        )
     else:
-        html_path = "server/static/templates/overcooked_agent_0_header.html"
+        html_path = (
+            "interactive_gym/server/static/templates/overcooked_agent_0_header.html"
+        )
 
     try:
         with open(html_path, "r", encoding="utf-8") as f:

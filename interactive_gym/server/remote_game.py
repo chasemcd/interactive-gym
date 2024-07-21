@@ -9,9 +9,9 @@ from gymnasium import spaces
 import uuid
 import time
 
-from configurations import remote_config
-from configurations import configuration_constants
-from server import utils
+from interactive_gym.configurations import remote_config
+from interactive_gym.configurations import configuration_constants
+from interactive_gym.server import utils
 import logging
 
 logger = logging.getLogger(__name__)
@@ -287,8 +287,8 @@ class RemoteGame:
                 self.total_negative_rewards[k] += min(0, v)
 
         if isinstance(terminateds, dict):
-            terminateds = terminateds["__all__"]
-            truncateds = truncateds["__all__"]
+            terminateds = all([t for t in terminateds.values()])
+            truncateds = all([t for t in truncateds.values()])
 
         self.tick_num += 1
         if terminateds or truncateds:
@@ -300,6 +300,9 @@ class RemoteGame:
     def enqueue_observations(self) -> None:
         """Add self.obs to the state queues for all bots"""
         if self.status != GameStatus.Active:
+            return
+
+        if not self.bot_players:
             return
 
         for pid, obs in self.obs.items():

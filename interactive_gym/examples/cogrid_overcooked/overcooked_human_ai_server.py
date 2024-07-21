@@ -5,12 +5,12 @@ eventlet.monkey_patch()
 from datetime import datetime
 from cogrid.envs import registry
 
-from configurations import remote_config
-from server import server_app
-from configurations import configuration_constants
-from examples.cogrid_overcooked import overcooked_utils
-from examples.cogrid_overcooked import overcooked_callback
-from utils import onnx_inference_utils
+from interactive_gym.configurations import remote_config
+from interactive_gym.server import server_app
+from interactive_gym.configurations import configuration_constants
+from interactive_gym.examples.cogrid_overcooked import overcooked_utils
+from interactive_gym.examples.cogrid_overcooked import overcooked_callback
+from interactive_gym.utils import onnx_inference_utils
 
 import argparse
 
@@ -25,8 +25,8 @@ Noop = 6
 
 
 POLICY_MAPPING = {
-    "agent-0": configuration_constants.PolicyTypes.Human,
-    "agent-1": "examples/cogrid_overcooked/policies/cramped_room_model.onnx",
+    0: configuration_constants.PolicyTypes.Human,
+    1: "interactive_gym/examples/cogrid_overcooked/policies/cramped_room_model.onnx",
 }
 
 
@@ -73,11 +73,11 @@ config = (
     .hosting(host="0.0.0.0", max_concurrent_games=100, max_ping=100)
     .user_experience(
         page_title="Overcooked",
-        instructions_html_file="server/static/templates/overcooked_instructions.html",
-        waitroom_time_randomization_interval_s=(
-            5,
-            25,
-        ),  # fake waitroom of 5 to 25 seconds
+        instructions_html_file="interactive_gym/server/static/templates/overcooked_instructions.html",
+        # waitroom_time_randomization_interval_s=(
+        #     5,
+        #     25,
+        # ),  # fake waitroom of 5 to 25 seconds
         welcome_header_text="Overcooked",
         game_header_text="Overcooked",
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
