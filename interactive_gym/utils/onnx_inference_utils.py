@@ -1,11 +1,12 @@
 """
 This file provides utilities to inference an ONNX model that has been exported via RLLib. Note that
 the structure of the input may change if you've exported with something other than RLLib, so you
-may need to reconfigure these if you've done your own export. 
+may need to reconfigure these if you've done your own export.
 """
 
-import numpy as np
+from __future__ import annotations
 
+import numpy as np
 
 from interactive_gym.utils import inference_utils
 

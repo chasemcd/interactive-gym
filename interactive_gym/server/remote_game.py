@@ -1,18 +1,21 @@
+from __future__ import annotations
+
 import collections
 import dataclasses
+import logging
 import queue
 import threading
-import eventlet
+import time
 import typing
+import uuid
+
+import eventlet
 import numpy as np
 from gymnasium import spaces
-import uuid
-import time
 
-from interactive_gym.configurations import remote_config
-from interactive_gym.configurations import configuration_constants
+from interactive_gym.configurations import (configuration_constants,
+                                            remote_config)
 from interactive_gym.server import utils
-import logging
 
 logger = logging.getLogger(__name__)
 

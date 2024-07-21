@@ -9,6 +9,7 @@ certifi==2023.11.17
 charset-normalizer==3.3.2
 click==8.1.7
 cloudpickle==3.0.0
+cogrid @ git+https://github.com/chasemcd/cogrid.git
 coloredlogs==15.0.1
 dm-tree==0.1.8
 dnspython==2.6.1
@@ -80,4 +81,3 @@ Werkzeug==3.0.1
 wsproto==1.2.0
 zope.event==5.0
 zope.interface==6.2
-cogrid @ git+https://github.com/chasemcd/cogrid.git

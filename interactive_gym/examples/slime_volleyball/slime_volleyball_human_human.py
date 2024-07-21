@@ -1,27 +1,29 @@
+from __future__ import annotations
+
 import eventlet
 
 eventlet.monkey_patch()
 
 import argparse
+from datetime import datetime
+
 from slime_volleyball import slimevolley_env
 
-from datetime import datetime
-from interactive_gym.configurations import remote_config
-from interactive_gym.configurations import configuration_constants
+from interactive_gym.configurations import (configuration_constants,
+                                            remote_config)
+from interactive_gym.examples.slime_volleyball import (
+    slime_volleyball_callback, slime_volleyball_utils)
 from interactive_gym.server import server_app
-from interactive_gym.examples.slime_volleyball import slime_volleyball_utils
-from interactive_gym.examples.slime_volleyball import slime_volleyball_callback
-
 
 """
 This is an example script for running MountainCar-v0 in
 a local server. Simply run the script and navigate
-to http://127.0.0.1:8000 in your browser. 
+to http://127.0.0.1:8000 in your browser.
 
 MountainCar-v0 has three actions: do nothing, accelerate left
 and accelerate right. We set "do nothing" to be the default
 for when there is no key pressed. Accelerating left and right
-are the left and right arrow keys, respectively.  
+are the left and right arrow keys, respectively.
 """
 
 NOOP = 0

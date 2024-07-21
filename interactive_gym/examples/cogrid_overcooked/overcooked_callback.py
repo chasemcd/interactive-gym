@@ -1,14 +1,16 @@
-import typing
-import time
-import collections
-import os
+from __future__ import annotations
 
-from cogrid import cogrid_env
+import collections
+import logging
+import os
+import time
+import typing
+
 import pandas as pd
+from cogrid import cogrid_env
 
 from interactive_gym.server import callback
 from interactive_gym.server.remote_game import RemoteGame
-import logging
 
 logger = logging.getLogger(__name__)
 

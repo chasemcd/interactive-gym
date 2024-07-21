@@ -1,16 +1,19 @@
+from __future__ import annotations
+
 import eventlet
 
 eventlet.monkey_patch()
 
 import argparse
-from cogrid.envs import registry
 from datetime import datetime
-from interactive_gym.configurations import remote_config
-from interactive_gym.server import server_app
-from interactive_gym.configurations import configuration_constants
-from interactive_gym.examples.cogrid_overcooked import overcooked_utils
-from interactive_gym.examples.cogrid_overcooked import overcooked_callback
 
+from cogrid.envs import registry
+
+from interactive_gym.configurations import (configuration_constants,
+                                            remote_config)
+from interactive_gym.examples.cogrid_overcooked import (overcooked_callback,
+                                                        overcooked_utils)
+from interactive_gym.server import server_app
 
 MoveUp = 0
 MoveDown = 1

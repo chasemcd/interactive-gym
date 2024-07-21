@@ -1,11 +1,12 @@
+from __future__ import annotations
+
 import os
 
+from cogrid.core import grid_object
 from cogrid.envs import overcooked
 from cogrid.envs.overcooked import overcooked_grid_objects
-from cogrid.core import grid_object
 
-from interactive_gym.configurations import remote_config
-from interactive_gym.configurations import object_contexts
+from interactive_gym.configurations import object_contexts, remote_config
 from interactive_gym.server import remote_game
 
 ASSET_PATH = "static/assets/overcooked/sprites"
@@ -40,7 +41,7 @@ def overcooked_game_page_header_fn(
         )
 
     try:
-        with open(html_path, "r", encoding="utf-8") as f:
+        with open(html_path, encoding="utf-8") as f:
             header_html = f.read()
     except FileNotFoundError:
         header_html = f"<p> Unable to load header file {html_path}.</p>"

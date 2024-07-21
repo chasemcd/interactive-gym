@@ -16,6 +16,8 @@
 #                 format: anim = {key, frames, frameRate, repeat, hideOnComplete}
 #     }
 #  */
+from __future__ import annotations
+
 import dataclasses
 import typing
 

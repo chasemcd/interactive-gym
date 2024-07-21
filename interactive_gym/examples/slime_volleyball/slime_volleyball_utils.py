@@ -1,12 +1,13 @@
+from __future__ import annotations
+
 import math
 import os
 
-from interactive_gym.configurations import object_contexts
 from slime_volleyball import slimevolley_env
 from slime_volleyball.core import constants
-from interactive_gym.configurations import remote_config
-from interactive_gym.server import remote_game
 
+from interactive_gym.configurations import object_contexts, remote_config
+from interactive_gym.server import remote_game
 
 ASSET_PATH = "static/assets/slime_volleyball/sprites"
 
@@ -32,7 +33,7 @@ def slime_volleyball_game_page_header_fn(
         )
 
     try:
-        with open(html_path, "r", encoding="utf-8") as f:
+        with open(html_path, encoding="utf-8") as f:
             header_html = f.read()
     except FileNotFoundError:
         header_html = f"<p> Unable to load header file {html_path}.</p>"

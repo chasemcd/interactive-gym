@@ -236,7 +236,7 @@ socket.on("single_player_waiting_room", function(data) {
 
 
 socket.on("single_player_waiting_room_failure", function(data) {
-    
+
     $("#waitroomText").text("Sorry, you were matched with a player but they disconnected before the game could start. You will be redirected shortly...");
     console.log("Leaving game due to waiting room failure (other player left)...")
     socket.emit("leave_game", {session_id: window.sessionId})
@@ -403,7 +403,7 @@ function enable_key_listener(input_mode) {
         }
 
         // If we're using the single keystroke input method, we just send the key when it's pressed.
-        // This means no composite actions. 
+        // This means no composite actions.
         if (input_mode == "single_keystroke") {
             socket.emit('send_pressed_keys', {'pressed_keys': Array(event.key), session_id: window.sessionId});
             return;
@@ -433,5 +433,3 @@ function disable_key_listener() {
         $(document).off('keyup');
         pressedKeys = {};
 }
-
-

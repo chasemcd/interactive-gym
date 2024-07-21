@@ -1,22 +1,21 @@
+from __future__ import annotations
+
+import atexit
 import base64
+import itertools
+import logging
 import os
 import random
+import secrets
 import threading
 import time
 import uuid
-import itertools
-import atexit
-import secrets
+
 import eventlet
-from eventlet import queue
-import redis
-
-
 import flask
 import flask_socketio
-
-import logging
-
+import redis
+from eventlet import queue
 
 try:
     import cv2
@@ -28,11 +27,9 @@ except ImportError:
         "have the canvas display whatever is returned from `env.render()`."
     )
 
-from interactive_gym.server import remote_game
-from interactive_gym.configurations import remote_config
-from interactive_gym.configurations import configuration_constants
-from interactive_gym.server import utils
-
+from interactive_gym.configurations import (configuration_constants,
+                                            remote_config)
+from interactive_gym.server import remote_game, utils
 
 CONFIG = remote_config.RemoteConfig()
 
@@ -561,7 +558,7 @@ def user_index(subject_name):
     instructions_html = ""
     if CONFIG.instructions_html_file is not None:
         try:
-            with open(CONFIG.instructions_html_file, "r", encoding="utf-8") as f:
+            with open(CONFIG.instructions_html_file, encoding="utf-8") as f:
                 instructions_html = f.read()
         except FileNotFoundError:
             instructions_html = f"<p> Unable to load instructions file {CONFIG.instructions_html_file}.</p>"

@@ -45,7 +45,7 @@ class GraphicsManager {
         game_config.parent = graphics_config.parent;
         game_config.fps = graphics_config.fps;
         this.game = new Phaser.Game(game_config);
-        // TODO(chase): Figure out proper resizing. Sprites must be resized as well but they aren't if we do this. 
+        // TODO(chase): Figure out proper resizing. Sprites must be resized as well but they aren't if we do this.
         // this.resizeGame();
 
         // // Add a resize event listener to adjust the game size dynamically
@@ -160,7 +160,7 @@ class GymScene extends Phaser.Scene {
         // NOTE: This approach is very inefficient and not good practice! It's oriented
         //  to testing or local experiments.
         if (game_state_objects == null && !(game_state_image == null)) {
-            
+
             // Remove the current image
             let oldImage;
 
@@ -205,7 +205,7 @@ class GymScene extends Phaser.Scene {
                     object_map = this.temp_object_map;
                 };
 
-                
+
                 // Check if we need to add a new object
                 if (!object_map.hasOwnProperty(game_obj.uuid)) {
                     this._addObject(game_obj, object_map);
@@ -320,10 +320,10 @@ class GymScene extends Phaser.Scene {
 
         if (
             object_config.tween == true &&
-            sprite.tween == null && 
+            sprite.tween == null &&
             (new_x !== sprite.x || new_y !== sprite.y)
             ) {
-                // sprite.tween = 
+                // sprite.tween =
             this.tweens.add({
                 targets: [sprite],
                 x: new_x,
@@ -335,12 +335,12 @@ class GymScene extends Phaser.Scene {
                 }
             })
         } else if (
-            sprite.tween == null && 
+            sprite.tween == null &&
             (new_x !== sprite.x || new_y !== sprite.y)
         ) {
             sprite.x = new_x;
             sprite.y = new_y;
-        } 
+        }
 
     }
 

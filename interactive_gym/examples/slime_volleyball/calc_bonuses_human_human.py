@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import os
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 DATA_PATH = "data/slime_vb_hh_0318"
 
