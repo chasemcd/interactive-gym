@@ -13,8 +13,10 @@ import eventlet
 import numpy as np
 from gymnasium import spaces
 
-from interactive_gym.configurations import (configuration_constants,
-                                            remote_config)
+from interactive_gym.configurations import (
+    configuration_constants,
+    remote_config,
+)
 from interactive_gym.server import utils
 
 logger = logging.getLogger(__name__)
@@ -29,17 +31,21 @@ class GameStatus:
 
 
 class RemoteGame:
-    def __init__(self, config: remote_config.RemoteConfig, game_id: int | None = None):
+    def __init__(
+        self, config: remote_config.RemoteConfig, game_id: int | None = None
+    ):
         self.config = config
         self.status = GameStatus.Inactive
         self.lock = threading.Lock()
         self.reset_event: eventlet.event.Event | None = None
         self.set_reset_event()
 
-        self.document_focus_status: dict[str | int, bool] = collections.defaultdict(
-            lambda: True
+        self.document_focus_status: dict[str | int, bool] = (
+            collections.defaultdict(lambda: True)
         )
-        self.current_ping: dict[str | int, int] = collections.defaultdict(lambda: 0)
+        self.current_ping: dict[str | int, int] = collections.defaultdict(
+            lambda: 0
+        )
 
         # Players and actions
         self.pending_actions = None
@@ -56,7 +62,9 @@ class RemoteGame:
         self.env = None
         self.obs: np.ndarray | dict[str, typing.Any] | None = None
         self.game_uuid: str = str(uuid.uuid4())
-        self.game_id: int | str = game_id if game_id is not None else self.game_uuid
+        self.game_id: int | str = (
+            game_id if game_id is not None else self.game_uuid
+        )
         assert (
             game_id is not None
         ), f"Must pass valid game id! Got {game_id} but expected an int."
@@ -64,7 +72,9 @@ class RemoteGame:
         self.tick_num: int = 0
         self.episode_num: int = 0
         self.episode_rewards = collections.defaultdict(lambda: 0)
-        self.total_rewards = collections.defaultdict(lambda: 0)  # score across episodes
+        self.total_rewards = collections.defaultdict(
+            lambda: 0
+        )  # score across episodes
         self.total_positive_rewards = collections.defaultdict(
             lambda: 0
         )  # sum of positives
@@ -96,11 +106,15 @@ class RemoteGame:
                 assert (
                     self.config.load_policy_fn is not None
                 ), "Must provide a method to load policies via policy name to RemoteConfig!"
-                self.bot_players[agent_id] = self.config.load_policy_fn(policy_id)
+                self.bot_players[agent_id] = self.config.load_policy_fn(
+                    policy_id
+                )
 
     def _init_bot_threads(self):
         # TODO(chase): put this in a separate function
-        for agent_id in self.bot_players.keys():
+        for agent_id, pid in self.bot_players.items():
+            if pid == configuration_constants.PolicyTypes.Random:
+                continue
             self.bot_threads[agent_id] = eventlet.spawn(
                 self.policy_consumer, agent_id=agent_id
             )
@@ -134,7 +148,11 @@ class RemoteGame:
 
     def cur_num_human_players(self) -> int:
         return len(
-            [pid for pid, sid in self.human_players.items() if sid != utils.Available]
+            [
+                pid
+                for pid, sid in self.human_players.items()
+                if sid != utils.Available
+            ]
         )
 
     def remove_human_player(self, subject_id) -> None:
@@ -146,7 +164,9 @@ class RemoteGame:
                 break
 
         if player_id is None:
-            logger.warning(f"Attempted to remove {subject_id} but player wasn't found.")
+            logger.warning(
+                f"Attempted to remove {subject_id} but player wasn't found."
+            )
             return
 
         self.human_players[player_id] = utils.Available
@@ -252,6 +272,8 @@ class RemoteGame:
                     self.env.action_space, dict
                 ):
                     player_actions[pid] = self.env.action_space[pid].sample()
+                elif callable(self.env.action_space):
+                    player_actions[pid] = self.env.action_space(pid).sample()
                 else:
                     player_actions[pid] = self.env.action_space.sample()
 
@@ -318,10 +340,14 @@ class RemoteGame:
                 pass
 
     def reset_pending_actions(self) -> None:
-        self.pending_actions = collections.defaultdict(lambda: queue.Queue(maxsize=1))
+        self.pending_actions = collections.defaultdict(
+            lambda: queue.Queue(maxsize=1)
+        )
 
     def reset_state_queues(self) -> None:
-        self.state_queues = collections.defaultdict(lambda: queue.Queue(maxsize=1))
+        self.state_queues = collections.defaultdict(
+            lambda: queue.Queue(maxsize=1)
+        )
 
     def reset(self, seed: int | None = None) -> None:
         self.reset_pending_actions()
