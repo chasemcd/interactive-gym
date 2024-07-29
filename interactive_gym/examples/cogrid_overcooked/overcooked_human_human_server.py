@@ -9,10 +9,14 @@ from datetime import datetime
 
 from cogrid.envs import registry
 
-from interactive_gym.configurations import (configuration_constants,
-                                            remote_config)
-from interactive_gym.examples.cogrid_overcooked import (overcooked_callback,
-                                                        overcooked_utils)
+from interactive_gym.configurations import (
+    configuration_constants,
+    remote_config,
+)
+from interactive_gym.examples.cogrid_overcooked import (
+    overcooked_callback,
+    overcooked_utils,
+)
 from interactive_gym.server import server_app
 
 MoveUp = 0
@@ -32,7 +36,7 @@ POLICY_MAPPING = {
 
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
-    return registry.make("Overcooked-CrampedRoom-V0", render_mode=None)
+    return registry.make("Overcooked-RandomizedLayout-V0", render_mode=None)
 
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
@@ -66,7 +70,7 @@ config = (
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
-    .hosting(host="0.0.0.0", max_concurrent_games=100, max_ping=100)
+    .hosting(host="0.0.0.0", max_concurrent_games=100)
     .user_experience(
         page_title="Overcooked",
         instructions_html_file="interactive_gym/server/static/templates/overcooked_instructions.html",
