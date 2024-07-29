@@ -9,10 +9,14 @@ from datetime import datetime
 
 from cogrid.envs import registry
 
-from interactive_gym.configurations import (configuration_constants,
-                                            remote_config)
-from interactive_gym.examples.cogrid_overcooked import (overcooked_callback,
-                                                        overcooked_utils)
+from interactive_gym.configurations import (
+    configuration_constants,
+    remote_config,
+)
+from interactive_gym.examples.cogrid_overcooked import (
+    overcooked_callback,
+    overcooked_utils,
+)
 from interactive_gym.server import server_app
 from interactive_gym.utils import onnx_inference_utils
 
@@ -27,13 +31,13 @@ Noop = 6
 
 POLICY_MAPPING = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "interactive_gym/examples/cogrid_overcooked/policies/cramped_room_model.onnx",
+    1: configuration_constants.PolicyTypes.Random,  # "interactive_gym/examples/cogrid_overcooked/policies/cramped_room_model.onnx",
 }
 
 
 def env_creator(*args, **kwargs):
     """Generic function to return the Gymnasium environment"""
-    return registry.make("Overcooked-CrampedRoom-V0", render_mode=None)
+    return registry.make("Overcooked-RandomizedLayout-V0", render_mode=None)
 
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
@@ -60,8 +64,8 @@ config = (
         env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
         assets_to_preload=overcooked_utils.overcooked_preload_assets_spec(),
         hud_text_fn=overcooked_utils.hud_text_fn,
-        game_width=overcooked_utils.TILE_SIZE * 7,
-        game_height=overcooked_utils.TILE_SIZE * 6,
+        game_width=overcooked_utils.TILE_SIZE * 12,
+        game_height=overcooked_utils.TILE_SIZE * 7,
         background="#e6b453",
     )
     .gameplay(
