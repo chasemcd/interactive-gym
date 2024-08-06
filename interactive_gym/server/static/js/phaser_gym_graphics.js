@@ -83,6 +83,12 @@ class GymScene extends Phaser.Scene {
         this.animation_configs = config.animation_configs;
         this.background = config.background;
         this.last_rendered_step = -1;
+        this.pyodide_remote_game = config.pyodide_remote_game;
+
+        if (this.pyodide_remote_game !== undefined) {
+            this.pyodide_remote_game.initialize();
+        }
+
     }
     preload () {
 
@@ -139,6 +145,16 @@ class GymScene extends Phaser.Scene {
     };
 
     update() {
+
+        if (this.pyodide_remote_game !== undefined) {
+            if (this.pyodide_remote_game.step == -1) {
+                this.pyodide_remote_game.reset();
+            } else {
+                this.pyodide_remote_game.step();
+            }
+        }
+
+
         if (stateBuffer.length > 0) {
             this.state = stateBuffer.shift(); // get the oldest state from the buffer
             this.drawState()

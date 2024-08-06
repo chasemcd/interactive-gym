@@ -1,48 +1,137 @@
-from __future__ import annotations
+import functools
 
-import os
-
+from cogrid.core import layouts
 from cogrid.core import grid_object
 from cogrid.envs import overcooked
 from cogrid.envs.overcooked import overcooked_grid_objects
-
-from interactive_gym.configurations import object_contexts, remote_config
-from interactive_gym.server import remote_game
-
-ASSET_PATH = "static/assets/overcooked/sprites"
-TILE_SIZE = 45
-DIR_TO_CARDINAL_DIRECTION = {
-    0: "EAST",
-    1: "SOUTH",
-    2: "WEST",
-    3: "NORTH",
-}
-PLAYER_COLORS = {0: "blue", 1: "green"}
+from cogrid.envs import registry
 
 
-def overcooked_game_page_header_fn(
-    game: remote_game.RemoteGame, player_name: str
-) -> str:
-    """Function that takes the game and a player name to determine the html that should be shown when the game active."""
-    player_id = None
-    for pid, sid in game.human_players.items():
-        if sid == player_name:
-            player_id = pid
+import dataclasses
+import typing
 
-    assert player_id is not None
 
-    if player_id == 1:
-        html_path = "interactive_gym/server/static/templates/overcooked_agent_1_header.html"
-    else:
-        html_path = "interactive_gym/server/static/templates/overcooked_agent_0_header.html"
+@dataclasses.dataclass
+class Sprite:
+    """
+    Context for a sprite object to render it. We maintain
+    this for each object that we are tracking in the game
+    state and passing along to render.
+    """
 
-    try:
-        with open(html_path, encoding="utf-8") as f:
-            header_html = f.read()
-    except FileNotFoundError:
-        header_html = f"<p> Unable to load header file {html_path}.</p>"
+    uuid: str
+    x: int
+    y: int
+    height: int
+    width: int
+    image_name: str | None = None  # texture name
+    frame: str | int | None = None
+    object_size: int | None = None
+    angle: int | None = None
+    depth: int = 1
+    animation: str | None = None
+    object_type: str = "sprite"
+    tween: bool = False
+    tween_duration: int = 50
+    permanent: bool = False
 
-    return header_html
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class Line:
+    uuid: str
+    color: str
+    width: int
+    points: list[tuple[float, float]]
+    object_type: str = "line"
+    fill_below: bool = False
+    fill_above: bool = False
+    depth: int = -1
+    permanent: bool = False
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class Circle:
+    uuid: str
+    color: str
+    x: float
+    y: float
+    radius: int
+    alpha: float = 1
+    object_type: str = "circle"
+    depth: int = -1
+    permanent: bool = False
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class Polygon:
+    uuid: str
+    color: str
+    points: list[tuple[float, float]]
+    alpha: float = 1
+    object_type: str = "polygon"
+    depth: int = -1
+    permanent: bool = False
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class Text:
+    uuid: str
+    text: str
+    x: float | int
+    y: float | int
+    size: int = 16
+    color: str = "#000000"
+    font: str = "Arial"
+    depth: int = -1
+    object_type: str = "text"
+    permanent: bool = False
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class AtlasSpec:
+    name: str
+    img_path: str
+    atlas_path: str
+    object_type: str = "atlas_spec"
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class MultiAtlasSpec:
+    name: str
+    img_path: str
+    atlas_path: str
+    object_type: str = "multi_atlas_spec"
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class ImgSpec:
+    name: str
+    img_path: str
+    object_type: str = "img_spec"
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
 
 
 def get_x_y(
@@ -54,65 +143,20 @@ def get_x_y(
     return x, y
 
 
-def hud_text_fn(game: remote_game.RemoteGame) -> str:
-    """Function to create HUD text to display"""
-    score = int(
-        list(game.episode_rewards.values())[0]
-        if len(game.episode_rewards) > 0
-        else 0
-    )
-    return f"Score: {score:03d}   |    Time Left: {(game.env.max_steps - game.tick_num) / game.config.fps:.1f}s"
+ASSET_PATH = "static/assets/overcooked/sprites"
+TILE_SIZE = 45
+WIDTH = 12 * TILE_SIZE
+HEIGHT = 7 * TILE_SIZE
+DIR_TO_CARDINAL_DIRECTION = {
+    0: "EAST",
+    1: "SOUTH",
+    2: "WEST",
+    3: "NORTH",
+}
+PLAYER_COLORS = {0: "blue", 1: "green"}
 
 
-def overcooked_preload_assets_spec() -> (
-    list[
-        object_contexts.AtlasSpec
-        | object_contexts.MultiAtlasSpec
-        | object_contexts.ImgSpec
-    ]
-):
-    terrain = object_contexts.AtlasSpec(
-        name="terrain",
-        img_path=os.path.join(ASSET_PATH, "terrain.png"),
-        atlas_path=os.path.join(ASSET_PATH, "terrain.json"),
-    )
-    chefs = object_contexts.AtlasSpec(
-        name="chefs",
-        img_path=os.path.join(ASSET_PATH, "chefs.png"),
-        atlas_path=os.path.join(ASSET_PATH, "chefs.json"),
-    )
-    objects = object_contexts.AtlasSpec(
-        name="objects",
-        img_path=os.path.join(ASSET_PATH, "objects.png"),
-        atlas_path=os.path.join(ASSET_PATH, "objects.json"),
-    )
-
-    return [
-        terrain.as_dict(),
-        chefs.as_dict(),
-        objects.as_dict(),
-    ]
-
-
-def overcooked_env_to_render_fn(
-    env: overcooked.Overcooked, config: remote_config.RemoteConfig
-):
-    render_objects = []
-
-    if env.t == 0:
-        render_objects += generate_counter_objects(env=env, config=config)
-        render_objects += generate_delivery_areas(env, config=config)
-        render_objects += generate_static_tools(env=env, config=config)
-
-    render_objects += generate_agent_sprites(env=env, config=config)
-    render_objects += generate_objects(env=env, config=config)
-
-    return [obj.as_dict() for obj in render_objects]
-
-
-def generate_counter_objects(
-    env: overcooked.Overcooked, config: remote_config.RemoteConfig
-) -> list[object_contexts.Sprite]:
+def generate_counter_objects(env: overcooked.Overcooked) -> list[Sprite]:
     objs = []
     for obj in env.grid.grid:
         if not (
@@ -122,10 +166,10 @@ def generate_counter_objects(
         ):
             continue
 
-        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        x, y = get_x_y(obj.pos, HEIGHT, WIDTH)
 
         objs.append(
-            object_contexts.Sprite(
+            Sprite(
                 obj.uuid,
                 x=x,
                 y=y,
@@ -141,16 +185,16 @@ def generate_counter_objects(
 
 
 def generate_delivery_areas(
-    env: overcooked.Overcooked, config: remote_config.RemoteConfig
-) -> list[object_contexts.Sprite]:
+    env: overcooked.Overcooked,
+) -> list[Sprite]:
     objs = []
     for obj in env.grid.grid:
         if not isinstance(obj, overcooked_grid_objects.DeliveryZone):
             continue
-        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        x, y = get_x_y(obj.pos, HEIGHT, WIDTH)
 
         objs.append(
-            object_contexts.Sprite(
+            Sprite(
                 obj.uuid,
                 x=x,
                 y=y,
@@ -165,14 +209,14 @@ def generate_delivery_areas(
 
 
 def generate_static_tools(
-    env: overcooked.Overcooked, config: remote_config.RemoteConfig
-) -> list[object_contexts.Sprite]:
+    env: overcooked.Overcooked,
+) -> list[Sprite]:
     objs = []
     for obj in env.grid.grid:
         if isinstance(obj, overcooked_grid_objects.PlateStack):
-            x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+            x, y = get_x_y(obj.pos, HEIGHT, WIDTH)
             objs.append(
-                object_contexts.Sprite(
+                Sprite(
                     obj.uuid,
                     x=x,
                     y=y,
@@ -184,9 +228,9 @@ def generate_static_tools(
                 )
             )
         elif isinstance(obj, overcooked_grid_objects.OnionStack):
-            x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+            x, y = get_x_y(obj.pos, HEIGHT, WIDTH)
             objs.append(
-                object_contexts.Sprite(
+                Sprite(
                     obj.uuid,
                     x=x,
                     y=y,
@@ -198,9 +242,9 @@ def generate_static_tools(
                 )
             )
         elif isinstance(obj, overcooked_grid_objects.Pot):
-            x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+            x, y = get_x_y(obj.pos, HEIGHT, WIDTH)
             objs.append(
-                object_contexts.Sprite(
+                Sprite(
                     obj.uuid,
                     x=x,
                     y=y,
@@ -215,12 +259,10 @@ def generate_static_tools(
     return objs
 
 
-def generate_agent_sprites(
-    env: overcooked.Overcooked, config: remote_config.RemoteConfig
-) -> list[object_contexts.Sprite]:
+def generate_agent_sprites(env: overcooked.Overcooked) -> list[Sprite]:
     objs = []
     for i, agent_obj in enumerate(env.grid.grid_agents.values()):
-        x, y = get_x_y(agent_obj.pos, config.game_height, config.game_width)
+        x, y = get_x_y(agent_obj.pos, HEIGHT, WIDTH)
         held_object_name = ""
         if agent_obj.inventory:
             assert (
@@ -238,7 +280,7 @@ def generate_agent_sprites(
         dir = DIR_TO_CARDINAL_DIRECTION[agent_obj.dir]
 
         objs.append(
-            object_contexts.Sprite(
+            Sprite(
                 f"agent-{i}-sprite",
                 x=x,
                 y=y,
@@ -251,7 +293,7 @@ def generate_agent_sprites(
         )
 
         objs.append(
-            object_contexts.Sprite(
+            Sprite(
                 f"agent-{i}-hat-sprite",
                 x=x,
                 y=y,
@@ -267,26 +309,24 @@ def generate_agent_sprites(
 
 
 def generate_objects(
-    env: overcooked.Overcooked, config: remote_config.RemoteConfig
-) -> list[object_contexts.Sprite]:
+    env: overcooked.Overcooked,
+) -> list[Sprite]:
     objs = []
     for obj in env.grid.grid:
         if obj is None:
             continue
 
         if obj.can_place_on and obj.obj_placed_on is not None:
-            objs += temp_object_creation(obj=obj.obj_placed_on, config=config)
+            objs += temp_object_creation(obj=obj.obj_placed_on)
 
-        objs += temp_object_creation(obj=obj, config=config)
+        objs += temp_object_creation(obj=obj)
 
     return objs
 
 
-def temp_object_creation(
-    obj: grid_object.GridObj, config: remote_config.RemoteConfig
-):
+def temp_object_creation(obj: grid_object.GridObj):
     if isinstance(obj, overcooked_grid_objects.Pot):
-        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        x, y = get_x_y(obj.pos, HEIGHT, WIDTH)
         if not obj.objects_in_pot:
             return []
         status = "cooked" if obj.cooking_timer == 0 else "cooking"
@@ -296,7 +336,7 @@ def temp_object_creation(
             frame = "soup-onion-cooked.png"
 
         pot_sprite = [
-            object_contexts.Sprite(
+            Sprite(
                 obj.uuid,
                 x=x,
                 y=y,
@@ -310,7 +350,7 @@ def temp_object_creation(
 
         if status == "cooking" and len(obj.objects_in_pot) == 3:
             pot_sprite.append(
-                object_contexts.Text(
+                Text(
                     uuid="time_left",
                     text=f"{obj.cooking_timer:02d}",
                     x=x,
@@ -322,9 +362,9 @@ def temp_object_creation(
 
         return pot_sprite
     elif isinstance(obj, overcooked_grid_objects.Onion):
-        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        x, y = get_x_y(obj.pos, HEIGHT, WIDTH)
         return [
-            object_contexts.Sprite(
+            Sprite(
                 obj.uuid,
                 x=x,
                 y=y,
@@ -337,9 +377,9 @@ def temp_object_creation(
         ]
 
     elif isinstance(obj, overcooked_grid_objects.Plate):
-        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        x, y = get_x_y(obj.pos, HEIGHT, WIDTH)
         return [
-            object_contexts.Sprite(
+            Sprite(
                 obj.uuid,
                 x=x,
                 y=y,
@@ -351,9 +391,9 @@ def temp_object_creation(
             )
         ]
     elif isinstance(obj, overcooked_grid_objects.OnionSoup):
-        x, y = get_x_y(obj.pos, config.game_height, config.game_width)
+        x, y = get_x_y(obj.pos, HEIGHT, WIDTH)
         return [
-            object_contexts.Sprite(
+            Sprite(
                 obj.uuid,
                 x=x,
                 y=y,
@@ -365,3 +405,40 @@ def temp_object_creation(
             )
         ]
     return []
+
+
+class InteractiveGymOvercooked(overcooked.Overcooked):
+
+    def env_to_render_fn(self):
+        render_objects = []
+
+        if self.t == 0:
+            render_objects += self.generate_counter_objects(env=self)
+            render_objects += self.generate_delivery_areas(env=self)
+            render_objects += self.generate_static_tools(env=self)
+
+        render_objects += self.generate_agent_sprites(env=self)
+        render_objects += self.generate_objects(env=self)
+
+        return [obj.as_dict() for obj in render_objects]
+
+
+overcooked_config = {
+    "name": "overcooked",
+    "num_agents": 2,
+    "action_set": "cardinal_actions",
+    "features": ["overcooked_features"],
+    "rewards": ["delivery_reward"],
+    "grid": {"layout": "overcooked_cramped_room_v0"},
+    "max_steps": 1000,
+    "scope": "overcooked",
+}
+
+registry.register(
+    environment_id="Overcooked-RandomizedLayout-EnvToRender",
+    env_class=functools.partial(
+        InteractiveGymOvercooked, config=overcooked_config
+    ),
+)
+
+env = registry.make("Overcooked-RandomizedLayout-EnvToRender")

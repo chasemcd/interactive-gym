@@ -87,6 +87,11 @@ class RemoteConfig:
         # logging
         self.logfile: str = "./server_log.log"
 
+        # pyodide
+        self.run_through_pyodide: bool = False
+        self.environment_initialization_code: str = ""
+        self.packages_to_install: list[str] = []
+
     def logging(self, logfile: str | None = None):
         if logfile is not None:
             self.logfile = logfile
@@ -183,7 +188,9 @@ class RemoteConfig:
             self.port = port
 
         if max_concurrent_games is not None:
-            assert max_concurrent_games >= 1, "Must have at least one concurrent game!"
+            assert (
+                max_concurrent_games >= 1
+            ), "Must have at least one concurrent game!"
             self.max_concurrent_games = max_concurrent_games
 
         if max_ping is not None:
@@ -286,7 +293,9 @@ class RemoteConfig:
             self.waitroom_timeout_redirect_url = waitroom_timeout_redirect_url
 
         if append_subject_name_to_redirect is not None:
-            self.append_subject_name_to_redirect = append_subject_name_to_redirect
+            self.append_subject_name_to_redirect = (
+                append_subject_name_to_redirect
+            )
 
         if game_page_html_fn is not None:
             self.game_page_html_fn = game_page_html_fn
@@ -331,6 +340,26 @@ class RemoteConfig:
 
         return self
 
+    def pyodide(
+        self,
+        run_through_pyodide: bool | None = None,
+        environment_initialization_code: str | None = None,
+        packages_to_install: list[str] | None = None,
+    ):
+        if run_through_pyodide is not None:
+            assert isinstance(run_through_pyodide, bool)
+            self.run_through_pyodide = run_through_pyodide
+
+        if environment_initialization_code is not None:
+            self.environment_initialization_code = (
+                environment_initialization_code
+            )
+
+        if packages_to_install is not None:
+            self.packages_to_install = packages_to_install
+
+        return self
+
     @property
     def simulate_waiting_room(self) -> bool:
         """
@@ -363,7 +392,9 @@ def serialize_dict(data):
         }
     elif isinstance(data, list):
         # Use list comprehension to process each item
-        return [serialize_dict(item) for item in data if is_json_serializable(item)]
+        return [
+            serialize_dict(item) for item in data if is_json_serializable(item)
+        ]
     elif is_json_serializable(data):
         return data
     else:

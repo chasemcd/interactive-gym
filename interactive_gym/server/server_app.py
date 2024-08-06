@@ -27,8 +27,10 @@ except ImportError:
         "have the canvas display whatever is returned from `env.render()`."
     )
 
-from interactive_gym.configurations import (configuration_constants,
-                                            remote_config)
+from interactive_gym.configurations import (
+    configuration_constants,
+    remote_config,
+)
 from interactive_gym.server import remote_game, utils
 
 CONFIG = remote_config.RemoteConfig()
@@ -43,7 +45,9 @@ def setup_logger(name, log_file, level=logging.INFO):
 
     # Create console handler with a higher log level
     ch = logging.StreamHandler()
-    ch.setFormatter(formatter)  # Setting the formatter for the console handler as well
+    ch.setFormatter(
+        formatter
+    )  # Setting the formatter for the console handler as well
 
     logger = logging.getLogger(name)
     logger.setLevel(level)
@@ -170,7 +174,9 @@ def _create_game() -> None:
             f"Create game failed for subject ID {flask.request.sid} with error {err.__repr__()}"
         )
         socketio.emit(
-            "create_game_failed", {"error": err.__repr__()}, room=flask.request.sid
+            "create_game_failed",
+            {"error": err.__repr__()},
+            room=flask.request.sid,
         )
         return
 
@@ -223,12 +229,18 @@ def join_or_create_game(data):
 
             # will be the name entered in the url, e.g., MTurk ID or uuid
             player_name = SUBJECT_ID_MAP[subject_id]
-            game.add_player(random.choice(available_human_player_ids), player_name)
+            game.add_player(
+                random.choice(available_human_player_ids), player_name
+            )
 
             if CONFIG.game_page_html_fn is not None:
                 socketio.emit(
                     "update_game_page_text",
-                    {"game_page_text": CONFIG.game_page_html_fn(game, player_name)},
+                    {
+                        "game_page_text": CONFIG.game_page_html_fn(
+                            game, player_name
+                        )
+                    },
                     room=subject_id,
                 )
 
@@ -284,7 +296,9 @@ def join_or_create_game(data):
 
             # If there is a real waiting room
             else:
-                send_participant_to_waiting_room(game=game, subject_id=subject_id)
+                send_participant_to_waiting_room(
+                    game=game, subject_id=subject_id
+                )
 
 
 @socketio.on("single_player_waiting_room_end")
@@ -341,11 +355,21 @@ def start_game(game: remote_game.RemoteGame) -> None:
         f"Game {game.game_id} is starting with subjects: {[sid for sid in game.human_players.values()]}"
     )
     ACTIVE_GAMES.add(game.game_id)
+
+    if CONFIG.run_through_pyodide:
+        socketio.emit(
+            "start_game_pyodide",
+            {"config": CONFIG.to_dict(serializable=True)},
+            room=game.game_id,
+        )
+        return
+
     socketio.emit(
         "start_game",
         {"config": CONFIG.to_dict(serializable=True)},
         room=game.game_id,
     )
+
     socketio.start_background_task(run_game, game)
 
 
@@ -434,7 +458,9 @@ def _cleanup_game(game: remote_game.RemoteGame):
     # Add a new game_id to FREE_IDS
     new_game_id = add_new_game_id()
 
-    logger.info(f"Successfully added a new game_id to available games: {new_game_id}.")
+    logger.info(
+        f"Successfully added a new game_id to available games: {new_game_id}."
+    )
 
 
 def remove_participant_from_game(
@@ -544,7 +570,9 @@ def _leave_game(subject_id) -> bool:
 def index(*args):
     """If no subject ID provided, generate a UUID and re-route them."""
     subject_name = str(uuid.uuid4())
-    return flask.redirect(flask.url_for("user_index", subject_name=subject_name))
+    return flask.redirect(
+        flask.url_for("user_index", subject_name=subject_name)
+    )
 
 
 @app.route("/<subject_name>")
@@ -747,12 +775,15 @@ def generate_composite_action(pressed_keys) -> list[tuple[str]]:
 
     # TODO(chase): set this in the config so we don't recalculate every time
     max_composite_action_size = max(
-        [len(k) for k in CONFIG.action_mapping.keys() if isinstance(k, tuple)] + [0]
+        [len(k) for k in CONFIG.action_mapping.keys() if isinstance(k, tuple)]
+        + [0]
     )
 
     if max_composite_action_size > 1:
         composite_actions = [
-            action for action in CONFIG.action_mapping if isinstance(action, tuple)
+            action
+            for action in CONFIG.action_mapping
+            if isinstance(action, tuple)
         ]
 
         composites = [
@@ -823,7 +854,9 @@ def pong(data):
     ping_ms = data["ping_ms"]
     player_name = SUBJECT_ID_MAP[sid]
     game.update_document_focus_status_and_ping(
-        player_identifier=player_name, hidden_status=document_in_focus, ping=ping_ms
+        player_identifier=player_name,
+        hidden_status=document_in_focus,
+        ping=ping_ms,
     )
 
 
@@ -896,7 +929,9 @@ def run_game(game: remote_game.RemoteGame):
             socketio.sleep(1 / game.config.fps)
 
     with game.lock:
-        logger.info(f"Game loop ended for {game.game_id}, ending and cleaning up.")
+        logger.info(
+            f"Game loop ended for {game.game_id}, ending and cleaning up."
+        )
         if game.status != remote_game.GameStatus.Inactive:
             game.tear_down()
 
@@ -930,7 +965,10 @@ def on_request_redirect(data):
 
     socketio.emit(
         "end_game_redirect",
-        {"redirect_url": redirect_url, "redirect_timeout": CONFIG.redirect_timeout},
+        {
+            "redirect_url": redirect_url,
+            "redirect_timeout": CONFIG.redirect_timeout,
+        },
         room=subject_id,
     )
 
@@ -943,15 +981,19 @@ def render_game(game: remote_game.RemoteGame):
         state = CONFIG.env_to_state_fn(game.env, CONFIG)
     else:
         # Generate a base64 image of the game and send it to display
-        assert cv2 is not None, "Must install cv2 to use default image rendering!"
+        assert (
+            cv2 is not None
+        ), "Must install cv2 to use default image rendering!"
         assert (
             game.env.render_mode == "rgb_array"
-        ), "Env must be using render more rgb_array!"
+        ), "Env must be using render mode `rgb_array`!"
         game_image = game.env.render()
         _, encoded_image = cv2.imencode(".png", game_image)
         encoded_image = base64.b64encode(encoded_image).decode()
 
-    hud_text = CONFIG.hud_text_fn(game) if CONFIG.hud_text_fn is not None else None
+    hud_text = (
+        CONFIG.hud_text_fn(game) if CONFIG.hud_text_fn is not None else None
+    )
 
     # TODO(chase): this emits the same state to every player in a room, but we may want
     #   to have different observations for each player. Figure that out (maybe state is a dict
