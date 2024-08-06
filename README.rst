@@ -15,7 +15,6 @@ The repository has the following structure:
 .. code-block:: bash
 
     ├── README.md
-    ├── __pycache__
     ├── configurations
     │   ├── configuration_constants.py
     │   ├── object_contexts.py
@@ -42,10 +41,12 @@ The repository has the following structure:
 The ``server/`` directory provides all functionality to execute rendering and client-facing interfaces. ``server_app.py`` defines the Flask app that serves information to the front end, for which all templates are included in ``server/static/``.
 The ``remote_game.py`` file defines the logic that operates over a ``gymnasium`` environment.
 
+Importantly, all assets used must be placed in `server/static/assets/` and all Javascript files must be placed in `server/static/js/`.
+
 Callbacks can be used for data logging and provide hooks for a user to execute specific code at various points in the user experiences, their definition is in ``server/callback.py``
 
 
-Usage
+Quick Start
 ------
 
 To run an interactive experiment, a user should define a file with the following general structure:
@@ -148,6 +149,14 @@ In both examples we follow the same file structure with three key files:
 
 Example AI policies as ONNX files are also included in the ``policies/`` directory.
 
+
+Installation
+------------
+To use Interactive Gym, clone this repository.
+
+
+
+
 Acknowledgements
 ---------------------
 
@@ -156,6 +165,3 @@ The Phaser integration and server implementation are inspired by and derived fro
 
 
 
-Installation
-------------
-To use Interactive Gym, clone this repository. PyPi coming soon!

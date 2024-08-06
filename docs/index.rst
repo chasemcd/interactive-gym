@@ -10,6 +10,3 @@
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
-
-   content/quick_start
-   content/examples
