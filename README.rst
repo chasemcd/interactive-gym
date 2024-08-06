@@ -15,7 +15,6 @@ The repository has the following structure:
 .. code-block:: bash
 
     ├── README.md
-    ├── __pycache__
     ├── configurations
     │   ├── configuration_constants.py
     │   ├── object_contexts.py
