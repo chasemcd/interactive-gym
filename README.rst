@@ -155,6 +155,11 @@ Installation
 To use Interactive Gym, clone this repository.
 
 
+.. code-block:: bash
+
+    git clone https://github.com/chasemcd/interactive-gym.git
+
+
 
 
 Acknowledgements
