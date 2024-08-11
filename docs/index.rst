@@ -4,6 +4,7 @@
    contain the root ``toctree`` directive.
 
 .. image:: https://img.shields.io/github/stars/chasemcd/interactive-gym
+   :target: https://github.com/chasemcd/interactive-gym
    :alt: GitHub Repo stars
 
 
