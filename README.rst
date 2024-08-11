@@ -1,7 +1,7 @@
 Interactive Gym
 ================
 
-.. image:: docs/interactive_gym_logo.png
+.. image:: interactive_gym_logo.png
     :alt: Interactive Gym Logo
     :align: center
 
