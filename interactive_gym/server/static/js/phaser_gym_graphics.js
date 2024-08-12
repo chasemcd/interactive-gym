@@ -131,7 +131,7 @@ class GymScene extends Phaser.Scene {
         // Check if the background is just a color, if so fill
         if (this._checkIfHex(this.background)) {
             this.cameras.main.setBackgroundColor(this._strToHex(this.background));
-        } else {
+        } else { 
             // If the background isn't a color, load the specified image
             this._addTexture(this.background);
             this.add.image(this.height / 2, this.width / 2, this.background);
@@ -152,6 +152,8 @@ class GymScene extends Phaser.Scene {
             } else {
                 this.pyodide_remote_game.step();
             }
+
+            addStateToBuffer(this.pyodide_remote_game.render_state);
         }
 
 
