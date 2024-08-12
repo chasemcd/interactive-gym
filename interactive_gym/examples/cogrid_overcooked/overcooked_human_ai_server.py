@@ -31,7 +31,7 @@ Noop = 6
 
 POLICY_MAPPING = {
     0: configuration_constants.PolicyTypes.Human,
-    1: configuration_constants.PolicyTypes.Random,  # "interactive_gym/examples/cogrid_overcooked/policies/cramped_room_model.onnx",
+    1: "interactive_gym/examples/cogrid_overcooked/policies/ibc_0.onnx",
 }
 
 
