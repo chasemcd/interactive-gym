@@ -11,13 +11,22 @@ var game_config = {
 var game_graphics;
 let stateBuffer = []
 const MAX_BUFFER_SIZE = 1;
-
 function addStateToBuffer(state_data) {
     if (stateBuffer >= MAX_BUFFER_SIZE) {
         stateBuffer.shift(); // remove the oldest state
     }
     stateBuffer.push(state_data);
 }
+
+let actionBuffer = [];
+const MAX_ACTION_BUFFER_SIZE = 1;
+function addActionsToBuffer(action_data) {
+    if (actionBuffer >= MAX_ACTION_BUFFER_SIZE) {
+        actionBuffer.shift(); // remove the oldest state
+    }
+    actionBuffer.push(action_data);
+}
+
 
 
 function graphics_start(graphics_config) {
@@ -85,9 +94,9 @@ class GymScene extends Phaser.Scene {
         this.last_rendered_step = -1;
         this.pyodide_remote_game = config.pyodide_remote_game;
 
-        if (this.pyodide_remote_game !== undefined) {
-            this.pyodide_remote_game.initialize();
-        }
+        // if (this.pyodide_remote_game !== undefined) {
+        //     this.pyodide_remote_game.initialize();
+        // }
 
     }
     preload () {
@@ -146,14 +155,26 @@ class GymScene extends Phaser.Scene {
 
     update() {
 
+
         if (this.pyodide_remote_game !== undefined) {
-            if (this.pyodide_remote_game.step == -1) {
-                this.pyodide_remote_game.reset();
+            let obs, rewards, terminateds, truncateds, infos, render_state;
+            if (this.pyodide_remote_game.shouldReset) {
+                console.log("calling env.reset()")
+                [obs, infos, render_state] = this.pyodide_remote_game.reset();
             } else {
-                this.pyodide_remote_game.step();
+
+                let actions;
+
+                if (actionBuffer.length > 0) {
+                    actions = actionBuffer.shift(); // get the oldest state from the buffer
+                } else {
+                    actions = {0: 0, 1: 0};
+                };
+                [obs, rewards, terminateds, truncateds, infos, render_state] = this.pyodide_remote_game.step(actions);
             }
 
-            addStateToBuffer(this.pyodide_remote_game.render_state);
+            console.log("render_state", render_state)
+            addStateToBuffer(render_state);
         }
 
 
@@ -171,6 +192,11 @@ class GymScene extends Phaser.Scene {
          */
 
         // Retrieve the list of object contexts
+        if (this.state == null || this.state == undefined) {
+            console.log("No state to render");
+            return;
+        }
+
         let game_state_objects = this.state.state;
         let game_state_image = this.state.game_image_base64;
 

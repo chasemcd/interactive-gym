@@ -20,6 +20,7 @@ from interactive_gym.examples.cogrid_overcooked import (
 from interactive_gym.server import server_app
 from interactive_gym.utils import onnx_inference_utils
 
+
 MoveUp = 0
 MoveDown = 1
 MoveLeft = 2
@@ -97,7 +98,7 @@ config = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code=overcooked_env_initialization,
-        packages_to_install=["numpy", "cogrid"],
+        packages_to_install=["numpy", "cogrid==0.0.3"],
     )
 )
 

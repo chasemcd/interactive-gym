@@ -413,12 +413,12 @@ class InteractiveGymOvercooked(overcooked.Overcooked):
         render_objects = []
 
         if self.t == 0:
-            render_objects += self.generate_counter_objects(env=self)
-            render_objects += self.generate_delivery_areas(env=self)
-            render_objects += self.generate_static_tools(env=self)
+            render_objects += generate_counter_objects(env=self)
+            render_objects += generate_delivery_areas(env=self)
+            render_objects += generate_static_tools(env=self)
 
-        render_objects += self.generate_agent_sprites(env=self)
-        render_objects += self.generate_objects(env=self)
+        render_objects += generate_agent_sprites(env=self)
+        render_objects += generate_objects(env=self)
 
         return [obj.as_dict() for obj in render_objects]
 

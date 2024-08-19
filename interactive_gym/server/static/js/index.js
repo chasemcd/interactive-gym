@@ -345,7 +345,7 @@ socket.on('environment_state', function(data) {
 });
 
 
-socket.on('run_game_pyodide', function(data) {
+socket.on('start_game_pyodide', function(data) {
     // Clear the waitroomInterval to stop the waiting room timer
     if (waitroomInterval) {
         clearInterval(waitroomInterval);
