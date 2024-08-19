@@ -1001,7 +1001,7 @@ def render_game(game: remote_game.RemoteGame):
     socketio.emit(
         "environment_state",
         {
-            "state": state,
+            "game_state_objects": state,
             "game_image_base64": encoded_image,
             "step": game.tick_num,
             "hud_text": hud_text,

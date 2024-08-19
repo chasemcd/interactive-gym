@@ -41,8 +41,8 @@ obs, infos = env.reset()
 render_state = env.env_to_render_fn()
 obs, infos, render_state
         `);
-        const [obs, infos, render_state] = this.pyodide.toPy(result).toJs();
-        this.render_state = render_state;
+        let [obs, infos, render_state] = this.pyodide.toPy(result).toJs();
+        render_state = {"game_state_objects": render_state};
         this.step_num = this.step_num + 1;
         return [obs, infos, render_state]
     }
@@ -58,12 +58,12 @@ obs, rewards, terminateds, truncateds, infos = env.step(actions)
 render_state = env.env_to_render_fn()
 obs, rewards, terminateds, truncateds, infos, render_state
         `);
-        const [obs, rewards, terminateds, truncateds, infos, render_state] = this.pyodide.toPy(result).toJs();
+        let [obs, rewards, terminateds, truncateds, infos, render_state] = this.pyodide.toPy(result).toJs();
         this.step_num = this.step_num + 1;
 
         // Convert everything from python objects to JS objects
         console.log(render_state);
-        this.render_state = {"state": render_state};
+        render_state = {"game_state_objects": render_state};
 
         // Check if all values in terminates dictionary are true
         const all_terminated = Object.values(terminateds).every(Boolean);

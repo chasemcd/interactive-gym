@@ -153,14 +153,14 @@ class GymScene extends Phaser.Scene {
         }
     };
 
-    update() {
+    async update() {
 
 
         if (this.pyodide_remote_game !== undefined) {
             let obs, rewards, terminateds, truncateds, infos, render_state;
             if (this.pyodide_remote_game.shouldReset) {
-                console.log("calling env.reset()")
-                [obs, infos, render_state] = this.pyodide_remote_game.reset();
+                [obs, infos, render_state] = await this.pyodide_remote_game.reset();
+                this.pyodide_remote_game.shouldReset = false;
             } else {
 
                 let actions;
@@ -170,10 +170,9 @@ class GymScene extends Phaser.Scene {
                 } else {
                     actions = {0: 0, 1: 0};
                 };
-                [obs, rewards, terminateds, truncateds, infos, render_state] = this.pyodide_remote_game.step(actions);
+                [obs, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide_remote_game.step(actions);
             }
 
-            console.log("render_state", render_state)
             addStateToBuffer(render_state);
         }
 
@@ -197,7 +196,7 @@ class GymScene extends Phaser.Scene {
             return;
         }
 
-        let game_state_objects = this.state.state;
+        let game_state_objects = this.state;
         let game_state_image = this.state.game_image_base64;
 
         // If we don't have any object contexts, we render the image from `env.render()`
