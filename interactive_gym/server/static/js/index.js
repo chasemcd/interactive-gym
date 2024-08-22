@@ -160,6 +160,47 @@ socket.on("start_game", function(data) {
     graphics_start(graphics_config);
 })
 
+
+socket.on('start_game_pyodide', function(data) {
+    // Clear the waitroomInterval to stop the waiting room timer
+    if (waitroomInterval) {
+        clearInterval(waitroomInterval);
+    }
+
+    $("#welcomeHeader").hide();
+    $("#welcomeText").hide();
+    $("#instructions").hide();
+    $("#waitroomText").hide();
+    $('#errorText').hide()
+    $("#gameHeaderText").show();
+    $("#gamePageText").show();
+    $("#gameContainer").show();
+
+    let config = data.config;
+    pyodide_remote_game = new RemoteGame(data.config);
+
+    // Initialize game
+    let graphics_config = {
+        'parent': 'gameContainer',
+        'fps': {
+            'target': config.fps,
+            'forceSetTimeOut': true
+        },
+        'height': config.game_height,
+        'width': config.game_width,
+        'background': config.background,
+        'state_init': config.state_init,
+        'assets_dir': config.assets_dir,
+        'assets_to_preload': config.assets_to_preload,
+        'animation_configs': config.animation_configs,
+        'pyodide_remote_game': pyodide_remote_game,
+    };
+
+    enable_key_listener(config.input_mode)
+    graphics_start(graphics_config);
+});
+
+
 var waitroomInterval;
 socket.on("waiting_room", function(data) {
     if (waitroomInterval) {
@@ -345,44 +386,6 @@ socket.on('environment_state', function(data) {
 });
 
 
-socket.on('start_game_pyodide', function(data) {
-    // Clear the waitroomInterval to stop the waiting room timer
-    if (waitroomInterval) {
-        clearInterval(waitroomInterval);
-    }
-
-    $("#welcomeHeader").hide();
-    $("#welcomeText").hide();
-    $("#instructions").hide();
-    $("#waitroomText").hide();
-    $('#errorText').hide()
-    $("#gameHeaderText").show();
-    $("#gamePageText").show();
-    $("#gameContainer").show();
-
-    let config = data.config;
-    pyodide_remote_game = new RemoteGame(data.config);
-
-    // Initialize game
-    let graphics_config = {
-        'parent': 'gameContainer',
-        'fps': {
-            'target': config.fps,
-            'forceSetTimeOut': true
-        },
-        'height': config.game_height,
-        'width': config.game_width,
-        'background': config.background,
-        'state_init': config.state_init,
-        'assets_dir': config.assets_dir,
-        'assets_to_preload': config.assets_to_preload,
-        'animation_configs': config.animation_configs,
-        'pyodide_remote_game': pyodide_remote_game,
-    };
-
-    enable_key_listener(config.input_mode)
-    graphics_start(graphics_config);
-});
 
 
 

@@ -18,13 +18,23 @@ function addStateToBuffer(state_data) {
     stateBuffer.push(state_data);
 }
 
-let actionBuffer = [];
+let actionBuffer = [];  // contain full dict of actions
+
+let humanActionBuffer = [];
 const MAX_ACTION_BUFFER_SIZE = 1;
-function addActionsToBuffer(action_data) {
-    if (actionBuffer >= MAX_ACTION_BUFFER_SIZE) {
-        actionBuffer.shift(); // remove the oldest state
+function addHumanActionToBuffer(action) {
+    if (humanActionBuffer >= MAX_ACTION_BUFFER_SIZE) {
+        humanActionBuffer.shift(); // remove the oldest state
     }
-    actionBuffer.push(action_data);
+    humanActionBuffer.push(action);
+}
+
+let botActionBuffer = [];
+function addBotActionToBuffer(action) {
+    if (botActionBuffer >= MAX_ACTION_BUFFER_SIZE) {
+        botActionBuffer.shift(); // remove the oldest state
+    }
+    botActionBuffer.push(action);
 }
 
 
@@ -154,8 +164,16 @@ class GymScene extends Phaser.Scene {
     };
 
     async update() {
+        if (this.pyodide_remote_game !== undefined) {
+            // Perform async operations
+            await this.processPyodideGame();
+        }
+        
+        // Handle rendering
+        this.processRendering();
+    };
 
-
+    async processPyodideGame() {
         if (this.pyodide_remote_game !== undefined) {
             let obs, rewards, terminateds, truncateds, infos, render_state;
             if (this.pyodide_remote_game.shouldReset) {
@@ -163,27 +181,36 @@ class GymScene extends Phaser.Scene {
                 this.pyodide_remote_game.shouldReset = false;
             } else {
 
+                
+
                 let actions;
 
                 if (actionBuffer.length > 0) {
                     actions = actionBuffer.shift(); // get the oldest state from the buffer
                 } else {
-                    actions = {0: 0, 1: 0};
+                    // Generate random integers for actions from {0, 1, 2, 3, 4, 5}
+                    actions = {};
+                    for (let i = 0; i < 2; i++) {
+                        actions[i] = Math.floor(Math.random() * 6);
+                    }
+                    // actions = {0: 1, 1: 2};
                 };
                 [obs, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide_remote_game.step(actions);
             }
-
+            // Convert render state from Proxy to standard
+             
             addStateToBuffer(render_state);
-        }
-
-
-        if (stateBuffer.length > 0) {
-            this.state = stateBuffer.shift(); // get the oldest state from the buffer
-            this.drawState()
         }
     };
 
-     drawState() {
+    processRendering() {
+        if (stateBuffer.length > 0) {
+            this.state = stateBuffer.shift(); // get the oldest state from the buffer
+            this.drawState();
+        }
+    }
+
+    drawState() {
 
         /*
         Iterate over the objects defined in the state and
@@ -196,7 +223,7 @@ class GymScene extends Phaser.Scene {
             return;
         }
 
-        let game_state_objects = this.state;
+        let game_state_objects = this.state.game_state_objects;
         let game_state_image = this.state.game_image_base64;
 
         // If we don't have any object contexts, we render the image from `env.render()`

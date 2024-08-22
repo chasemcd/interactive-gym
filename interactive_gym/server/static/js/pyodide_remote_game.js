@@ -22,13 +22,13 @@ class RemoteGame {
             await this.micropip.install(this.config.packages_to_install);
         }
 
-//         // The code executed here should instantiate an environment `env`
-        this.env = await this.pyodide.runPythonAsync(`
+        // The code executed here must instantiate an environment `env`
+        const env = await this.pyodide.runPythonAsync(`
 ${this.config.environment_initialization_code}
 env
         `);
 
-        if (this.env === undefined) {
+        if (env == undefined) {
             throw new Error("The environment was not initialized correctly. Ensure the the environment_initialization_code correctly creates an `env` object.");
         }
     }
@@ -42,7 +42,9 @@ render_state = env.env_to_render_fn()
 obs, infos, render_state
         `);
         let [obs, infos, render_state] = this.pyodide.toPy(result).toJs();
-        render_state = {"game_state_objects": render_state};
+        render_state = {
+            "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
+        };
         this.step_num = this.step_num + 1;
         return [obs, infos, render_state]
     }
@@ -58,21 +60,63 @@ obs, rewards, terminateds, truncateds, infos = env.step(actions)
 render_state = env.env_to_render_fn()
 obs, rewards, terminateds, truncateds, infos, render_state
         `);
-        let [obs, rewards, terminateds, truncateds, infos, render_state] = this.pyodide.toPy(result).toJs();
-        this.step_num = this.step_num + 1;
 
         // Convert everything from python objects to JS objects
-        console.log(render_state);
-        render_state = {"game_state_objects": render_state};
+        let [obs, rewards, terminateds, truncateds, infos, render_state] = this.pyodide.toPy(result).toJs();
+        
+        this.step_num = this.step_num + 1;
 
-        // Check if all values in terminates dictionary are true
-        const all_terminated = Object.values(terminateds).every(Boolean);
-        const all_truncated = Object.values(truncateds).every(Boolean);
-        console.log("Terminateds: ", terminateds, "Truncateds: ", truncateds, "All Terminated: ", all_terminated, "All Truncated: ", all_truncated);
+        render_state = {
+            "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
+        };
+        // Extracting the values from the Map and checking if all are true
+        const all_terminated = Array.from(terminateds.values()).every(value => value === true);
+        const all_truncated = Array.from(truncateds.values()).every(value => value === true);
+
+        // console.log("Terminateds: ", terminateds, "Truncateds: ", truncateds, "All Terminated: ", all_terminated, "All Truncated: ", all_truncated);
         if (all_terminated || all_truncated) {
+            console.log("All terminated or all truncated, resetting")
             this.shouldReset = true;
         }
 
         return [obs, rewards, terminateds, truncateds, infos, render_state]
+    };
+};
+
+
+
+// Helper function to convert Proxy(Map) to a plain object
+function convertProxyToObject(obj) {
+    if (obj instanceof Map) {
+        return Array.from(obj).reduce((acc, [key, value]) => {
+            acc[key] = value instanceof Object ? this.convertProxyToObject(value) : value;
+            return acc;
+        }, {});
+    } else if (obj instanceof Object) {
+        return Object.keys(obj).reduce((acc, key) => {
+            acc[key] = obj[key] instanceof Object ? this.convertProxyToObject(obj[key]) : obj[key];
+            return acc;
+        }, {});
     }
+    return obj; // Return value directly if it's neither Map nor Object
+}
+
+
+// Helper function to convert all `undefined` values in an object to `null`
+function convertUndefinedToNull(obj) {
+    if (typeof obj !== 'object' || obj === null) {
+        // Return the value as is if it's not an object or is already null
+        return obj;
+    }
+
+    for (let key in obj) {
+        if (obj[key] === undefined) {
+            obj[key] = null; // Convert undefined to null
+        } else if (typeof obj[key] === 'object') {
+            // Recursively apply the conversion to nested objects
+            obj[key] = convertUndefinedToNull(obj[key]);
+        }
+    }
+
+    return obj;
 }

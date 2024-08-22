@@ -263,6 +263,7 @@ def generate_agent_sprites(
                 depth=2,
             )
         )
+
     return objs
 
 
