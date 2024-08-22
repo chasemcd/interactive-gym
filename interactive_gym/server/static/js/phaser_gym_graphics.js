@@ -1,3 +1,6 @@
+import {actionFromONNX} from './onnx_inference.js';
+
+
 var game_config = {
     type: Phaser.AUTO,
     pixelArt: true,
@@ -20,26 +23,30 @@ function addStateToBuffer(state_data) {
 
 let actionBuffer = [];  // contain full dict of actions
 
-let humanActionBuffer = [];
-const MAX_ACTION_BUFFER_SIZE = 1;
-function addHumanActionToBuffer(action) {
-    if (humanActionBuffer >= MAX_ACTION_BUFFER_SIZE) {
-        humanActionBuffer.shift(); // remove the oldest state
+let humanKeyPressBuffer = [];
+const MAX_KEY_PRESS_BUFFER_SIZE = 1;
+function addHumanKeyPressToBuffer(action) {
+    // TODO(chase): this should filter out actions that aren't allowed, 
+    // otherwise hitting an unrelated key could cancel out previous actions.
+    if (humanKeyPressBuffer >= MAX_KEY_PRESS_BUFFER_SIZE) {
+        humanKeyPressBuffer.shift(); // remove the oldest state
     }
-    humanActionBuffer.push(action);
+    humanKeyPressBuffer.push(action);
 }
 
-let botActionBuffer = [];
-function addBotActionToBuffer(action) {
-    if (botActionBuffer >= MAX_ACTION_BUFFER_SIZE) {
-        botActionBuffer.shift(); // remove the oldest state
-    }
-    botActionBuffer.push(action);
+var pressedKeys = {};
+function updatePressedKeys(updatedPressedKeys) {
+    pressedKeys = updatedPressedKeys;
 }
 
+// Contains the last action submitted at each step
+var previousSubmittedActions = {};
 
 
-function graphics_start(graphics_config) {
+let currentObservations = {};
+
+
+export function graphics_start(graphics_config) {
     game_graphics = new GraphicsManager(game_config, graphics_config);
 }
 
@@ -63,6 +70,7 @@ class GraphicsManager {
         game_config.animation_configs = graphics_config.animation_configs;
         game_config.parent = graphics_config.parent;
         game_config.fps = graphics_config.fps;
+        game_config.interactive_gym_config = graphics_config.interactive_gym_config;
         this.game = new Phaser.Game(game_config);
         // TODO(chase): Figure out proper resizing. Sprites must be resized as well but they aren't if we do this.
         // this.resizeGame();
@@ -102,12 +110,8 @@ class GymScene extends Phaser.Scene {
         this.animation_configs = config.animation_configs;
         this.background = config.background;
         this.last_rendered_step = -1;
+        this.interactive_gym_config = config.interactive_gym_config;
         this.pyodide_remote_game = config.pyodide_remote_game;
-
-        // if (this.pyodide_remote_game !== undefined) {
-        //     this.pyodide_remote_game.initialize();
-        // }
-
     }
     preload () {
 
@@ -165,43 +169,133 @@ class GymScene extends Phaser.Scene {
 
     async update() {
         if (this.pyodide_remote_game !== undefined) {
-            // Perform async operations
             await this.processPyodideGame();
         }
         
-        // Handle rendering
         this.processRendering();
     };
 
     async processPyodideGame() {
         if (this.pyodide_remote_game !== undefined) {
-            let obs, rewards, terminateds, truncateds, infos, render_state;
+            let rewards, terminateds, truncateds, infos, render_state;
             if (this.pyodide_remote_game.shouldReset) {
-                [obs, infos, render_state] = await this.pyodide_remote_game.reset();
+                [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
                 this.pyodide_remote_game.shouldReset = false;
             } else {
-
-                
-
-                let actions;
-
-                if (actionBuffer.length > 0) {
-                    actions = actionBuffer.shift(); // get the oldest state from the buffer
-                } else {
-                    // Generate random integers for actions from {0, 1, 2, 3, 4, 5}
-                    actions = {};
-                    for (let i = 0; i < 2; i++) {
-                        actions[i] = Math.floor(Math.random() * 6);
-                    }
-                    // actions = {0: 1, 1: 2};
-                };
-                [obs, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide_remote_game.step(actions);
-            }
-            // Convert render state from Proxy to standard
-             
+                const actions = this.buildPyodideActionDict();
+                previousSubmittedActions = actions;
+                [currentObservations, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide_remote_game.step(actions);
+            }             
             addStateToBuffer(render_state);
         }
     };
+
+    buildPyodideActionDict() {
+        let actions = {};
+
+        // Identify which policy corresponds to the human by checking for the human value in policy_mapping
+        let human_policy_agent_id = Object.keys(
+            this.interactive_gym_config.policy_mapping
+        ).find(
+                key => this.interactive_gym_config.policy_mapping[key] == "human"
+        );
+
+        // Get the human action and populate the actions dictionary with corresponding agent id key
+        actions[human_policy_agent_id] = this.getHumanAction();
+        
+        // Loop over the policy mapping and populate the actions dictionary with bot actions
+        for (let agentID in Object.keys(this.interactive_gym_config.policy_mapping)) {
+            // Skip if the agent is the human
+            if (agentID == human_policy_agent_id) {
+                continue;
+            }
+            actions[agentID] = this.getBotAction(agentID);
+        }
+
+        return actions;
+    }
+
+    getBotAction(agent_id) {
+        let policy_mapping = this.interactive_gym_config.policy_mapping;
+        
+        // If the bot is action on this step (according to frame skip), calculate an action.
+        if (this.pyodide_remote_game.step_num % this.interactive_gym_config.frame_skip == 0) {
+            let policyID = policy_mapping[agent_id];
+            // if the policy is an ONNX model, conduct forward inference
+            // TODO(chase): accommodate hidden states for recurrent networks. 
+            // Check if the policy mapping ends with .onnx to indicate an ONNX model
+            if (policyID.endsWith(".onnx")) {
+                // Cast the agent ID to an integer
+                let observation = currentObservations.get(parseInt(agent_id));
+                return actionFromONNX(policyID, observation);
+            } else if (policyID === "random") {
+                // If the policy is random, return a random action
+                return Math.floor(Math.random() * Object.keys(this.interactive_gym_config.action_mapping).length + 1) - 1;
+            }
+        } else {
+            // If we're using previous_action as population method, return the previous action
+            if (this.interactive_gym_config.action_population_method === "previous_submitted_action") {
+                return previousSubmittedActions[agent_id];
+            } else {
+                // If we're using default_action as population method, return the default action
+                return this.interactive_gym_config.default_action;
+            }
+        }
+    }
+
+    getHumanAction() {
+        let human_action;
+
+        // If single_keystroke, we'll get the action that was added to the buffer when the key was pressed
+        if (this.interactive_gym_config.input_mode === "single_keystroke") {
+            if (humanKeyPressBuffer.length > 0) {
+                human_action = this.interactive_gym_config.action_mapping[humanKeyPressBuffer.shift()];
+            } else {
+                human_action = this.interactive_gym_config.default_action;
+            }
+        } else if (this.interactive_gym_config.input_mode === "pressed_keys") {
+            // If pressed_keys, we get the (potentially composite) action from the currently pressed keys
+            if (pressedKeys.length == 0) {
+                // if no keys are pressed, we'll use the default action
+                human_action = this.interactive_gym_config.default_action;
+            } else if (pressedKeys.length == 1) {
+                human_action = this.interactive_gym_config.action_mapping[Object.keys(pressedKeys)[0]];
+            } else {
+                // multiple keys are pressed so check for a composite action
+                human_action = this.interactive_gym_config.action_mapping[this.generateCompositeAction()[0]];
+            }
+        }
+
+        return human_action;
+    }
+
+    generateCompositeAction() {
+        // TODO: Set this in the config so we don't recalculate every time
+        const maxCompositeActionSize = Math.max(
+            ...Object.keys(this.interactive_gym_config.action_mapping)
+                .filter(key => Array.isArray(key))
+                .map(key => key.length),
+            0
+        );
+    
+        if (maxCompositeActionSize > 1) {
+            const compositeActions = Object.keys(this.interactive_gym_config)
+                .filter(key => Array.isArray(key))
+                .map(key => key.sort());
+    
+            const combinations = combinationsOf(pressedKeys, maxCompositeActionSize);
+    
+            for (const combination of combinations) {
+                const sortedCombination = combination.sort();
+                if (compositeActions.some(action => arraysEqual(action, sortedCombination))) {
+                    pressedKeys = [sortedCombination];
+                    break;
+                }
+            }
+        }
+    
+        return pressedKeys;
+    }
 
     processRendering() {
         if (stateBuffer.length > 0) {
@@ -219,7 +313,7 @@ class GymScene extends Phaser.Scene {
 
         // Retrieve the list of object contexts
         if (this.state == null || this.state == undefined) {
-            console.log("No state to render");
+            console.log("No state to render.");
             return;
         }
 
@@ -370,13 +464,8 @@ class GymScene extends Phaser.Scene {
         //     obj.play(object_config.cur_animation)
         // } else
         if (object_config.image_name !== null) {
-
-            // console.log(this.textures.exists(object_config.image_name))
-            // sprite.setTexture(object_config.image_name, object_config.frame);
-
             if (object_config.frame !== null) {
                 sprite.setTexture(object_config.image_name, object_config.frame);
-
             } else {
                 sprite.setTexture(object_config.image_name)
             }
@@ -557,4 +646,24 @@ class GymScene extends Phaser.Scene {
         return parseInt(color_str.replace(/^#/, ''), 16)
     }
 
+}
+
+
+function combinationsOf(arr, k) {
+    if (k === 0) return [[]];
+    if (arr.length === 0) return [];
+
+    const [head, ...tail] = arr;
+    const withoutHead = combinationsOf(tail, k);
+    const withHead = combinationsOf(tail, k - 1).map(combination => [head, ...combination]);
+
+    return [...withHead, ...withoutHead];
+}
+
+function arraysEqual(a, b) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
 }

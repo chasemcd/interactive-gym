@@ -18,7 +18,6 @@ from interactive_gym.examples.cogrid_overcooked import (
     overcooked_utils,
 )
 from interactive_gym.server import server_app
-from interactive_gym.utils import onnx_inference_utils
 
 
 MoveUp = 0
@@ -32,7 +31,7 @@ Noop = 6
 
 POLICY_MAPPING = {
     0: configuration_constants.PolicyTypes.Human,
-    1: configuration_constants.PolicyTypes.Random,  # "interactive_gym/examples/cogrid_overcooked/policies/cramped_room_model.onnx",
+    1: "static/assets/overcooked/models/cramped_room_model.onnx",
 }
 
 
@@ -61,8 +60,6 @@ config = (
     remote_config.RemoteConfig()
     .policies(
         policy_mapping=POLICY_MAPPING,
-        policy_inference_fn=onnx_inference_utils.onnx_model_inference_fn,
-        load_policy_fn=onnx_inference_utils.load_onnx_policy_fn,
         frame_skip=5,
     )
     .environment(env_creator=env_creator, env_name="cogrid_overcooked")

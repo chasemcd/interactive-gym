@@ -102,6 +102,8 @@ class RemoteGame:
                 self.human_players[agent_id] = utils.Available
             elif policy_id == configuration_constants.PolicyTypes.Random:
                 self.bot_players[agent_id] = policy_id
+            elif self.config.run_through_pyodide:
+                continue
             else:
                 assert (
                     self.config.load_policy_fn is not None

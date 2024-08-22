@@ -1,3 +1,6 @@
+import {graphics_start} from './phaser_gym_graphics.js';
+
+
 var socket = io();
 var start_pressed = false;
 
@@ -154,6 +157,7 @@ socket.on("start_game", function(data) {
         'assets_dir': config.assets_dir,
         'assets_to_preload': config.assets_to_preload,
         'animation_configs': config.animation_configs,
+        'interactive_gym_config': config,
     };
 
     enable_key_listener(config.input_mode)
@@ -177,7 +181,7 @@ socket.on('start_game_pyodide', function(data) {
     $("#gameContainer").show();
 
     let config = data.config;
-    pyodide_remote_game = new RemoteGame(data.config);
+    let pyodideRemoteGame = new RemoteGame(data.config);
 
     // Initialize game
     let graphics_config = {
@@ -193,7 +197,8 @@ socket.on('start_game_pyodide', function(data) {
         'assets_dir': config.assets_dir,
         'assets_to_preload': config.assets_to_preload,
         'animation_configs': config.animation_configs,
-        'pyodide_remote_game': pyodide_remote_game,
+        'pyodide_remote_game': pyodideRemoteGame,
+        'interactive_gym_config': config,
     };
 
     enable_key_listener(config.input_mode)
@@ -448,6 +453,7 @@ function enable_key_listener(input_mode) {
         // If we're using the single keystroke input method, we just send the key when it's pressed.
         // This means no composite actions.
         if (input_mode == "single_keystroke") {
+            addHumanKeyPressToBuffer(event.key);
             socket.emit('send_pressed_keys', {'pressed_keys': Array(event.key), session_id: window.sessionId});
             return;
         }
@@ -458,6 +464,7 @@ function enable_key_listener(input_mode) {
         }
 
         pressedKeys[event.key] = true; // Add key to pressedKeys when it is pressed
+        updatePressedKeys(pressedKeys);
     });
 
     $(document).on('keyup', function(event) {
@@ -467,6 +474,7 @@ function enable_key_listener(input_mode) {
 
         // If we're tracking pressed keys, remove it
         delete pressedKeys[event.key]; // Remove key from pressedKeys when it is released
+        updatePressedKeys(pressedKeys);
     });
 }
 
