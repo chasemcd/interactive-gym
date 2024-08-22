@@ -182,7 +182,7 @@ class GymScene extends Phaser.Scene {
                 [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
                 this.pyodide_remote_game.shouldReset = false;
             } else {
-                const actions = this.buildPyodideActionDict();
+                const actions = await this.buildPyodideActionDict();
                 previousSubmittedActions = actions;
                 [currentObservations, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide_remote_game.step(actions);
             }             
@@ -190,7 +190,7 @@ class GymScene extends Phaser.Scene {
         }
     };
 
-    buildPyodideActionDict() {
+    async buildPyodideActionDict() {
         let actions = {};
 
         // Identify which policy corresponds to the human by checking for the human value in policy_mapping
@@ -209,13 +209,13 @@ class GymScene extends Phaser.Scene {
             if (agentID == human_policy_agent_id) {
                 continue;
             }
-            actions[agentID] = this.getBotAction(agentID);
+            actions[agentID] = await this.getBotAction(agentID);
         }
 
         return actions;
     }
 
-    getBotAction(agent_id) {
+    async getBotAction(agent_id) {
         let policy_mapping = this.interactive_gym_config.policy_mapping;
         
         // If the bot is action on this step (according to frame skip), calculate an action.
@@ -227,7 +227,8 @@ class GymScene extends Phaser.Scene {
             if (policyID.endsWith(".onnx")) {
                 // Cast the agent ID to an integer
                 let observation = currentObservations.get(parseInt(agent_id));
-                return actionFromONNX(policyID, observation);
+                let action = await actionFromONNX(policyID, observation);
+                return action;
             } else if (policyID === "random") {
                 // If the policy is random, return a random action
                 return Math.floor(Math.random() * Object.keys(this.interactive_gym_config.action_mapping).length + 1) - 1;
