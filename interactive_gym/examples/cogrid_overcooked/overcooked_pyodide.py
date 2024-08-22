@@ -31,7 +31,7 @@ Noop = 6
 
 POLICY_MAPPING = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "static/assets/overcooked/models/cramped_room_model.onnx",
+    1: "static/assets/overcooked/models/recurrent_ibc_0.onnx",
 }
 
 
