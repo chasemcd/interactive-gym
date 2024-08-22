@@ -110,8 +110,5 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    config.hosting(port=args.port).logging(
-        logfile=f'./{datetime.now().strftime("%y_%m_%d")}_overcooked_human_ai_port_{args.port}.log'
-    )
-
+    config.hosting(port=args.port)
     server_app.run(config)
