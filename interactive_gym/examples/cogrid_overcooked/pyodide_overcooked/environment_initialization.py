@@ -647,6 +647,7 @@ def generate_agent_sprites(env: overcooked.Overcooked) -> list[Sprite]:
                 width=TILE_SIZE,
                 image_name="chefs",
                 tween=True,
+                tween_duration=75,
                 frame=f"{dir}{held_object_name}.png",
             )
         )
@@ -661,6 +662,7 @@ def generate_agent_sprites(env: overcooked.Overcooked) -> list[Sprite]:
                 image_name="chefs",
                 frame=f"{dir}-{PLAYER_COLORS[i]}hat.png",
                 tween=True,
+                tween_duration=75,
                 depth=2,
             )
         )
