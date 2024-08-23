@@ -1,4 +1,4 @@
-import {graphics_start} from './phaser_gym_graphics.js';
+import {graphics_start, graphics_end, addHumanKeyPressToBuffer, updatePressedKeys, addStateToBuffer} from './phaser_gym_graphics.js';
 
 
 var socket = io();
@@ -9,6 +9,9 @@ var start_pressed = false;
 var latencyMeasurements = [];
 var curLatency;
 var maxLatency;
+
+
+var pyodideRemoteGame = null;
 
 var documentInFocus = false;
 document.addEventListener("visibilitychange", function() {
@@ -86,7 +89,13 @@ var refreshStartButton = setInterval(() => {
     } else if (maxLatency != null && latencyMeasurements.length <= 5) {
         $("#startButton").show();
         $("#startButton").attr("disabled", true);
-    } else {
+    } 
+    // else if (pyodideRemoteGame != null && pyodideRemoteGame.pyodideReady !== true) {
+    //     $("#startButton").show();
+    //     $("#startButton").attr("disabled", true);
+    //     clearInterval(refreshStartButton);
+    // }   
+    else {
         $('#errorText').hide()
         $("#startButton").show();
         $("#startButton").attr("disabled", false);
@@ -112,6 +121,7 @@ socket.on('server_session_id', function(data) {
 socket.on('connect', function() {
     // Emit an event to the server with the subject_name
     socket.emit('register_subject_name', { subject_name: subjectName });
+    socket.emit('request_pyodide_initialization', {});
 });
 
 
@@ -165,6 +175,11 @@ socket.on("start_game", function(data) {
 })
 
 
+socket.on('initialize_pyodide_remote_game', function(data) {
+    pyodideRemoteGame = new RemoteGame(data.config);
+});
+
+
 socket.on('start_game_pyodide', function(data) {
     // Clear the waitroomInterval to stop the waiting room timer
     if (waitroomInterval) {
@@ -181,7 +196,7 @@ socket.on('start_game_pyodide', function(data) {
     $("#gameContainer").show();
 
     let config = data.config;
-    let pyodideRemoteGame = new RemoteGame(data.config);
+    // let pyodideRemoteGame = new RemoteGame(data.config);
 
     // Initialize game
     let graphics_config = {
