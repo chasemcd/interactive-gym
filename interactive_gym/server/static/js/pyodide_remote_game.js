@@ -2,12 +2,13 @@ class RemoteGame {
     constructor(config) {
         this.config = config;
         this.micropip = null;
-        this.pyodideReady = this.initialize(); 
+        this.pyodideReady = false;
+        this.initialize(); 
         this.objects_to_render = [];
         this.observations = [];
         this.render_state = null;
         this.num_episodes = config.num_episodes;
-        this.step_num = -1;
+        this.step_num = 0;
         this.shouldReset = true;
     }
 
@@ -31,6 +32,8 @@ env
         if (env == undefined) {
             throw new Error("The environment was not initialized correctly. Ensure the the environment_initialization_code correctly creates an `env` object.");
         }
+
+        this.pyodideReady = true;
     }
 
     async reset() {
@@ -46,13 +49,13 @@ obs, infos, render_state
             "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
         };
         this.step_num = this.step_num + 1;
+        this.shouldReset = false;
         return [obs, infos, render_state]
     }
 
 
     async step(actions) {
         // await this.pyodideReady;
-        console.log("stepping with actions", actions);
         const pyActions = this.pyodide.toPy(actions);
         const result = await this.pyodide.runPythonAsync(`
 actions = {int(k): v for k, v in ${pyActions}.items()}
@@ -69,13 +72,13 @@ obs, rewards, terminateds, truncateds, infos, render_state
         render_state = {
             "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
         };
-        // Extracting the values from the Map and checking if all are true
+
+
+        // Check if the episode is complete
         const all_terminated = Array.from(terminateds.values()).every(value => value === true);
         const all_truncated = Array.from(truncateds.values()).every(value => value === true);
 
-        // console.log("Terminateds: ", terminateds, "Truncateds: ", truncateds, "All Terminated: ", all_terminated, "All Truncated: ", all_truncated);
         if (all_terminated || all_truncated) {
-            console.log("All terminated or all truncated, resetting")
             this.shouldReset = true;
         }
 

@@ -14,18 +14,20 @@ var game_config = {
 var game_graphics;
 let stateBuffer = []
 const MAX_BUFFER_SIZE = 1;
-function addStateToBuffer(state_data) {
+export function addStateToBuffer(state_data) {
     if (stateBuffer >= MAX_BUFFER_SIZE) {
         stateBuffer.shift(); // remove the oldest state
     }
     stateBuffer.push(state_data);
 }
 
-let actionBuffer = [];  // contain full dict of actions
+// Contains an array for each bot that we'll shift to get the most recent action
+// Bots are queried asynchronously!
+let botActionBuffers = {};
 
 let humanKeyPressBuffer = [];
 const MAX_KEY_PRESS_BUFFER_SIZE = 1;
-function addHumanKeyPressToBuffer(action) {
+export function addHumanKeyPressToBuffer(action) {
     // TODO(chase): this should filter out actions that aren't allowed, 
     // otherwise hitting an unrelated key could cancel out previous actions.
     if (humanKeyPressBuffer >= MAX_KEY_PRESS_BUFFER_SIZE) {
@@ -35,7 +37,7 @@ function addHumanKeyPressToBuffer(action) {
 }
 
 var pressedKeys = {};
-function updatePressedKeys(updatedPressedKeys) {
+export function updatePressedKeys(updatedPressedKeys) {
     pressedKeys = updatedPressedKeys;
 }
 
@@ -51,7 +53,7 @@ export function graphics_start(graphics_config) {
 }
 
 
-function graphics_end() {
+export function graphics_end() {
     $("#gameContainer").empty();
     game_graphics.game.destroy(true);
     stateBuffer = [];
@@ -112,6 +114,7 @@ class GymScene extends Phaser.Scene {
         this.last_rendered_step = -1;
         this.interactive_gym_config = config.interactive_gym_config;
         this.pyodide_remote_game = config.pyodide_remote_game;
+        this.isProcessingPyodide = false;
     }
     preload () {
 
@@ -167,20 +170,21 @@ class GymScene extends Phaser.Scene {
         }
     };
 
-    async update() {
-        if (this.pyodide_remote_game !== undefined) {
-            await this.processPyodideGame();
+    update() {
+        if (this.pyodide_remote_game !== undefined && !this.isProcessingPyodide) {
+            this.processPyodideGame();
         }
         
         this.processRendering();
     };
 
     async processPyodideGame() {
+        this.isProcessingPyodide = true;
         if (this.pyodide_remote_game !== undefined) {
             let rewards, terminateds, truncateds, infos, render_state;
             if (this.pyodide_remote_game.shouldReset) {
+                this.removeAllObjects();
                 [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
-                this.pyodide_remote_game.shouldReset = false;
             } else {
                 const actions = await this.buildPyodideActionDict();
                 previousSubmittedActions = actions;
@@ -188,6 +192,7 @@ class GymScene extends Phaser.Scene {
             }             
             addStateToBuffer(render_state);
         }
+        this.isProcessingPyodide = false;
     };
 
     async buildPyodideActionDict() {
@@ -215,33 +220,53 @@ class GymScene extends Phaser.Scene {
         return actions;
     }
 
-    async getBotAction(agent_id) {
+    getBotAction(agentID) {
         let policy_mapping = this.interactive_gym_config.policy_mapping;
         
         // If the bot is action on this step (according to frame skip), calculate an action.
         if (this.pyodide_remote_game.step_num % this.interactive_gym_config.frame_skip == 0) {
-            let policyID = policy_mapping[agent_id];
+            let policyID = policy_mapping[agentID];
             // if the policy is an ONNX model, conduct forward inference
             // TODO(chase): accommodate hidden states for recurrent networks. 
             // Check if the policy mapping ends with .onnx to indicate an ONNX model
             if (policyID.endsWith(".onnx")) {
                 // Cast the agent ID to an integer
-                let observation = currentObservations.get(parseInt(agent_id));
-                let action = await actionFromONNX(policyID, observation);
-                return action;
+                let observation = currentObservations.get(parseInt(agentID));
+                this.queryBotPolicy(agentID, policyID, observation);
             } else if (policyID === "random") {
                 // If the policy is random, return a random action
                 return Math.floor(Math.random() * Object.keys(this.interactive_gym_config.action_mapping).length + 1) - 1;
             }
+        } 
+
+        // If the bot was queried asynchronously, we may now have an action to execute
+        if (botActionBuffers[agentID] !== undefined && botActionBuffers[agentID].length > 0) {
+            return botActionBuffers[agentID].shift();
         } else {
+            // Otherwise, just return the default as specified by the settings
+
             // If we're using previous_action as population method, return the previous action
-            if (this.interactive_gym_config.action_population_method === "previous_submitted_action") {
-                return previousSubmittedActions[agent_id];
+            if (
+                this.interactive_gym_config.action_population_method === "previous_submitted_action" && 
+                previousSubmittedActions[agentID] !== undefined
+            ) {
+                return previousSubmittedActions[agentID];
             } else {
                 // If we're using default_action as population method, return the default action
                 return this.interactive_gym_config.default_action;
             }
+        } 
+    }
+
+    async queryBotPolicy(agentID, policyID, observation) {
+
+        if (botActionBuffers[agentID] === undefined) {
+            botActionBuffers[agentID] = [];
         }
+
+        // Calculate the action and add it to the buffer
+        let action = await actionFromONNX(policyID, observation);
+        botActionBuffers[agentID].push(action);
     }
 
     getHumanAction() {
@@ -392,6 +417,18 @@ class GymScene extends Phaser.Scene {
         }
     };
 
+    removeAllObjects() {
+        Object.keys(this.temp_object_map).forEach(obj_uuid => {
+            this.temp_object_map[obj_uuid].destroy();
+            delete this.temp_object_map[obj_uuid];
+        })
+
+        Object.keys(this.perm_object_map).forEach(obj_uuid => {
+            this.perm_object_map[obj_uuid].destroy();
+            delete this.perm_object_map[obj_uuid];
+        })
+    }
+
     _addObject(object_config, object_map) {
         if (object_config.object_type === "sprite") {
             this._addSprite(object_config, object_map);
@@ -483,8 +520,8 @@ class GymScene extends Phaser.Scene {
             sprite.tween == null &&
             (new_x !== sprite.x || new_y !== sprite.y)
             ) {
-                // sprite.tween =
-            this.tweens.add({
+
+            sprite.tween = this.tweens.add({
                 targets: [sprite],
                 x: new_x,
                 y: new_y,
