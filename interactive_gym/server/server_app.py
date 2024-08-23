@@ -614,6 +614,17 @@ def register_subject_name(data):
     logger.info(f"Registered subject ID {sid} with name {subject_name}")
 
 
+@socketio.on("request_pyodide_initialization")
+def check_pyodide_usage(data):
+    """If we're using Pyodide, emit the initialization event."""
+    if CONFIG.run_through_pyodide:
+        socketio.emit(
+            "initialize_pyodide_remote_game",
+            {"config": CONFIG.to_dict(serializable=True)},
+        )
+        return
+
+
 def is_valid_session(client_session_id):
     return client_session_id == SERVER_SESSION_ID
 
