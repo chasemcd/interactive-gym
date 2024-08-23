@@ -34,12 +34,15 @@ async function inferenceONNXPolicy(policyID, observation) {
     }
 
 
-    // Prepare input tensor(s) from the observation
-    const inputTensor = new window.ort.Tensor('float32', observation, [observation.length]);
 
-    const feeds = {};
-    feeds['obs'] = inputTensor;
+    // Observation should be shape (observationSize,), reshape to add batch dimension of 1
+    // and convert to an ort.Tensor
+    const inputTensor = new window.ort.Tensor('float32', observation, [1, observation.length]);
 
+    const feeds = {
+        'obs': inputTensor,
+        'seq_lens': new window.ort.Tensor('float32', new Float32Array([1])),
+    };
 
     // Check if the model is recurrent by inspecting input names, we're following
     // the RLlib convention of naming hidden states as 'state_in_0', 'state_in_1', etc.
@@ -54,8 +57,9 @@ async function inferenceONNXPolicy(policyID, observation) {
         session.inputNames.forEach(name => {
             if (name.startsWith('state_in_')) {
                 if (!hiddenStates[policyID][name]) {
-                    const inputMetadata = session.inputMetadata;
-                    const expectedShape = inputMetadata[name].dimensions;
+
+                    // TODO(chase): retrieve the shape; this hardcodes hidden states to [1, 128]
+                    const expectedShape = [1, 128] // inputMetadata[name].dimensions;
 
                     // Initialize the hidden state tensor with zeros
                     hiddenStates[policyID][name] = new window.ort.Tensor('float32', new Float32Array(expectedShape.reduce((a, b) => a * b)), expectedShape);
