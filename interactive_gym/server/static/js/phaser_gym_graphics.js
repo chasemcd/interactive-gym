@@ -222,7 +222,6 @@ class GymScene extends Phaser.Scene {
             actions[agentID] = this.getBotAction(agentID);
         }
 
-        console.log(actions);
         return actions;
     }
 

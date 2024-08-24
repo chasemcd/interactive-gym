@@ -75,7 +75,7 @@ config = (
     .gameplay(
         default_action=Noop,
         action_mapping=action_mapping,
-        num_episodes=1,
+        num_episodes=10000000,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
         callback=overcooked_callback.OvercookedCallback(),
     )
@@ -103,7 +103,7 @@ config = (
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--port", type=int, default=5701, help="Port number to listen on"
+        "--port", type=int, default=5702, help="Port number to listen on"
     )
     args = parser.parse_args()
 
