@@ -32,35 +32,11 @@ from interactive_gym.configurations import (
     remote_config,
 )
 from interactive_gym.server import remote_game, utils
+from interactive_gym.scenes import stager
+
+STAGER = stager.Stager()
 
 CONFIG = remote_config.RemoteConfig()
-
-
-def setup_logger(name, log_file, level=logging.INFO):
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    handler = logging.FileHandler(log_file)
-    handler.setFormatter(formatter)
-
-    # Create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setFormatter(
-        formatter
-    )  # Setting the formatter for the console handler as well
-
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.addHandler(handler)
-    logger.addHandler(ch)
-    logger.propagate = False
-
-    return logger
-
-
-# TODO(chase): logfile should be able to be updated when the CONFIG is updated
-logger = None  # setup_logger(__name__, CONFIG.logfile)
-
 
 # Data structure to save subjects by their socket id
 SUBJECTS = utils.ThreadSafeDict()
@@ -482,7 +458,6 @@ def _leave_game(subject_id) -> bool:
     game = _get_existing_game(subject_id)
 
     if game is None:
-        logger.info(f"{SUBJECT_ID_MAP[subject_id]} left and game is None.")
         return False
 
     logger.info(f"{SUBJECT_ID_MAP[subject_id]} leaving game {game.game_id}")
@@ -566,52 +541,12 @@ def _leave_game(subject_id) -> bool:
     return exit_status
 
 
-@app.route("/")
-def index(*args):
-    """If no subject ID provided, generate a UUID and re-route them."""
-    subject_name = str(uuid.uuid4())
-    return flask.redirect(
-        flask.url_for("user_index", subject_name=subject_name)
-    )
-
-
-@app.route("/<subject_name>")
-def user_index(subject_name):
-
-    if subject_name in PROCESSED_SUBJECT_NAMES:
-        return "Error: You have already played with under this subject ID!", 404
-
-    flask.session["subject_name"] = subject_name
-
-    instructions_html = ""
-    if CONFIG.instructions_html_file is not None:
-        try:
-            with open(CONFIG.instructions_html_file, encoding="utf-8") as f:
-                instructions_html = f.read()
-        except FileNotFoundError:
-            instructions_html = f"<p> Unable to load instructions file {CONFIG.instructions_html_file}.</p>"
-
-    return flask.render_template(
-        "index.html",
-        async_mode=socketio.async_mode,
-        welcome_header_text=CONFIG.welcome_header_text,
-        welcome_text=CONFIG.welcome_text,
-        instructions_html=instructions_html,
-        game_header_text=CONFIG.game_header_text,
-        game_page_text=CONFIG.game_page_text,
-        final_page_header_text=CONFIG.final_page_header_text,
-        final_page_text=CONFIG.final_page_text,
-        subject_name=subject_name,
-    )
-
-
 @socketio.on("register_subject_name")
 def register_subject_name(data):
     """Ties the subject name in the URL to the flask request sid"""
     subject_name = data["subject_name"]
     sid = flask.request.sid
     SUBJECT_ID_MAP[sid] = subject_name
-    logger.info(f"Registered subject ID {sid} with name {subject_name}")
 
 
 @socketio.on("request_pyodide_initialization")
@@ -648,7 +583,6 @@ def on_connect():
 def on_leave(data):
     subject_id = flask.request.sid
     client_session_id = data.get("session_id")
-    logger.info(f"Participant {SUBJECT_ID_MAP[subject_id]} leaving game.")
 
     # Validate session
     if not is_valid_session(client_session_id):
@@ -684,45 +618,6 @@ def on_leave(data):
                 PROCESSED_SUBJECT_NAMES.append(human_player_name)
         else:
             socketio.emit("end_lobby", room=game_id)
-
-
-@socketio.on("disconnect")
-def on_disconnect():
-    global SUBJECTS
-    subject_id = flask.request.sid
-    game = _get_existing_game(subject_id)
-
-    try:
-        logger.info(
-            f"Subject {SUBJECT_ID_MAP[subject_id]} disconnected, Game ID: {game.game_id if game is not None else 'None'}.",
-        )
-    except KeyError:
-        logger.warning(
-            f"Subject {subject_id} disconnected, but they aren't in SUBJECT_ID_MAP."
-        )
-
-    if subject_id not in SUBJECTS:
-        logger.warning(
-            f"Subject {subject_id} disconnected, but they aren't in SUBJECTS."
-        )
-        return
-
-    logger.info(
-        f"Calling _leave_game for {subject_id} ({SUBJECT_ID_MAP[subject_id]}).",
-    )
-    with SUBJECTS[subject_id]:
-        _leave_game(subject_id)
-
-    logger.info(
-        f"Removing subject {subject_id} ({SUBJECT_ID_MAP[subject_id]}) from SUBJECTS.",
-    )
-
-    del SUBJECTS[subject_id]
-
-    if subject_id in SUBJECTS:
-        logger.warning(
-            f"Tried to remove {subject_id} ({SUBJECT_ID_MAP[subject_id]}) but it's still in SUBJECTS."
-        )
 
 
 @socketio.on("send_pressed_keys")
@@ -844,33 +739,6 @@ def handle_reset_complete(data):
         game.reset_event.send()  # Signal to the game loop that reset is complete
 
 
-@socketio.on("ping")
-def pong(data):
-    sid = flask.request.sid
-    socketio.emit(
-        "pong",
-        {
-            "max_latency": CONFIG.max_ping,
-            "min_ping_measurements": CONFIG.min_ping_measurements,
-        },
-        room=flask.request.sid,
-    )
-
-    # also track if the user isn't focused on their window.
-    game = _get_existing_game(sid)
-    if game is None:
-        return
-
-    document_in_focus = data["document_in_focus"]
-    ping_ms = data["ping_ms"]
-    player_name = SUBJECT_ID_MAP[sid]
-    game.update_document_focus_status_and_ping(
-        player_identifier=player_name,
-        hidden_status=document_in_focus,
-        ping=ping_ms,
-    )
-
-
 def run_game(game: remote_game.RemoteGame):
     end_status = [remote_game.GameStatus.Inactive, remote_game.GameStatus.Done]
 
@@ -940,9 +808,6 @@ def run_game(game: remote_game.RemoteGame):
             socketio.sleep(1 / game.config.fps)
 
     with game.lock:
-        logger.info(
-            f"Game loop ended for {game.game_id}, ending and cleaning up."
-        )
         if game.status != remote_game.GameStatus.Inactive:
             game.tear_down()
 
@@ -955,33 +820,6 @@ def run_game(game: remote_game.RemoteGame):
         )
         for human_player_name in game.human_players.values():
             PROCESSED_SUBJECT_NAMES.append(human_player_name)
-
-        # _cleanup_game(game)
-
-
-@socketio.on("end_game_request_redirect")
-def on_request_redirect(data):
-    subject_id = flask.request.sid
-
-    waitroom_timeout = data.get("waitroom_timeout")
-    if waitroom_timeout:
-        redirect_url = CONFIG.waitroom_timeout_redirect_url
-    else:
-        redirect_url = CONFIG.end_game_redirect_url
-
-    if CONFIG.append_subject_name_to_redirect:
-        redirect_url += SUBJECT_ID_MAP[subject_id]
-
-    # del SUBJECT_ID_MAP[subject_id]
-
-    socketio.emit(
-        "end_game_redirect",
-        {
-            "redirect_url": redirect_url,
-            "redirect_timeout": CONFIG.redirect_timeout,
-        },
-        room=subject_id,
-    )
 
 
 def render_game(game: remote_game.RemoteGame):
@@ -1029,38 +867,3 @@ def on_exit():
             CONFIG.callback.on_game_end(game)
 
         socketio.emit("end_game", {}, room=game_id)
-
-
-def periodic_log() -> None:
-    """Log information at specified 30s interval"""
-    while True:
-        logger.info(
-            f"{time.ctime(time.time())}, there are {len(ACTIVE_GAMES)} active games, {len(WAITING_GAMES)} waiting games, {len(GAMES)} total games, and {len(SUBJECTS)} participants."
-        )
-        eventlet.sleep(30)
-
-
-def run(config):
-    global app, CONFIG, FREE_IDS, MAX_CONCURRENT_GAMES, logger
-    CONFIG = config
-    MAX_CONCURRENT_GAMES = CONFIG.max_concurrent_games
-
-    # Global queue of available IDs. This is how we sync game creation and keep track of how many games are in memory
-    FREE_IDS = queue.Queue(maxsize=CONFIG.max_concurrent_games)
-
-    logger = setup_logger(__name__, CONFIG.logfile)
-
-    # Initialize our game ID tracking data
-    for _ in range(CONFIG.max_concurrent_games):
-        add_new_game_id()
-
-    atexit.register(on_exit)
-
-    eventlet.spawn_n(periodic_log)
-
-    socketio.run(
-        app,
-        log_output=app.config["DEBUG"],
-        port=CONFIG.port,
-        host=CONFIG.host,
-    )

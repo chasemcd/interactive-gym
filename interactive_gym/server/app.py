@@ -32,35 +32,11 @@ from interactive_gym.configurations import (
     remote_config,
 )
 from interactive_gym.server import remote_game, utils
+from interactive_gym.scenes import stager
+
+STAGER = stager.Stager()
 
 CONFIG = remote_config.RemoteConfig()
-
-
-def setup_logger(name, log_file, level=logging.INFO):
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    handler = logging.FileHandler(log_file)
-    handler.setFormatter(formatter)
-
-    # Create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setFormatter(
-        formatter
-    )  # Setting the formatter for the console handler as well
-
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.addHandler(handler)
-    logger.addHandler(ch)
-    logger.propagate = False
-
-    return logger
-
-
-# TODO(chase): logfile should be able to be updated when the CONFIG is updated
-logger = None  # setup_logger(__name__, CONFIG.logfile)
-
 
 # Data structure to save subjects by their socket id
 SUBJECTS = utils.ThreadSafeDict()
