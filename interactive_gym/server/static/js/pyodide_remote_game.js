@@ -1,4 +1,7 @@
-class RemoteGame {
+import * as ui_utils from './ui_utils.js';
+
+
+export class RemoteGame {
     constructor(config) {
         this.config = config;
         this.micropip = null;
@@ -7,9 +10,13 @@ class RemoteGame {
         this.objects_to_render = [];
         this.observations = [];
         this.render_state = null;
-        this.num_episodes = config.num_episodes;
+        this.num_episodes = 0;
+        this.max_episodes = config.num_episodes;
         this.step_num = 0;
+        this.max_steps = 1000; // TODO(chase): get from config/env
+        this.cumulative_rewards = {};
         this.shouldReset = true;
+        this.state = null;
     }
 
     async initialize() {
@@ -33,29 +40,38 @@ env
             throw new Error("The environment was not initialized correctly. Ensure the the environment_initialization_code correctly creates an `env` object.");
         }
 
+        this.state = "ready";
         this.pyodideReady = true;
     }
 
     async reset() {
-        await this.pyodideReady;
         this.shouldReset = false;
         const result = await this.pyodide.runPythonAsync(`
 obs, infos = env.reset()
 render_state = env.env_to_render_fn()
 obs, infos, render_state
         `);
-        let [obs, infos, render_state] = this.pyodide.toPy(result).toJs();
+        let [obs, infos, render_state] = await this.pyodide.toPy(result).toJs();
         render_state = {
             "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
         };
-        this.step_num = this.step_num + 1;
+        this.step_num = 0;
         this.shouldReset = false;
+
+        // Iterate over the keys of obs and set cumulative rewards to be 0 for each ID
+        for (let key of obs.keys()) {
+            this.cumulative_rewards[key] = 0;
+        }
+
+        ui_utils.showHUD();
+        ui_utils.updateHUDText(this.getHUDText());
+
+
         return [obs, infos, render_state]
     }
 
 
     async step(actions) {
-        // await this.pyodideReady;
         const pyActions = this.pyodide.toPy(actions);
         const result = await this.pyodide.runPythonAsync(`
 actions = {int(k): v for k, v in ${pyActions}.items()}
@@ -65,24 +81,49 @@ obs, rewards, terminateds, truncateds, infos, render_state
         `);
 
         // Convert everything from python objects to JS objects
-        let [obs, rewards, terminateds, truncateds, infos, render_state] = this.pyodide.toPy(result).toJs();
+        let [obs, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide.toPy(result).toJs();
         
+        for (let [key, value] of rewards.entries()) {
+            this.cumulative_rewards[key] += value;
+        }
+
         this.step_num = this.step_num + 1;
 
         render_state = {
             "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
         };
 
+        ui_utils.updateHUDText(this.getHUDText());
 
         // Check if the episode is complete
         const all_terminated = Array.from(terminateds.values()).every(value => value === true);
         const all_truncated = Array.from(truncateds.values()).every(value => value === true);
 
         if (all_terminated || all_truncated) {
-            this.shouldReset = true;
+            this.num_episodes += 1;
+
+            if (this.num_episodes >= this.max_episodes) {
+                this.state = "done";
+                ui_utils.hideHUD();
+            } else {
+                this.shouldReset = true;
+            }
+            
         }
 
         return [obs, rewards, terminateds, truncateds, infos, render_state]
+    };
+
+    getHUDText() {
+        let score = Object.values(this.cumulative_rewards)[0];
+        let time_left = (this.max_steps - this.step_num) / this.config.fps;
+
+        let formatted_score = score.toString().padStart(2, '0');
+        let formatted_time_left = time_left.toFixed(1).toString().padStart(5, '0');
+
+        let hud_text = `Score: ${formatted_score} | Time left: ${formatted_time_left}s`;
+
+        return hud_text
     };
 };
 

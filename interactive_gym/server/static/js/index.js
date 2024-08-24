@@ -1,5 +1,6 @@
-import {graphics_start, graphics_end, addHumanKeyPressToBuffer, updatePressedKeys, addStateToBuffer} from './phaser_gym_graphics.js';
-
+import {graphics_start, graphics_end, addStateToBuffer} from './phaser_gym_graphics.js';
+import {RemoteGame} from './pyodide_remote_game.js';
+import * as ui_utils from './ui_utils.js';
 
 var socket = io();
 var start_pressed = false;
@@ -90,18 +91,23 @@ var refreshStartButton = setInterval(() => {
         $("#startButton").show();
         $("#startButton").attr("disabled", true);
     } 
-    // else if (pyodideRemoteGame != null && pyodideRemoteGame.pyodideReady !== true) {
-    //     $("#startButton").show();
-    //     $("#startButton").attr("disabled", true);
-    //     clearInterval(refreshStartButton);
-    // }   
-    else {
+    else if (pyodideReadyIfUsing()){
         $('#errorText').hide()
         $("#startButton").show();
         $("#startButton").attr("disabled", false);
         clearInterval(refreshStartButton);
     }
 }, 1000)
+
+function pyodideReadyIfUsing() {
+    if (pyodideRemoteGame == null) {
+        console.log("pyodideRemoteGame is null")
+        return true;
+    }
+
+    console.log(pyodideRemoteGame.pyodideReady)
+    return pyodideRemoteGame.pyodideReady;
+}
 
 
 $(function() {
@@ -170,7 +176,7 @@ socket.on("start_game", function(data) {
         'interactive_gym_config': config,
     };
 
-    enable_key_listener(config.input_mode)
+    ui_utils.enableKeyListener(config.input_mode)
     graphics_start(graphics_config);
 })
 
@@ -216,7 +222,7 @@ socket.on('start_game_pyodide', function(data) {
         'interactive_gym_config': config,
     };
 
-    enable_key_listener(config.input_mode)
+    ui_utils.enableKeyListener(config.input_mode)
     graphics_start(graphics_config);
 });
 
@@ -319,7 +325,7 @@ function updateWaitroomText(data, timer) {
 socket.on("game_reset", function(data) {
     graphics_end()
     $('#hudText').hide()
-    disable_key_listener();
+    ui_utils.disableKeyListener();
 
 
     // Initialize game
@@ -343,7 +349,7 @@ socket.on("game_reset", function(data) {
 
     startResetCountdown(data.timeout, function() {
         // This function will be called after the countdown
-        enable_key_listener(input_mode);
+        ui_utils.enableKeyListener(input_mode);
         graphics_start(graphics_config);
 
         socket.emit("reset_complete", {room: data.room, session_id: window.sessionId});
@@ -401,7 +407,6 @@ socket.on("create_game_failed", function(data) {
 socket.on('environment_state', function(data) {
     $('#hudText').show()
     $('#hudText').text(data.hud_text)
-
     addStateToBuffer(data);
 });
 
@@ -414,7 +419,7 @@ socket.on('end_game', function(data) {
     // Hide game data and display game-over html
     graphics_end();
     $('#hudText').hide();
-    disable_key_listener();
+    ui_utils.disableKeyListener();
     socket.emit("leave_game", {session_id: window.sessionId});
 
     $('#finalPageHeaderText').show()
@@ -449,53 +454,8 @@ socket.on('update_game_page_text', function(data) {
 })
 
 
-var pressedKeys = {};
+// var pressedKeys = {};
 
 socket.on('request_pressed_keys', function(data) {
-    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(pressedKeys), session_id: window.sessionId});
+    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(ui_utils.pressedKeys), session_id: window.sessionId});
 });
-
-function enable_key_listener(input_mode) {
-    pressedKeys = {};
-    $(document).on('keydown', function(event) {
-        // List of keys to prevent default behavior for (scroll the window)
-        var keysToPreventDefault = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ']; // Includes space (' ')
-
-        if (keysToPreventDefault.includes(event.key)) {
-            event.preventDefault(); // Prevent default behavior for specified keys
-        }
-
-        // If we're using the single keystroke input method, we just send the key when it's pressed.
-        // This means no composite actions.
-        if (input_mode == "single_keystroke") {
-            addHumanKeyPressToBuffer(event.key);
-            socket.emit('send_pressed_keys', {'pressed_keys': Array(event.key), session_id: window.sessionId});
-            return;
-        }
-
-        // Otherwise, we keep track of the keys that are pressed and send them on request
-        if (pressedKeys[event.key]) {
-            return; // Key is already pressed, so exit the function
-        }
-
-        pressedKeys[event.key] = true; // Add key to pressedKeys when it is pressed
-        updatePressedKeys(pressedKeys);
-    });
-
-    $(document).on('keyup', function(event) {
-        if (input_mode == "single_keystroke") {
-            return;
-        }
-
-        // If we're tracking pressed keys, remove it
-        delete pressedKeys[event.key]; // Remove key from pressedKeys when it is released
-        updatePressedKeys(pressedKeys);
-    });
-}
-
-
-function disable_key_listener() {
-        $(document).off('keydown');
-        $(document).off('keyup');
-        pressedKeys = {};
-}

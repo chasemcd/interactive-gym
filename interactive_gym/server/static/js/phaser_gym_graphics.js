@@ -8,7 +8,6 @@ var game_config = {
         noAudio: true
     },
     resolution: window.devicePixelRatio,
-    // pauseOnBlur: false,
 };
 
 var game_graphics;
@@ -171,6 +170,12 @@ class GymScene extends Phaser.Scene {
     };
 
     update() {
+
+        if (this.pyodide_remote_game !== undefined && this.pyodide_remote_game.state === "done") {
+            this.removeAllObjects();
+            return;
+        };
+
         if (this.pyodide_remote_game !== undefined && !this.isProcessingPyodide) {
             this.processPyodideGame();
         }
@@ -214,9 +219,10 @@ class GymScene extends Phaser.Scene {
             if (agentID == human_policy_agent_id) {
                 continue;
             }
-            actions[agentID] = await this.getBotAction(agentID);
+            actions[agentID] = this.getBotAction(agentID);
         }
 
+        console.log(actions);
         return actions;
     }
 
@@ -226,8 +232,6 @@ class GymScene extends Phaser.Scene {
         // If the bot is action on this step (according to frame skip), calculate an action.
         if (this.pyodide_remote_game.step_num % this.interactive_gym_config.frame_skip == 0) {
             let policyID = policy_mapping[agentID];
-            // if the policy is an ONNX model, conduct forward inference
-            // TODO(chase): accommodate hidden states for recurrent networks. 
             // Check if the policy mapping ends with .onnx to indicate an ONNX model
             if (policyID.endsWith(".onnx")) {
                 // Cast the agent ID to an integer
@@ -276,6 +280,9 @@ class GymScene extends Phaser.Scene {
         if (this.interactive_gym_config.input_mode === "single_keystroke") {
             if (humanKeyPressBuffer.length > 0) {
                 human_action = this.interactive_gym_config.action_mapping[humanKeyPressBuffer.shift()];
+                if (human_action == undefined) {
+                    human_action = this.interactive_gym_config.default_action;
+                }
             } else {
                 human_action = this.interactive_gym_config.default_action;
             }
@@ -286,6 +293,9 @@ class GymScene extends Phaser.Scene {
                 human_action = this.interactive_gym_config.default_action;
             } else if (pressedKeys.length == 1) {
                 human_action = this.interactive_gym_config.action_mapping[Object.keys(pressedKeys)[0]];
+                if (human_action == undefined) {
+                    human_action = this.interactive_gym_config.default_action;
+                }
             } else {
                 // multiple keys are pressed so check for a composite action
                 human_action = this.interactive_gym_config.action_mapping[this.generateCompositeAction()[0]];
