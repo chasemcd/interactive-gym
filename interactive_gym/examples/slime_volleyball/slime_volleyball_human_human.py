@@ -9,10 +9,14 @@ from datetime import datetime
 
 from slime_volleyball import slimevolley_env
 
-from interactive_gym.configurations import (configuration_constants,
-                                            remote_config)
+from interactive_gym.configurations import (
+    configuration_constants,
+    remote_config,
+)
 from interactive_gym.examples.slime_volleyball import (
-    slime_volleyball_callback, slime_volleyball_utils)
+    slime_volleyball_callback,
+    slime_volleyball_utils,
+)
 from interactive_gym.server import server_app
 
 """
@@ -92,7 +96,7 @@ config = (
         ),  # fake waitroom of 5 to 25 seconds
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
-        end_game_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
+        experiment_end_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
         waitroom_timeout=5 * 60_000,  # 2 minutes in waitroom
         waitroom_timeout_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_bIskl3fFOPC6ayy",
     )

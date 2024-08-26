@@ -48,8 +48,31 @@
             margin-top: 20px;
         }
 
+        /* Style for the start button */
+        #advanceButton {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 20px;
+            background-color: #008000; /* Green color for start */
+            color: white;
+            border: none;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
         /* Style for the start button when it's disabled */
         #startButton:disabled {
+            background-color: #A9A9A9; /* Grey color to indicate disabled */
+            color: #7F7F7F; /* Optional: Darker text color for better contrast */
+            cursor: not-allowed; /* Change cursor to indicate the button is disabled */
+        }
+
+        #advanceButton:disabled {
             background-color: #A9A9A9; /* Grey color to indicate disabled */
             color: #7F7F7F; /* Optional: Darker text color for better contrast */
             cursor: not-allowed; /* Change cursor to indicate the button is disabled */
@@ -143,6 +166,9 @@
         <!-- Start button -->
         <button id="startButton" disabled>Start</button>
 
+        <!-- Advance (continue) button -->
+        <button id="advanceButton" enabled>Continue</button>
+
 
 
 
@@ -165,7 +191,7 @@
     <script src="static/js/pyodide_remote_game.js", type="module"></script>
 
     <script type="text/javascript">
-        var subjectName = "{{ subject_name }}";
+        var subjectName = "{{ subject_id }}";
     </script>
 
 

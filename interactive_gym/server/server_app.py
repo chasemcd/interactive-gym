@@ -186,7 +186,7 @@ def _create_game() -> None:
     )  # convert waitroom timeout to seconds
 
 
-@socketio.on("join")
+@socketio.on("join_game")
 def join_or_create_game(data):
     subject_id = flask.request.sid
     client_session_id = data.get("session_id")
@@ -569,19 +569,17 @@ def _leave_game(subject_id) -> bool:
 @app.route("/")
 def index(*args):
     """If no subject ID provided, generate a UUID and re-route them."""
-    subject_name = str(uuid.uuid4())
-    return flask.redirect(
-        flask.url_for("user_index", subject_name=subject_name)
-    )
+    subject_id = str(uuid.uuid4())
+    return flask.redirect(flask.url_for("user_index", subject_id=subject_id))
 
 
-@app.route("/<subject_name>")
-def user_index(subject_name):
+@app.route("/<subject_id>")
+def user_index(subject_id):
 
-    if subject_name in PROCESSED_SUBJECT_NAMES:
+    if subject_id in PROCESSED_SUBJECT_NAMES:
         return "Error: You have already played with under this subject ID!", 404
 
-    flask.session["subject_name"] = subject_name
+    flask.session["subject_id"] = subject_id
 
     instructions_html = ""
     if CONFIG.instructions_html_file is not None:
@@ -601,17 +599,17 @@ def user_index(subject_name):
         game_page_text=CONFIG.game_page_text,
         final_page_header_text=CONFIG.final_page_header_text,
         final_page_text=CONFIG.final_page_text,
-        subject_name=subject_name,
+        subject_id=subject_id,
     )
 
 
-@socketio.on("register_subject_name")
-def register_subject_name(data):
+@socketio.on("register_subject_id")
+def register_subject_id(data):
     """Ties the subject name in the URL to the flask request sid"""
-    subject_name = data["subject_name"]
+    subject_id = data["subject_id"]
     sid = flask.request.sid
-    SUBJECT_ID_MAP[sid] = subject_name
-    logger.info(f"Registered subject ID {sid} with name {subject_name}")
+    SUBJECT_ID_MAP[sid] = subject_id
+    logger.info(f"Registered subject ID {sid} with name {subject_id}")
 
 
 @socketio.on("request_pyodide_initialization")
@@ -963,13 +961,13 @@ def run_game(game: remote_game.RemoteGame):
 def on_request_redirect(data):
     subject_id = flask.request.sid
 
-    waitroom_timeout = data.get("waitroom_timeout")
+    waitroom_timeout = data.get("waitroom_timeout", False)
     if waitroom_timeout:
         redirect_url = CONFIG.waitroom_timeout_redirect_url
     else:
-        redirect_url = CONFIG.end_game_redirect_url
+        redirect_url = CONFIG.experiment_end_redirect_url
 
-    if CONFIG.append_subject_name_to_redirect:
+    if CONFIG.append_subject_id_to_redirect:
         redirect_url += SUBJECT_ID_MAP[subject_id]
 
     # del SUBJECT_ID_MAP[subject_id]
