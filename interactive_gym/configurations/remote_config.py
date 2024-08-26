@@ -60,13 +60,13 @@ class RemoteConfig:
         self.animation_configs: list = []
 
         # user_experience
-        self.end_game_redirect_url: str | None = (
+        self.experiment_end_redirect_url: str | None = (
             None  # send user here after experiment.
         )
         self.waitroom_timeout_redirect_url: str | None = (
             None  # here if waiting room times out
         )
-        self.append_subject_name_to_redirect: bool = False
+        self.append_subject_id_to_redirect: bool = False
         self.redirect_timeout: int = 5_000  # 5k ms = 5 seconds default
         self.instructions_html_file: str | None = None
         self.waitroom_time_randomization_interval_s: tuple[int, int] = (0, 0)
@@ -271,9 +271,9 @@ class RemoteConfig:
         self,
         page_title: str | None = None,
         instructions_html_file: str | None = None,
-        end_game_redirect_url: str | None = None,
+        experiment_end_redirect_url: str | None = None,
         waitroom_timeout_redirect_url: str | None = None,
-        append_subject_name_to_redirect: bool | None = None,
+        append_subject_id_to_redirect: bool | None = None,
         redirect_timeout: int | None = None,
         waitroom_timeout: tuple[int, int] | None = None,
         waitroom_time_randomization_interval_s: int | None = None,
@@ -286,16 +286,14 @@ class RemoteConfig:
         final_page_text: str | None = None,
         instructions: str | None = None,
     ):
-        if end_game_redirect_url is not None:
-            self.end_game_redirect_url = end_game_redirect_url
+        if experiment_end_redirect_url is not None:
+            self.experiment_end_redirect_url = experiment_end_redirect_url
 
         if waitroom_timeout_redirect_url is not None:
             self.waitroom_timeout_redirect_url = waitroom_timeout_redirect_url
 
-        if append_subject_name_to_redirect is not None:
-            self.append_subject_name_to_redirect = (
-                append_subject_name_to_redirect
-            )
+        if append_subject_id_to_redirect is not None:
+            self.append_subject_id_to_redirect = append_subject_id_to_redirect
 
         if game_page_html_fn is not None:
             self.game_page_html_fn = game_page_html_fn
