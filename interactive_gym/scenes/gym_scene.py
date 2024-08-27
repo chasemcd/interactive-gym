@@ -20,9 +20,8 @@ class GymScene(scene.Scene):
 
     """
 
-    def __init__(self, scene_name: str, ig_config: remote_config.RemoteConfig):
-        self.scene_name: str | None = scene_name
-        self.ig_config: remote_config.RemoteConfig = ig_config
+    def __init__(self, scene_id: str, ig_config: remote_config.RemoteConfig):
+        super().__init__(scene_id, ig_config)
 
         # Environment
         self.env_creator: Callable | None = None
@@ -68,28 +67,11 @@ class GymScene(scene.Scene):
         self.animation_configs: list = []
 
         # user_experience
-        self.experiment_end_redirect_url: str | None = (
-            None  # send user here after experiment.
-        )
-        self.waitroom_timeout_redirect_url: str | None = (
-            None  # here if waiting room times out
-        )
-        self.waitroom_timeout: int = -1  # -1 means no waitroom
-        self.append_subject_id_to_redirect: bool = False
-        self.redirect_timeout: int = 5_000  # 5k ms = 5 seconds default
-        self.instructions_html_file: str | None = None
-        self.waitroom_time_randomization_interval_s: tuple[int, int] = (0, 0)
-        self.page_title: str = "interactive-gym"
-        self.game_header_text: str = ""
-        self.welcome_header_text: str = ""
-        self.welcome_text: str = ""
-        self.game_page_text: str = ""
-        self.game_page_html_fn: Callable | None = None
-        self.between_episode_header: str = ""
-        self.between_episode_text: str = ""
-        self.final_page_text: str = ""
-        self.final_page_header_text: str = ""
-        self.instructions: str = ""  # can pass html
+        self.scene_header: str = None
+        self.scene_body: str = None
+        self.waitroom_timeout_redirect_url: str = None
+        self.waitroom_timeout: int = 1000
+        self.game_page_html_fn: Callable = None
         self.reset_timeout: int = 3000
         self.reset_freeze_s: int = 0
 
@@ -243,72 +225,54 @@ class GymScene(scene.Scene):
 
     def user_experience(
         self,
-        page_title: str = NotProvided,
-        instructions_html_file: str = NotProvided,
-        experiment_end_redirect_url: str = NotProvided,
+        scene_header: str = NotProvided,
+        scene_body: str = NotProvided,
+        scene_body_filepath: str = NotProvided,
+        in_game_scene_body: str = NotProvided,
+        in_game_scene_body_filepath: str = NotProvided,
         waitroom_timeout_redirect_url: str = NotProvided,
-        append_subject_id_to_redirect: bool = NotProvided,
-        redirect_timeout: int = NotProvided,
-        waitroom_timeout: tuple[int, int] = NotProvided,
-        waitroom_time_randomization_interval_s: int = NotProvided,
-        welcome_header_text: str = NotProvided,
-        game_header_text: str = NotProvided,
         game_page_html_fn: Callable = NotProvided,
-        game_page_text: str = NotProvided,
-        welcome_text: str = NotProvided,
-        final_page_header_text: str = NotProvided,
-        final_page_text: str = NotProvided,
-        instructions: str = NotProvided,
     ):
-        if experiment_end_redirect_url is not NotProvided:
-            self.experiment_end_redirect_url = experiment_end_redirect_url
+        if scene_header is not NotProvided:
+            self.scene_header = scene_header
 
         if waitroom_timeout_redirect_url is not NotProvided:
             self.waitroom_timeout_redirect_url = waitroom_timeout_redirect_url
 
-        if append_subject_id_to_redirect is not NotProvided:
-            self.append_subject_id_to_redirect = append_subject_id_to_redirect
+        # if append_subject_id_to_redirect is not NotProvided:
+        #     self.append_subject_id_to_redirect = append_subject_id_to_redirect
 
         if game_page_html_fn is not NotProvided:
             self.game_page_html_fn = game_page_html_fn
 
-        if redirect_timeout is not NotProvided:
-            self.redirect_timeout = redirect_timeout
+        if scene_body_filepath is not NotProvided:
+            assert (
+                self.scene_body is None and scene_body is NotProvided
+            ), "Cannot set both filepath and html_body."
 
-        if waitroom_time_randomization_interval_s is not NotProvided:
-            self.waitroom_time_randomization_interval_s = (
-                waitroom_time_randomization_interval_s
-            )
+            with open(scene_body_filepath, "r", encoding="utf-8") as f:
+                self.scene_body = f.read()
 
-        if waitroom_timeout is not NotProvided:
-            self.waitroom_timeout = waitroom_timeout
+        if scene_body is not NotProvided:
+            assert (
+                scene_body_filepath is NotProvided
+            ), "Cannot set both filepath and html_body."
+            self.scene_body = scene_body
 
-        if welcome_header_text is not NotProvided:
-            self.welcome_header_text = welcome_header_text
+        if in_game_scene_body_filepath is not NotProvided:
+            assert (
+                self.in_game_scene_body is NotProvided
+                and in_game_scene_body is NotProvided
+            ), "Cannot set both filepath and html_body."
 
-        if game_header_text is not NotProvided:
-            self.game_header_text = game_header_text
+            with open(in_game_scene_body_filepath, "r", encoding="utf-8") as f:
+                self.in_game_scene_body = f.read()
 
-        if instructions is not NotProvided:
-            self.instructions = instructions
-
-        if welcome_text is not NotProvided:
-            self.welcome_text = welcome_text
-
-        if game_page_text is not NotProvided:
-            self.game_page_text = game_page_text
-
-        if final_page_text is not NotProvided:
-            self.final_page_text = final_page_text
-
-        if final_page_header_text is not NotProvided:
-            self.final_page_header_text = final_page_header_text
-
-        if page_title is not NotProvided:
-            self.page_title = page_title
-
-        if instructions_html_file is not NotProvided:
-            self.instructions_html_file = instructions_html_file
+        if in_game_scene_body is not NotProvided:
+            assert (
+                in_game_scene_body_filepath is NotProvided
+            ), "Cannot set both filepath and html_body."
+            self.in_game_scene_body = in_game_scene_body
 
         return self
 
