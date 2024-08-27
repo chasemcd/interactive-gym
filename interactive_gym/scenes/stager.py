@@ -1,5 +1,6 @@
 import logging
 import copy
+import flask_socketio
 
 from interactive_gym.scenes import scene, static_scene
 
@@ -53,13 +54,16 @@ class Stager:
 
         return participant_copy
 
+    def get_current_scene(self) -> scene.Scene:
+        return self.current_scene
+
     def set_scenes(self, scenes: list[scene.Scene]):
         """
         Set the scenes for the Stager.
         """
         self.scenes = scenes
 
-    def start(self):
+    def start(self, sio: flask_socketio.SocketIO):
         """
         Initialize the Stager by activating the first Scene in the sequence.
         """
@@ -67,9 +71,9 @@ class Stager:
         assert isinstance(
             self.current_scene, static_scene.StartScene
         ), f"start() was called with a current_scene other than StartScene. Got {type(self.current_scene)}."
-        self.current_scene.activate()
+        self.current_scene.activate(sio)
 
-    def advance(self):
+    def advance(self, sio: flask_socketio.SocketIO):
         """
         Move to the next Scene in the sequence.
         """
@@ -78,5 +82,6 @@ class Stager:
         if self.current_scene_index >= len(self.scenes):
             logger.info("End of Stager sequence, no more scenes to stage.")
             return None
+
         self.current_scene = self.scenes[self.current_scene_index]
-        self.current_scene.activate()
+        self.current_scene.activate(sio=sio)
