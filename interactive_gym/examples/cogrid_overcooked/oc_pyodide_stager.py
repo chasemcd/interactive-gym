@@ -228,7 +228,7 @@ if __name__ == "__main__":
     ig_config = (
         experiment_config.ExperimentConfig()
         .experiment(stager=stager, experiment_id="overcooked_test")
-        .hosting(port=5701, host="0.0.0.0")
+        .hosting(port=5702, host="0.0.0.0")
     )
 
     app.run(ig_config)
