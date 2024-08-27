@@ -78,27 +78,6 @@ function sendPing() {
 // Send a ping every second
 setInterval(sendPing, 1000);
 
-// Check if we're enabling the start button
-var refreshStartButton = setInterval(() => {
-    if (maxLatency != null && latencyMeasurements.length > 5 && curLatency > maxLatency) {
-        $("#instructions").hide();
-        $("#startButton").hide();
-        $("#startButton").attr("disabled", true);
-        $('#errorText').show()
-        $('#errorText').text("Sorry, your connection is too slow for this application. Please make sure you have a strong internet connection to ensure a good experience for all players in the game.");
-        clearInterval(refreshStartButton);
-    } else if (maxLatency != null && latencyMeasurements.length <= 5) {
-        $("#startButton").show();
-        $("#startButton").attr("disabled", true);
-    } 
-    else if (pyodideReadyIfUsing()){
-        $('#errorText').hide()
-        $("#startButton").show();
-        $("#startButton").attr("disabled", false);
-        clearInterval(refreshStartButton);
-    }
-}, 1000)
-
 function pyodideReadyIfUsing() {
     if (pyodideRemoteGame == null) {
         console.log("pyodideRemoteGame is null")
@@ -115,6 +94,7 @@ $(function() {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
         start_pressed = true;
+        console.log("joining game in session", window.sessionId)
         socket.emit("join_game", {session_id: window.sessionId});
 
     })
@@ -125,9 +105,9 @@ socket.on('server_session_id', function(data) {
 });
 
 socket.on('connect', function() {
+    console.log("connecting")
     // Emit an event to the server with the subject_id
-    socket.emit('register_subject_id', { subject_id: subjectName });
-    socket.emit('request_pyodide_initialization', {});
+    socket.emit('register_subject', { subject_id: subjectName });
 });
 
 
@@ -141,88 +121,47 @@ socket.on('invalid_session', function(data) {
     $("#invalidSession").show();
 });
 
-
-socket.on("start_game", function(data) {
+socket.on('start_game', function(data) {
     // Clear the waitroomInterval to stop the waiting room timer
     if (waitroomInterval) {
         clearInterval(waitroomInterval);
     }
 
-    $("#welcomeHeader").hide();
-    $("#welcomeText").hide();
-    $("#instructions").hide();
-    $("#waitroomText").hide();
-    $('#errorText').hide()
-    $("#gameHeaderText").show();
-    $("#gamePageText").show();
-    $("#gameContainer").show();
+    let scene_metadata = data.scene_metadata
+    // let experiment_config = data.experiment_config
 
-    let config = data.config;
-
-    // Initialize game
-    let graphics_config = {
-        'parent': 'gameContainer',
-        'fps': {
-            'target': config.fps,
-            'forceSetTimeOut': true
-        },
-        'height': config.game_height,
-        'width': config.game_width,
-        'background': config.background,
-        'state_init': config.state_init,
-        'assets_dir': config.assets_dir,
-        'assets_to_preload': config.assets_to_preload,
-        'animation_configs': config.animation_configs,
-        'interactive_gym_config': config,
-    };
-
-    ui_utils.enableKeyListener(config.input_mode)
-    graphics_start(graphics_config);
-})
-
-
-socket.on('initialize_pyodide_remote_game', function(data) {
-    pyodideRemoteGame = new RemoteGame(data.config);
-});
-
-
-socket.on('start_game_pyodide', function(data) {
-    // Clear the waitroomInterval to stop the waiting room timer
-    if (waitroomInterval) {
-        clearInterval(waitroomInterval);
+    // Hide the sceneBody and any waiting room messages or errors
+    if (scene_metadata.in_game_scene_body != undefined) {
+        $("#sceneBody").html(scene_metadata.in_game_scene_body);
+        $("#sceneBody").show();
+    } else {
+        $("#sceneBody").hide(); 
     }
-
-    $("#welcomeHeader").hide();
-    $("#welcomeText").hide();
-    $("#instructions").hide();
     $("#waitroomText").hide();
     $('#errorText').hide()
-    $("#gameHeaderText").show();
-    $("#gamePageText").show();
-    $("#gameContainer").show();
 
-    let config = data.config;
-    // let pyodideRemoteGame = new RemoteGame(data.config);
+    // Show the game container 
+    $("#gameContainer").show();
 
     // Initialize game
     let graphics_config = {
         'parent': 'gameContainer',
         'fps': {
-            'target': config.fps,
+            'target': scene_metadata.fps,
             'forceSetTimeOut': true
         },
-        'height': config.game_height,
-        'width': config.game_width,
-        'background': config.background,
-        'state_init': config.state_init,
-        'assets_dir': config.assets_dir,
-        'assets_to_preload': config.assets_to_preload,
-        'animation_configs': config.animation_configs,
+        'height': scene_metadata.game_height,
+        'width': scene_metadata.game_width,
+        'background': scene_metadata.background,
+        'state_init': scene_metadata.state_init,
+        'assets_dir': scene_metadata.assets_dir,
+        'assets_to_preload': scene_metadata.assets_to_preload,
+        'animation_configs': scene_metadata.animation_configs,
         'pyodide_remote_game': pyodideRemoteGame,
-        'interactive_gym_config': config,
+        'scene_metadata': scene_metadata,
     };
 
-    ui_utils.enableKeyListener(config.input_mode)
+    ui_utils.enableKeyListener(scene_metadata.input_mode)
     graphics_start(graphics_config);
 });
 
@@ -327,25 +266,27 @@ socket.on("game_reset", function(data) {
     $('#hudText').hide()
     ui_utils.disableKeyListener();
 
+    let scene_metadata = data.scene_metadata
+
 
     // Initialize game
-    let config = data.config;
     let graphics_config = {
         'parent': 'gameContainer',
         'fps': {
-            'target': config.fps,
+            'target': scene_metadata.fps,
             'forceSetTimeOut': true
         },
-        'height': config.game_height,
-        'width': config.game_width,
-        'background': config.background,
-        'state_init': config.state_init,
-        'assets_dir': config.assets_dir,
-        'assets_to_preload': config.assets_to_preload,
-        'animation_configs': config.animation_configs,
+        'height': scene_metadata.game_height,
+        'width': scene_metadata.game_width,
+        'background': scene_metadata.background,
+        'state_init': scene_metadata.state_init,
+        'assets_dir': scene_metadata.assets_dir,
+        'assets_to_preload': scene_metadata.assets_to_preload,
+        'animation_configs': scene_metadata.animation_configs,
+        'scene_metadata': scene_metadata,
     };
 
-    input_mode = config.input_mode;
+    input_mode = scene_metadata.input_mode;
 
     startResetCountdown(data.timeout, function() {
         // This function will be called after the countdown
@@ -363,19 +304,19 @@ function startResetCountdown(timeout, callback) {
     var timer = Math.floor(timeout / 1000); // Convert milliseconds to seconds
 
 
-    $("#reset-game").show();
+    $("#resetGame").show();
     var minutes = parseInt(timer / 60, 10);
     var seconds = parseInt(timer % 60, 10);
     minutes = minutes < 10 ? "0" + minutes : minutes;
     seconds = seconds < 10 ? "0" + seconds : seconds;
-    $("#reset-game").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
+    $("#resetGame").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
 
 
     var interval = setInterval(function () {
         timer--;
         if (timer <= 0) {
             clearInterval(interval);
-            $("#reset-game").hide();
+            $("#resetGame").hide();
             if (callback) callback(); // Call the callback function
         } else {
             minutes = parseInt(timer / 60, 10);
@@ -383,7 +324,7 @@ function startResetCountdown(timeout, callback) {
 
             minutes = minutes < 10 ? "0" + minutes : minutes;
             seconds = seconds < 10 ? "0" + seconds : seconds;
-            $("#reset-game").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
+            $("#resetGame").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
         }
     }, 1000);
 }
@@ -448,10 +389,9 @@ socket.on('end_game_redirect', function(data) {
 });
 
 
-socket.on('update_game_page_text', function(data) {
-    // $("#gamePageText").text(data.game_page_text);
-    document.getElementById('gamePageText').innerHTML = data.game_page_text;
-})
+// socket.on('update_game_page_text', function(data) {
+//     $("#sceneBody").html(data.game_page_text);
+// })
 
 
 // var pressedKeys = {};
@@ -466,8 +406,29 @@ socket.on('request_pressed_keys', function(data) {
 
 //  UPDATED
 
+// var canAdvance = true;
+// refreshCanAdvance = setInterval(() => {
+//     canAdvance = document.getElemendById("canContinue");
+//     // if (canContinue == true) {
+//     //          $("#advanceButton").attr("disabled", false);
+//     //     } else {
+//     //         canContinue.onchange = function() {
+//     //             if (canContinue.value == "true") {
+//     //                 $("#continueButton").attr("disabled", false);
+//     //             } else {
+//     //                 $("#continueButton").attr("disabled", true);
+//     //             }
+//     //         }
+//     //     }
+// } , 100);
+
+
+
+var currentSceneMetadata = {};
+
 
 socket.on("activate_scene", function(data) {
+    console.log("Activating scene", data.scene_id)
     activateScene(data);
 });
 
@@ -478,30 +439,178 @@ socket.on("terminate_scene", function(data) {
 
 
 function activateScene(data) {
-    if (data.scene_type == "StaticScene") {
-        startStaticScene(data);
-    } else if (data.scene_type == "EndScene") {
+    console.log(data);
+    currentSceneMetadata = data;
+    if (data.scene_type == "EndScene") {
         startEndScene(data);
     } else if (data.scene_type == "GymScene") {
         startGymScene(data);
+    } else {
+        // Treat all other scenes as static scenes
+        //if (data.scene_type == "StaticScene" || data.scene_type == "StartScene") {
+    //     startStaticScene(data);
+    // } else
+        startStaticScene(data);
     }
 };
 
-function terminateScene() {
-    if (data.scene_type == "StaticScene") {
-        terminateStaticScene(data);
-    } else if (data.scene_type == "EndScene") {
-        terminateStartEndScene(data);
+
+function startStaticScene(data) {
+    // In the Static and Start scenes, we only show
+    // the advanceButton, sceneHeader, and sceneBody
+    $("#sceneHeader").show();
+    $("#sceneBody").show();
+
+    $("#sceneHeader").html(data.scene_header);
+    $("#sceneBody").html(data.scene_body);
+
+    $("#advanceButton").attr("disabled", false);
+    $("#advanceButton").show();
+
+};
+
+function startEndScene(data) {
+
+    $("#sceneHeader").show();
+    $("#sceneBody").show();
+
+    $("#sceneHeader").html(data.scene_header);
+    $("#sceneBody").html(data.scene_body);
+    
+    if (data.url !== undefined) {
+        $("#redirectButton").show();
+
+        let url = data.url;
+
+        if (data.append_subject_id) {
+            url = url + subjectName;
+        }
+
+        $("#redirectButton").show();
+
+        $("#redirectButton").on("click", function() {
+            // Replace this with the URL you want to redirect to
+            redirect_subject(url);
+        });
+    };
+
+};
+
+function startGymScene(data) {
+    enableStartRefreshInterval();
+
+    // First, check if we need to initialize Pyodide
+    if (data.run_through_pyodide) {
+        initializePyodideRemoteGame(data);
+        enableCheckPyodideDone();
+    };
+
+
+    // Set the text that we'll display:
+    $("#sceneHeader").html(data.scene_header);
+    $("#sceneBody").html(data.scene_body);
+
+
+    // Next, we display the startButton, header, and body
+    $("#sceneHeader").show();
+    $("#sceneBody").show();
+    $("#startButton").show();
+
+};
+
+
+function terminateScene(data) {
+    if (data.scene_type == "EndScene") {
+        terminateEndScene(data);
     } else if (data.scene_type == "GymScene") {
         terminateGymScene(data);
+    } else {
+        // (data.scene_type == "StaticScene" || data.scene_type == "StartScene" || data.scene_type == "EndScene")
+        // Treat all other scenes as static scenes
+        terminateStaticScene(data);
     }
 }
 
+function terminateStaticScene(data) {
+    $("#sceneHeader").hide();
+    $("#sceneBody").hide();
+    $("#advanceButton").hide();
+    $("#advanceButton").attr("disabled", true);
+}
+
+function terminateGymScene(data) {
+    ui_utils.disableKeyListener();
+    graphics_end();
+    $("#sceneHeader").show();
+    $("#sceneBody").show();
+    $("#startButton").hide();
+    $("#gameContainer").hide();
+};
+
+
+// Button Logic
 
 $(function() {
     $('#advanceButton').click( () => {
         $("#advanceButton").hide();
         $("#advanceButton").attr("disabled", true);
+        console.log("Emitting advance_scene")
         socket.emit("advance_scene", {session_id: window.sessionId});
     })
 })
+
+
+
+
+
+
+// GymScene
+
+function initializePyodideRemoteGame(data) {
+    pyodideRemoteGame = new RemoteGame(data);
+};
+
+var checkPyodideDone;
+function enableCheckPyodideDone() {
+    checkPyodideDone = setInterval(() => {
+        if (pyodideRemoteGame !== undefined && pyodideRemoteGame.isDone()) {
+            socket.emit("advance_scene", {session_id: window.sessionId});
+            pyodideRemoteGame = undefined;
+            clearInterval(refreshStartButton);
+        } 
+    }, 100);
+}
+
+
+
+// Check if we're enabling the start button
+var refreshStartButton;
+function enableStartRefreshInterval() {
+    refreshStartButton = setInterval(() => {
+        if (currentSceneMetadata.scene_type !== "GymScene") {
+            $("#startButton").hide();
+            $("#startButton").attr("disabled", true);
+        } else if (maxLatency != null && latencyMeasurements.length > 5 && curLatency > maxLatency) {
+            $("#instructions").hide();
+            $("#startButton").hide();
+            $("#startButton").attr("disabled", true);
+            $('#errorText').show()
+            $('#errorText').text("Sorry, your connection is too slow for this application. Please make sure you have a strong internet connection to ensure a good experience for all players in the game.");
+            clearInterval(refreshStartButton);
+        } else if (maxLatency != null && latencyMeasurements.length <= 5) {
+            $("#startButton").show();
+            $("#startButton").attr("disabled", true);
+        } 
+        else if (pyodideReadyIfUsing()){
+            $('#errorText').hide()
+            $("#startButton").show();
+            $("#startButton").attr("disabled", false);
+            clearInterval(refreshStartButton);
+        }
+    }, 500);
+}
+
+
+function redirect_subject(url) {
+    window.location.href = url;
+};

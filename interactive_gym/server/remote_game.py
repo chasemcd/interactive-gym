@@ -32,7 +32,12 @@ class GameStatus:
 
 
 class RemoteGameV2:
-    def __init__(self, scene: gym_scene.GymScene, game_id: int | None = None):
+    def __init__(
+        self,
+        scene: gym_scene.GymScene,
+        game_id: int | None = None,
+        ig_config: dict = {},
+    ):
         self.scene = scene
         self.status = GameStatus.Inactive
         self.lock = threading.Lock()
@@ -90,24 +95,24 @@ class RemoteGameV2:
         self.reset_event = eventlet.event.Event()
 
     def _build_env(self) -> None:
-        self.env = self.config.env_creator(
+        self.env = self.scene.env_creator(
             **self.config.env_config, render_mode="rgb_array"
         )
 
     def _load_policies(self) -> None:
         """Load and instantiates all policies"""
-        for agent_id, policy_id in self.config.policy_mapping.items():
+        for agent_id, policy_id in self.scene.policy_mapping.items():
             if policy_id == configuration_constants.PolicyTypes.Human:
                 self.human_players[agent_id] = utils.Available
             elif policy_id == configuration_constants.PolicyTypes.Random:
                 self.bot_players[agent_id] = policy_id
-            elif self.config.run_through_pyodide:
+            elif self.scene.run_through_pyodide:
                 continue
             else:
                 assert (
-                    self.config.load_policy_fn is not None
+                    self.scene.load_policy_fn is not None
                 ), "Must provide a method to load policies via policy name to RemoteConfig!"
-                self.bot_players[agent_id] = self.config.load_policy_fn(
+                self.bot_players[agent_id] = self.scene.load_policy_fn(
                     policy_id
                 )
 
@@ -124,7 +129,7 @@ class RemoteGameV2:
         while self.status == GameStatus.Active:
 
             # Game hangs if we don't do this
-            time.sleep(1 / self.config.fps)
+            time.sleep(1 / self.scene.fps)
 
             try:
                 state = self.state_queues[agent_id].get(block=False)
@@ -132,7 +137,7 @@ class RemoteGameV2:
                 continue
 
             policy = self.bot_players[agent_id]
-            action = self.config.policy_inference_fn(state, policy)
+            action = self.scene.policy_inference_fn(state, policy)
             self.enqueue_action(agent_id, action)
 
     def get_available_human_agent_ids(self) -> list[str]:
@@ -145,7 +150,7 @@ class RemoteGameV2:
 
     def is_at_player_capacity(self) -> bool:
         """Check if there are any available human player IDs."""
-        return not self.get_available_human_player_ids()
+        return not self.get_available_human_agent_ids()
 
     def cur_num_human_players(self) -> int:
         return len(
@@ -175,7 +180,8 @@ class RemoteGameV2:
         return ready
 
     def _build(self):
-        self._build_env()
+        if not self.scene.run_through_pyodide:
+            self._build_env()
         self._load_policies()
 
     def tear_down(self):
@@ -198,7 +204,7 @@ class RemoteGameV2:
             pass
 
     def add_player(self, player_id: str | int, identifier: str | int) -> None:
-        available_ids = self.get_available_human_player_ids()
+        available_ids = self.get_available_human_agent_ids()
         assert (
             player_id in available_ids
         ), f"Player ID is not available! Available IDs are: {available_ids}"
@@ -225,13 +231,13 @@ class RemoteGameV2:
                 action = self.pending_actions[sid].get(block=False)
             except queue.Empty:
                 if (
-                    self.config.action_population_method
+                    self.scene.action_population_method
                     == configuration_constants.ActionSettings.PreviousSubmittedAction
                 ):
                     action = self.prev_actions.get(pid)
 
             if action is None:
-                action = self.config.default_action
+                action = self.scene.default_action
 
             player_actions[pid] = action
 
@@ -240,28 +246,28 @@ class RemoteGameV2:
 
             # set default action
             if (
-                self.config.action_population_method
+                self.scene.action_population_method
                 == configuration_constants.ActionSettings.PreviousSubmittedAction
             ):
                 action = self.prev_actions.get(pid)
                 if action is None:
-                    action = self.config.default_action
-                player_actions[pid] = self.config.default_action
+                    action = self.scene.default_action
+                player_actions[pid] = self.scene.default_action
             elif (
-                self.config.action_population_method
+                self.scene.action_population_method
                 == configuration_constants.ActionSettings.DefaultAction
             ):
-                player_actions[pid] = self.config.default_action
+                player_actions[pid] = self.scene.default_action
             else:
                 raise NotImplementedError(
-                    f"Action population method logic not specified for method: {self.config.action_population_method}"
+                    f"Action population method logic not specified for method: {self.scene.action_population_method}"
                 )
 
             # If the bot is random, just sample the action space at
             # frame_skip intervals
             if (
                 bot == configuration_constants.PolicyTypes.Random
-                and self.tick_num % self.config.frame_skip == 0
+                and self.tick_num % self.scene.frame_skip == 0
             ):
                 if isinstance(self.env.action_space, spaces.Dict) or isinstance(
                     self.env.action_space, dict
@@ -293,7 +299,7 @@ class RemoteGameV2:
             rewards if isinstance(rewards, dict) else {"reward": rewards}
         )
 
-        if self.tick_num % self.config.frame_skip == 0:
+        if self.tick_num % self.scene.frame_skip == 0:
             self.enqueue_observations()
 
         if not isinstance(rewards, dict):
@@ -312,7 +318,7 @@ class RemoteGameV2:
 
         self.tick_num += 1
         if terminateds or truncateds:
-            if self.episode_num < self.config.num_episodes:
+            if self.episode_num < self.scene.num_episodes:
                 self.status = GameStatus.Reset
             else:
                 self.status = GameStatus.Done

@@ -18,6 +18,8 @@ import redis
 from eventlet import queue
 
 from interactive_gym.utils.typing import SubjectID, GameID, SceneID
+from interactive_gym.scenes import gym_scene
+from interactive_gym.server import game_manager as gm
 
 
 try:
@@ -38,6 +40,30 @@ from interactive_gym.server import remote_game, utils
 from interactive_gym.scenes import stager
 from interactive_gym.server import game_manager as gm
 
+
+def setup_logger(name, log_file, level=logging.INFO):
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    handler = logging.FileHandler(log_file)
+    handler.setFormatter(formatter)
+
+    # Create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setFormatter(
+        formatter
+    )  # Setting the formatter for the console handler as well
+
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.addHandler(handler)
+    logger.addHandler(ch)
+    logger.propagate = False
+
+    return logger
+
+
+logger = setup_logger(__name__, "./iglog.log", level=logging.DEBUG)
 
 CONFIG = remote_config.RemoteConfig()
 
@@ -66,6 +92,7 @@ SESSION_ID_TO_SUBJECT_ID = utils.ThreadSafeDict()
 
 
 def get_subject_id_from_session_id(session_id: str) -> SubjectID:
+    print("session_id", session_id, SESSION_ID_TO_SUBJECT_ID)
     return SESSION_ID_TO_SUBJECT_ID.get(session_id, None)
 
 
@@ -119,6 +146,7 @@ def index(*args):
 
 @app.route("/<subject_id>")
 def user_index(subject_id):
+    global STAGERS, SESSION_ID_TO_SUBJECT_ID, SUBJECTS
 
     if subject_id in PROCESSED_SUBJECT_NAMES:
         return (
@@ -126,60 +154,59 @@ def user_index(subject_id):
             404,
         )
 
-    STAGERS[subject_id] = GENERIC_STAGER.build_instance()
-    STAGERS[subject_id].start()
+    SUBJECTS[subject_id] = threading.Lock()
 
-    instructions_html = ""
-    if CONFIG.instructions_html_file is not None:
-        try:
-            with open(CONFIG.instructions_html_file, encoding="utf-8") as f:
-                instructions_html = f.read()
-        except FileNotFoundError:
-            instructions_html = f"<p> Unable to load instructions file {CONFIG.instructions_html_file}.</p>"
+    participant_stager = GENERIC_STAGER.build_instance()
+    STAGERS[subject_id] = participant_stager
+    participant_stager.start(socketio)
+
+    participant_stager = STAGERS[subject_id]
+    start_scene = participant_stager.current_scene
 
     return flask.render_template(
         "index.html",
         async_mode=socketio.async_mode,
-        welcome_header_text=CONFIG.welcome_header_text,
-        welcome_text=CONFIG.welcome_text,
-        instructions_html=instructions_html,
-        game_header_text=CONFIG.game_header_text,
-        game_page_text=CONFIG.game_page_text,
-        final_page_header_text=CONFIG.final_page_header_text,
-        final_page_text=CONFIG.final_page_text,
+        scene_header=start_scene.scene_header,
+        scene_body=start_scene.scene_body,
         subject_id=subject_id,
     )
 
 
-@socketio.on("register_subject_id")
-def register_subject_id(data):
+@socketio.on("register_subject")
+def register_subject(data):
+    global SESSION_ID_TO_SUBJECT_ID
     """Ties the subject name in the URL to the flask request sid"""
     subject_id = data["subject_id"]
     sid = flask.request.sid
     flask.session["subject_id"] = subject_id
     SESSION_ID_TO_SUBJECT_ID[sid] = subject_id
-    logger.info(f"Registered seesion ID {sid} with subject {subject_id}")
+    print("registering subject")
+    logger.info(f"Registered session ID {sid} with subject {subject_id}")
 
 
-@socketio.on("connect")
-def on_connect():
-    subject_id = flask.request.sid
+# @socketio.on("connect")
+# def on_connect():
+#     global SESSION_ID_TO_SUBJECT_ID
 
-    if subject_id in SUBJECTS:
-        return
+#     subject_id = get_subject_id_from_session_id(flask.request.sid)
 
-    SUBJECTS[subject_id] = threading.Lock()
+#     if subject_id in SUBJECTS:
+#         return
 
-    # Send the current server session ID to the client
-    flask_socketio.emit(
-        "server_session_id",
-        {"server_session_id": SERVER_SESSION_ID},
-        room=subject_id,
-    )
+#     SUBJECTS[subject_id] = threading.Lock()
+
+#     # TODO(chase): reenable session checkings
+#     # Send the current server session ID to the client
+#     # flask_socketio.emit(
+#     #     "server_session_id",
+#     #     {"server_session_id": SERVER_SESSION_ID},
+#     #     room=subject_id,
+#     # )
 
 
 @socketio.on("advance_scene")
-def advance_scene():
+def advance_scene(data):
+    global GAME_MANAGERS
     """Advance the scene to the next one."""
     subject_id = get_subject_id_from_session_id(flask.request.sid)
 
@@ -187,25 +214,28 @@ def advance_scene():
     if participant_stager is None:
         raise ValueError(f"No stager found for subject {subject_id}")
 
-    participant_stager.advance()
+    participant_stager.advance(socketio)
+
+    # If the current scene is a GymScene, we'll instantiate a
+    # corresponding GameManager to handle game logic, connections,
+    # and waiting rooms.
+    current_scene = participant_stager.get_current_scene()
+    if isinstance(current_scene, gym_scene.GymScene):
+        game_manager = gm.GameManager(
+            scene=current_scene, ig_config=CONFIG, sio=socketio
+        )
+        GAME_MANAGERS[current_scene.scene_id] = game_manager
 
 
 @socketio.on("join_game")
 def join_game(data):
+
     subject_id = get_subject_id_from_session_id(flask.request.sid)
     client_session_id = data.get("server_session_id")
 
     # Validate session
-    if not is_valid_session(client_session_id):
-        logger.warning(
-            f"Invalid session for {subject_id}. Got {client_session_id} but expected {SERVER_SESSION_ID}"
-        )
-        flask_socketio.emit(
-            "invalid_session",
-            {"message": "Session is invalid. Please reconnect."},
-            room=subject_id,
-        )
-        return
+    # if not is_valid_session(client_session_id, subject_id, "join_game"):
+    #     return
 
     with SUBJECTS[subject_id]:
 
@@ -234,28 +264,22 @@ def join_game(data):
         )
 
 
-@socketio.on("request_pyodide_initialization")
-def pyodide_initialization(data):
-    """If we're using Pyodide, emit the initialization event.
+def is_valid_session(
+    client_session_id: str, subject_id: SubjectID, context: str
+) -> bool:
+    valid_session = client_session_id == SERVER_SESSION_ID
 
-    TODO(chase): This should allow Pyodide to persist across scenes,
-    so we want to iterate through _all_ the scenes and check for Pyodide usage
-    and the packages to install.
-    """
-    subject_id = get_subject_id_from_session_id(flask.request.sid)
-    participant_stager = STAGERS.get(subject_id, None)
-    current_scene = participant_stager.current_scene
-
-    if CONFIG.run_through_pyodide:
-        socketio.emit(
-            "initialize_pyodide_remote_game",
-            {"config": current_scene.to_dict(serializable=True)},
+    if not valid_session:
+        logger.warning(
+            f"Invalid session for {subject_id} in {context}. Got {client_session_id} but expected {SERVER_SESSION_ID}"
         )
-        return
+        flask_socketio.emit(
+            "invalid_session",
+            {"message": "Session is invalid. Please reconnect."},
+            room=subject_id,
+        )
 
-
-def is_valid_session(client_session_id):
-    return client_session_id == SERVER_SESSION_ID
+    return valid_session
 
 
 @socketio.on("leave_game")
@@ -265,20 +289,17 @@ def leave_game(data):
 
     # Validate session
     client_reported_session_id = data.get("session_id")
-    if not is_valid_session(client_reported_session_id):
-        flask_socketio.emit(
-            "invalid_session",
-            {"message": "Session is invalid. Please refresh the page."},
-            room=subject_id,
-        )
-        return
+    # if not is_valid_session(
+    #     client_reported_session_id, subject_id, "leave_game"
+    # ):
+    #     return
 
     with SUBJECTS[subject_id]:
         # If the participant doesn't have a Stager, something is wrong at this point.
         participant_stager = STAGERS.get(subject_id, None)
         if participant_stager is None:
             logger.error(
-                f"Subject {subject_id} tried to join a game but they don't have a stager."
+                f"Subject {subject_id} tried to leave a game but they don't have a stager."
             )
             return
 
@@ -290,41 +311,41 @@ def leave_game(data):
         PROCESSED_SUBJECT_NAMES.append(subject_id)
 
 
-@socketio.on("disconnect")
-def on_disconnect():
-    global SUBJECTS
-    subject_id = get_subject_id_from_session_id(flask.request.sid)
+# @socketio.on("disconnect")
+# def on_disconnect():
+#     global SUBJECTS
+#     subject_id = get_subject_id_from_session_id(flask.request.sid)
 
-    participant_stager = STAGERS.get(subject_id, None)
-    if participant_stager is None:
-        logger.error(
-            f"Subject {subject_id} tried to join a game but they don't have a Stager."
-        )
-        return
+#     participant_stager = STAGERS.get(subject_id, None)
+#     if participant_stager is None:
+#         logger.error(
+#             f"Subject {subject_id} tried to join a game but they don't have a Stager."
+#         )
+#         return
 
-    current_scene = participant_stager.current_scene
-    game_manager = GAME_MANAGERS.get(current_scene.scene_id, None)
+#     current_scene = participant_stager.current_scene
+#     game_manager = GAME_MANAGERS.get(current_scene.scene_id, None)
 
-    # Get the current game for the participant, if any.
-    game = game_manager.get_subject_game(subject_id)
+#     # Get the current game for the participant, if any.
+#     game = game_manager.get_subject_game(subject_id)
 
-    if game is None:
-        logger.info(
-            f"Subject {subject_id} disconnected with no coresponding game."
-        )
-    else:
-        logger.info(
-            f"Subject {subject_id} disconnected, Game ID: {game.game_id}.",
-        )
+#     if game is None:
+#         logger.info(
+#             f"Subject {subject_id} disconnected with no coresponding game."
+#         )
+#     else:
+#         logger.info(
+#             f"Subject {subject_id} disconnected, Game ID: {game.game_id}.",
+#         )
 
-    with SUBJECTS[subject_id]:
-        game_manager.leave_game(subject_id=subject_id)
+#     with SUBJECTS[subject_id]:
+#         game_manager.leave_game(subject_id=subject_id)
 
-    del SUBJECTS[subject_id]
-    if subject_id in SUBJECTS:
-        logger.warning(
-            f"Tried to remove {subject_id} but it's still in SUBJECTS."
-        )
+#     del SUBJECTS[subject_id]
+#     if subject_id in SUBJECTS:
+#         logger.warning(
+#             f"Tried to remove {subject_id} but it's still in SUBJECTS."
+#         )
 
 
 @socketio.on("send_pressed_keys")
@@ -332,34 +353,35 @@ def send_pressed_keys(data):
     """
     Translate pressed keys into game action and add them to the pending_actions queue.
     """
-    sess_id = flask.request.sid
-    subject_id = get_subject_id_from_session_id(sess_id)
+    return
+    # # sess_id = flask.request.sid
+    # subject_id = get_subject_id_from_session_id(flask.request.sid)
+    # # subject_id = flask.session.get("subject_id")
+    # # print(subject_id, sess_id, STAGERS)
 
-    participant_stager = STAGERS.get(subject_id, None)
-    if participant_stager is None:
-        logger.error(
-            f"Subject {subject_id} tried to join a game but they don't have a Stager."
-        )
-        return
+    # # TODO(chase): figure out why we're getting a different session ID here...
+    # participant_stager = STAGERS.get(subject_id, None)
+    # if participant_stager is None:
+    #     logger.error(
+    #         f"Pressed keys requested for {subject_id} but they don't have a Stager."
+    #     )
+    #     return
 
-    current_scene = participant_stager.current_scene
-    game_manager = GAME_MANAGERS.get(current_scene.scene_id, None)
-    game = game_manager.get_subject_game(subject_id)
+    # current_scene = participant_stager.current_scene
+    # game_manager = GAME_MANAGERS.get(current_scene.scene_id, None)
+    # # game = game_manager.get_subject_game(subject_id)
 
-    client_reported_server_session_id = data.get("server_session_id")
-    if not is_valid_session(client_reported_server_session_id):
-        flask_socketio.emit(
-            "invalid_session",
-            {"message": "Session is invalid. Please reconnect."},
-            room=sess_id,
-        )
-        return
+    # client_reported_server_session_id = data.get("server_session_id")
+    # if not is_valid_session(
+    #     client_reported_server_session_id, subject_id, "send_pressed_keys"
+    # ):
+    #     return
 
-    pressed_keys = data["pressed_keys"]
+    # pressed_keys = data["pressed_keys"]
 
-    game_manager.process_pressed_keys(
-        subject_id=subject_id, pressed_keys=pressed_keys
-    )
+    # game_manager.process_pressed_keys(
+    #     subject_id=subject_id, pressed_keys=pressed_keys
+    # )
 
 
 @socketio.on("reset_complete")
@@ -367,13 +389,8 @@ def handle_reset_complete(data):
     subject_id = get_subject_id_from_session_id(flask.request.sid)
     client_session_id = data.get("session_id")
 
-    if not is_valid_session(client_session_id):
-        flask_socketio.emit(
-            "invalid_session",
-            {"message": "Session is invalid. Please reconnect."},
-            room=subject_id,
-        )
-        return
+    # if not is_valid_session(client_session_id, subject_id, "reset_complete"):
+    #     return
 
     participant_stager = STAGERS.get(subject_id, None)
     game_manager = GAME_MANAGERS.get(
@@ -450,7 +467,7 @@ def on_exit():
 
 
 def run(config):
-    global app, CONFIG, logger
+    global app, CONFIG, logger, GENERIC_STAGER
     CONFIG = config
     GENERIC_STAGER = config.stager
 

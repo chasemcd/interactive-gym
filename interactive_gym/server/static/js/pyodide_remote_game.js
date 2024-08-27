@@ -19,6 +19,10 @@ export class RemoteGame {
         this.state = null;
     }
 
+    isDone(){
+        return this.state === "done";
+    }
+
     async initialize() {
         this.pyodide = await loadPyodide();
 

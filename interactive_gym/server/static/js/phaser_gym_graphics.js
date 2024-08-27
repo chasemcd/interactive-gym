@@ -71,7 +71,7 @@ class GraphicsManager {
         game_config.animation_configs = graphics_config.animation_configs;
         game_config.parent = graphics_config.parent;
         game_config.fps = graphics_config.fps;
-        game_config.interactive_gym_config = graphics_config.interactive_gym_config;
+        game_config.scene_metadata = graphics_config.scene_metadata;
         this.game = new Phaser.Game(game_config);
         // TODO(chase): Figure out proper resizing. Sprites must be resized as well but they aren't if we do this.
         // this.resizeGame();
@@ -111,7 +111,7 @@ class GymScene extends Phaser.Scene {
         this.animation_configs = config.animation_configs;
         this.background = config.background;
         this.last_rendered_step = -1;
-        this.interactive_gym_config = config.interactive_gym_config;
+        this.scene_metadata = config.scene_metadata;
         this.pyodide_remote_game = config.pyodide_remote_game;
         this.isProcessingPyodide = false;
     }
@@ -205,16 +205,16 @@ class GymScene extends Phaser.Scene {
 
         // Identify which policy corresponds to the human by checking for the human value in policy_mapping
         let human_policy_agent_id = Object.keys(
-            this.interactive_gym_config.policy_mapping
+            this.scene_metadata.policy_mapping
         ).find(
-                key => this.interactive_gym_config.policy_mapping[key] == "human"
+                key => this.scene_metadata.policy_mapping[key] == "human"
         );
 
         // Get the human action and populate the actions dictionary with corresponding agent id key
         actions[human_policy_agent_id] = this.getHumanAction();
         
         // Loop over the policy mapping and populate the actions dictionary with bot actions
-        for (let agentID in Object.keys(this.interactive_gym_config.policy_mapping)) {
+        for (let agentID in Object.keys(this.scene_metadata.policy_mapping)) {
             // Skip if the agent is the human
             if (agentID == human_policy_agent_id) {
                 continue;
@@ -226,10 +226,10 @@ class GymScene extends Phaser.Scene {
     }
 
     getBotAction(agentID) {
-        let policy_mapping = this.interactive_gym_config.policy_mapping;
+        let policy_mapping = this.scene_metadata.policy_mapping;
         
         // If the bot is action on this step (according to frame skip), calculate an action.
-        if (this.pyodide_remote_game.step_num % this.interactive_gym_config.frame_skip == 0) {
+        if (this.pyodide_remote_game.step_num % this.scene_metadata.frame_skip == 0) {
             let policyID = policy_mapping[agentID];
             // Check if the policy mapping ends with .onnx to indicate an ONNX model
             if (policyID.endsWith(".onnx")) {
@@ -238,7 +238,7 @@ class GymScene extends Phaser.Scene {
                 this.queryBotPolicy(agentID, policyID, observation);
             } else if (policyID === "random") {
                 // If the policy is random, return a random action
-                return Math.floor(Math.random() * Object.keys(this.interactive_gym_config.action_mapping).length + 1) - 1;
+                return Math.floor(Math.random() * Object.keys(this.scene_metadata.action_mapping).length + 1) - 1;
             }
         } 
 
@@ -250,13 +250,13 @@ class GymScene extends Phaser.Scene {
 
             // If we're using previous_action as population method, return the previous action
             if (
-                this.interactive_gym_config.action_population_method === "previous_submitted_action" && 
+                this.scene_metadata.action_population_method === "previous_submitted_action" && 
                 previousSubmittedActions[agentID] !== undefined
             ) {
                 return previousSubmittedActions[agentID];
             } else {
                 // If we're using default_action as population method, return the default action
-                return this.interactive_gym_config.default_action;
+                return this.scene_metadata.default_action;
             }
         } 
     }
@@ -276,28 +276,28 @@ class GymScene extends Phaser.Scene {
         let human_action;
 
         // If single_keystroke, we'll get the action that was added to the buffer when the key was pressed
-        if (this.interactive_gym_config.input_mode === "single_keystroke") {
+        if (this.scene_metadata.input_mode === "single_keystroke") {
             if (humanKeyPressBuffer.length > 0) {
-                human_action = this.interactive_gym_config.action_mapping[humanKeyPressBuffer.shift()];
+                human_action = this.scene_metadata.action_mapping[humanKeyPressBuffer.shift()];
                 if (human_action == undefined) {
-                    human_action = this.interactive_gym_config.default_action;
+                    human_action = this.scene_metadata.default_action;
                 }
             } else {
-                human_action = this.interactive_gym_config.default_action;
+                human_action = this.scene_metadata.default_action;
             }
-        } else if (this.interactive_gym_config.input_mode === "pressed_keys") {
+        } else if (this.scene_metadata.input_mode === "pressed_keys") {
             // If pressed_keys, we get the (potentially composite) action from the currently pressed keys
             if (pressedKeys.length == 0) {
                 // if no keys are pressed, we'll use the default action
-                human_action = this.interactive_gym_config.default_action;
+                human_action = this.scene_metadata.default_action;
             } else if (pressedKeys.length == 1) {
-                human_action = this.interactive_gym_config.action_mapping[Object.keys(pressedKeys)[0]];
+                human_action = this.scene_metadata.action_mapping[Object.keys(pressedKeys)[0]];
                 if (human_action == undefined) {
-                    human_action = this.interactive_gym_config.default_action;
+                    human_action = this.scene_metadata.default_action;
                 }
             } else {
                 // multiple keys are pressed so check for a composite action
-                human_action = this.interactive_gym_config.action_mapping[this.generateCompositeAction()[0]];
+                human_action = this.scene_metadata.action_mapping[this.generateCompositeAction()[0]];
             }
         }
 
@@ -307,14 +307,14 @@ class GymScene extends Phaser.Scene {
     generateCompositeAction() {
         // TODO: Set this in the config so we don't recalculate every time
         const maxCompositeActionSize = Math.max(
-            ...Object.keys(this.interactive_gym_config.action_mapping)
+            ...Object.keys(this.scene_metadata.action_mapping)
                 .filter(key => Array.isArray(key))
                 .map(key => key.length),
             0
         );
     
         if (maxCompositeActionSize > 1) {
-            const compositeActions = Object.keys(this.interactive_gym_config)
+            const compositeActions = Object.keys(this.scene_metadata)
                 .filter(key => Array.isArray(key))
                 .map(key => key.sort());
     

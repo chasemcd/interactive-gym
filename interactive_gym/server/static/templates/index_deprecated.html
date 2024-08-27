@@ -65,30 +65,8 @@
             margin-top: 20px;
         }
 
-        #redirectButton {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 20px;
-            background-color: #b4b6b6; /* Green color for start */
-            color: black;
-            border: none;
-            padding: 15px 32px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
         /* Style for the start button when it's disabled */
         #startButton:disabled {
-            background-color: #A9A9A9; /* Grey color to indicate disabled */
-            color: #7F7F7F; /* Optional: Darker text color for better contrast */
-            cursor: not-allowed; /* Change cursor to indicate the button is disabled */
-        }
-
-        #advanceButton:disabled {
             background-color: #A9A9A9; /* Grey color to indicate disabled */
             color: #7F7F7F; /* Optional: Darker text color for better contrast */
             cursor: not-allowed; /* Change cursor to indicate the button is disabled */
@@ -104,7 +82,7 @@
             font-size: 20px;
         }
 
-        #resetGame, #waitroomText, #hudText {
+        #reset-game, #waitroomText, #hudText {
             background-color: white; /* White background color */
             border: 2px solid black; /* Black border */
             padding: 10px; /* Space around the text */
@@ -159,13 +137,8 @@
 
     <div class="text-container">
         <!-- Texts for start -->
-        <h1 id="sceneHeader">{{ scene_header | safe }}</h1>
-        
-        
-        <div id="sceneBody" style="text-align: left;">
-            {{ scene_body | safe }}
-        </div>
-
+        <h1 id="welcomeHeader">{{ welcome_header_text }}</h1>
+        <p id="welcomeText">{{ welcome_text }}</p>
 
         <p id="waitroomText" style="display: none;"> {{ waitroomText }}</p>
 
@@ -173,7 +146,11 @@
         <h1 id="gameHeaderText" style="display: none;">{{ game_header_text }}</h1>
         <p id="gamePageText" style="display: none;">{{ game_page_text | safe }}</p>
 
-        <div id="resetGame", class="text-center" style="display:none"></div>
+        <!-- Texts for final page, initially hidden -->
+        <h1 id="finalPageHeaderText" style="display: none;">{{ final_page_header_text }}</h1>
+        <p id="finalPageText" style="display: none;">{{ final_page_text }}</p>
+
+        <div id="reset-game", class="text-center" style="display:none"></div>
         <div id="invalidSession", class="text-center" style="display:none"> "Invalid Session. Please refresh the page!</div>
 
         <div id="errorText" style="display: none;"></div>
@@ -182,16 +159,18 @@
         <!-- Game container -->
         <div id="gameContainer"></div>
 
-
+        <div id="sceneBody" style="text-align: left;">
+            {{ scene_body | safe }}
+        </div>
 
         <!-- Start button -->
-        <button id="startButton" disabled style="display: none;">Start</button>
-
-        <!-- Redirect button -->
-        <button id="redirectButton" enabled style="display: none;">Finish</button>
+        <button id="startButton" disabled>Start</button>
 
         <!-- Advance (continue) button -->
         <button id="advanceButton" enabled>Continue</button>
+
+
+
 
     </div>
 

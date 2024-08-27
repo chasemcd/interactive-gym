@@ -95,8 +95,8 @@ class GameManager:
             # Even if we're using Pyodide, we'll still instantiate a RemoteGame, since
             # it'll track the players within a game.
             # TODO(chase): check if we actually do need this for Pyodide-based games...
-            remote_game = remote_game.RemoteGameV2(
-                self.scene, config=self.ig_config, game_id=game_id
+            game = remote_game.RemoteGameV2(
+                self.scene, ig_config=self.ig_config, game_id=game_id
             )
 
             # Instantiate Game and add it to all the necessary data structures
@@ -106,7 +106,7 @@ class GameManager:
             #     remote_game=remote_game,
             #     room=room,
             # )
-            self.games[game_id] = remote_game
+            self.games[game_id] = game
             self.waiting_games.append(game_id)
 
             # The timeout is the wall clock time in which the waiting room will time out and
@@ -119,12 +119,13 @@ class GameManager:
             self.reset_events[game_id] = utils.ThreadSafeDict()
 
         except Exception as e:
-            logger.error(f"Error in `create_game`: {e}")
+            logger.error(f"Error in `_create_game`: {e}")
             self.sio.emit(
                 "create_game_failed",
                 {"error": e.__repr__()},
                 room=flask.request.sid,
             )
+            raise e
 
     def _remove_game(self, game_id: GameID) -> None:
         """Remove a game from the server."""
@@ -159,9 +160,7 @@ class GameManager:
             self._create_game()
 
         game: remote_game.RemoteGameV2 = self.games[self.waiting_games[0]]
-        logger.info(
-            f"Adding subject {subject_id} to game {game.game_id} (room: {game.room})."
-        )
+        logger.info(f"Adding subject {subject_id} to game {game.game_id}")
         with game.lock:
             self.subject_games[subject_id] = game.game_id
             self.subject_rooms[subject_id] = game.game_id
@@ -173,11 +172,15 @@ class GameManager:
                 random.choice(available_human_agent_ids), subject_id
             )
 
-            if self.ig_config.game_page_html_fn is not None:
+            if self.scene.game_page_html_fn is not None:
+                print(
+                    "Emitting update_game_page_text",
+                    self.scene.game_page_html_fn(game, subject_id),
+                )
                 self.sio.emit(
                     "update_game_page_text",
                     {
-                        "game_page_text": self.ig_config.game_page_html_fn(
+                        "game_page_text": self.scene.game_page_html_fn(
                             game, subject_id
                         )
                     },
@@ -344,17 +347,11 @@ class GameManager:
         )
         self.active_games.add(game.game_id)
 
-        emit_message = (
-            "start_game"
-            if not self.scene.run_through_pyodide
-            else "start_game_pyodide"
-        )
-
         self.sio.emit(
-            emit_message,
+            "start_game",
             {
-                "scene": self.scene.to_dict(serializable=True),
-                "ig_config": self.ig_config,
+                "scene_metadata": self.scene.scene_metadata,
+                # "experiment_config": self.ig_config.to_dict(),
             },
             room=game.game_id,
         )
