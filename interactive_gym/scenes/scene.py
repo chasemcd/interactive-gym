@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import json
 import random
 
 import flask_socketio
@@ -17,16 +18,18 @@ class Scene:
     An Interactive Gym Scene defines an stage of interaction that a participant will have with the application.
     """
 
-    def __init__(self, scene_id: str, **kwargs):
+    def __init__(self, scene_id: str, ig_config: dict, **kwargs):
         self.scene_id = scene_id
+        self.ig_config = ig_config
         self.sio: flask_socketio.SocketIO | None = None
         self.status = SceneStatus.Inactive
 
-    def build(self, sio: flask_socketio.SocketIO) -> Scene:
+    def build(self) -> list[Scene]:
         """
         Build the Scene.
         """
-        return copy.deepcopy(self)
+        scene_copy = copy.deepcopy(self)
+        return [scene_copy]
 
     def unpack(self) -> list[Scene]:
         """
@@ -38,16 +41,16 @@ class Scene:
         """
         Activate the current scene.
         """
-        self.sio = sio
         self.status = SceneStatus.Active
-        self.sio.emit("activate_scene", {"scene": self.scene_metadata()})
+        self.sio = sio
+        self.sio.emit("activate_scene", {**self.scene_metadata})
 
     def deactivate(self):
         """
         Deactivate the current scene.
         """
         self.status = SceneStatus.Done
-        self.sio.emit("deactivate_scene", {"status": self.status})
+        self.sio.emit("terminate_scene", {**self.scene_metadata})
 
     @property
     def scene_metadata(self) -> dict:
@@ -58,6 +61,58 @@ class Scene:
             "scene_id": self.scene_id,
             "scene_type": self.__class__.__name__,
         }
+
+    @property
+    def scene_metadata(self) -> dict:
+        """
+        Return the metadata for the current scene that will be passed through the Flask app.
+        """
+        vv = serialize_dict(vars(self))
+        metadata = copy.deepcopy(vv)
+        return {
+            "scene_id": self.scene_id,
+            "scene_type": self.__class__.__name__,
+            **metadata,
+        }
+
+
+def serialize_dict(data):
+    """
+    Serialize a dictionary to JSON, removing unserializable keys recursively.
+
+    :param data: Dictionary to serialize.
+    :return: Serialized object with unserializable elements removed.
+    """
+    if isinstance(data, dict):
+        # Use dictionary comprehension to process each key-value pair
+        return {
+            key: serialize_dict(value)
+            for key, value in data.items()
+            if is_json_serializable(value)
+        }
+    elif isinstance(data, list):
+        # Use list comprehension to process each item
+        return [
+            serialize_dict(item) for item in data if is_json_serializable(item)
+        ]
+    elif is_json_serializable(data):
+        return data
+    else:
+        return None  # or some other default value
+
+
+def is_json_serializable(value):
+    """
+    Check if a value is JSON serializable.
+
+    :param value: The value to check.
+    :return: True if the value is JSON serializable, False otherwise.
+    """
+    try:
+        json.dumps(value)
+        return True
+    except (TypeError, OverflowError):
+        return False
 
 
 class SceneWrapper:
