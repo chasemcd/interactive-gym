@@ -36,7 +36,7 @@ class RemoteGameV2:
         self,
         scene: gym_scene.GymScene,
         game_id: int | None = None,
-        ig_config: dict = {},
+        experiment_config: dict = {},
     ):
         self.scene = scene
         self.status = GameStatus.Inactive

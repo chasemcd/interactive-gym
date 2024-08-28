@@ -222,7 +222,7 @@ def advance_scene(data):
     current_scene = participant_stager.get_current_scene()
     if isinstance(current_scene, gym_scene.GymScene):
         game_manager = gm.GameManager(
-            scene=current_scene, ig_config=CONFIG, sio=socketio
+            scene=current_scene, experiment_config=CONFIG, sio=socketio
         )
         GAME_MANAGERS[current_scene.scene_id] = game_manager
 

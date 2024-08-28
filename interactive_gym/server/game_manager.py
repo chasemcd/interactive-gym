@@ -51,12 +51,12 @@ class GameManager:
     def __init__(
         self,
         scene: gym_scene.GymScene,
-        ig_config: remote_config.RemoteConfig,
+        experiment_config: remote_config.RemoteConfig,
         sio: flask_socketio.SocketIO,
     ):
         assert isinstance(scene, gym_scene.GymScene)
         self.scene = scene
-        self.ig_config = ig_config
+        self.experiment_config = experiment_config
         self.sio = sio
 
         # Data structure to save subjects by their socket id
@@ -96,7 +96,9 @@ class GameManager:
             # it'll track the players within a game.
             # TODO(chase): check if we actually do need this for Pyodide-based games...
             game = remote_game.RemoteGameV2(
-                self.scene, ig_config=self.ig_config, game_id=game_id
+                self.scene,
+                experiment_config=self.experiment_config,
+                game_id=game_id,
             )
 
             # Instantiate Game and add it to all the necessary data structures
@@ -351,7 +353,7 @@ class GameManager:
             "start_game",
             {
                 "scene_metadata": self.scene.scene_metadata,
-                # "experiment_config": self.ig_config.to_dict(),
+                # "experiment_config": self.experiment_config.to_dict(),
             },
             room=game.game_id,
         )
