@@ -18,9 +18,9 @@ class Scene:
     An Interactive Gym Scene defines an stage of interaction that a participant will have with the application.
     """
 
-    def __init__(self, scene_id: str, ig_config: dict, **kwargs):
+    def __init__(self, scene_id: str, experiment_config: dict, **kwargs):
         self.scene_id = scene_id
-        self.ig_config = ig_config
+        self.experiment_config = experiment_config
         self.sio: flask_socketio.SocketIO | None = None
         self.status = SceneStatus.Inactive
 

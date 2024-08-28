@@ -20,8 +20,10 @@ class GymScene(scene.Scene):
 
     """
 
-    def __init__(self, scene_id: str, ig_config: remote_config.RemoteConfig):
-        super().__init__(scene_id, ig_config)
+    def __init__(
+        self, scene_id: str, experiment_config: remote_config.RemoteConfig
+    ):
+        super().__init__(scene_id, experiment_config)
 
         # Environment
         self.env_creator: Callable | None = None
