@@ -53,7 +53,9 @@ action_mapping = {
     "ArrowUp": MoveUp,
     "ArrowDown": MoveDown,
     "w": PickupDrop,
+    "W": PickupDrop,
     "q": Toggle,
+    "Q": Toggle,
 }
 
 
