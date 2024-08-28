@@ -113,10 +113,10 @@ socket.on('connect', function() {
 
 socket.on('invalid_session', function(data) {
     alert(data.message);
-    $('#finalPageHeaderText').hide()
-    $('#finalPageText').hide()
-    $("#gameHeaderText").hide();
-    $("#gamePageText").hide();
+    // $('#finalPageHeaderText').hide()
+    // $('#finalPageText').hide()
+    // $("#gameHeaderText").hide();
+    // $("#gamePageText").hide();
     $("#gameContainer").hide();
     $("#invalidSession").show();
 });
@@ -363,10 +363,10 @@ socket.on('end_game', function(data) {
     ui_utils.disableKeyListener();
     socket.emit("leave_game", {session_id: window.sessionId});
 
-    $('#finalPageHeaderText').show()
-    $('#finalPageText').show()
-    $("#gameHeaderText").hide();
-    $("#gamePageText").hide();
+    // $('#finalPageHeaderText').show()
+    // $('#finalPageText').show()
+    // $("#gameHeaderText").hide();
+    // $("#gamePageText").hide();
     $("#gameContainer").hide();
 
     if (data.message != undefined) {
@@ -459,9 +459,12 @@ function startStaticScene(data) {
     // In the Static and Start scenes, we only show
     // the advanceButton, sceneHeader, and sceneBody
     $("#sceneHeader").show();
+    $("#sceneSubHeader").show();
+
     $("#sceneBody").show();
 
     $("#sceneHeader").html(data.scene_header);
+    $("#sceneSubHeader").html(data.scene_subheader);
     $("#sceneBody").html(data.scene_body);
 
     $("#advanceButton").attr("disabled", false);
@@ -472,9 +475,12 @@ function startStaticScene(data) {
 function startEndScene(data) {
 
     $("#sceneHeader").show();
+    $("#sceneSubHeader").show();
     $("#sceneBody").show();
 
     $("#sceneHeader").html(data.scene_header);
+    $("#sceneSubHeader").html(data.scene_subheader);
+
     $("#sceneBody").html(data.scene_body);
     
     if (data.url !== undefined) {
@@ -508,11 +514,13 @@ function startGymScene(data) {
 
     // Set the text that we'll display:
     $("#sceneHeader").html(data.scene_header);
+    $("#sceneSubHeader").html(data.scene_subheader);
     $("#sceneBody").html(data.scene_body);
 
 
     // Next, we display the startButton, header, and body
     $("#sceneHeader").show();
+    $("#sceneSubHeader").show();
     $("#sceneBody").show();
     $("#startButton").show();
 
@@ -533,7 +541,14 @@ function terminateScene(data) {
 
 function terminateStaticScene(data) {
     $("#sceneHeader").hide();
+    $("#sceneSubHeader").hide();
     $("#sceneBody").hide();
+
+    $("#sceneHeader").html("");
+    $("#sceneSubHeader").html("");
+    $("#sceneBody").html("");
+
+
     $("#advanceButton").hide();
     $("#advanceButton").attr("disabled", true);
 }
@@ -541,8 +556,16 @@ function terminateStaticScene(data) {
 function terminateGymScene(data) {
     ui_utils.disableKeyListener();
     graphics_end();
+    
     $("#sceneHeader").show();
+    $("#sceneHeader").html("");
+    
+    $("#sceneSubHeader").show();
+    $("#sceneSubHeader").html("");
+    
     $("#sceneBody").show();
+    $("#sceneBody").html("");
+    
     $("#startButton").hide();
     $("#gameContainer").hide();
 };

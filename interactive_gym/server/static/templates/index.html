@@ -7,9 +7,6 @@
 
 
         /* Apply 'Press Start 2P' only to specific headers */
-        #gameHeaderText, #finalPageHeaderText, #welcomeHeader {
-            font-family: 'Press Start 2P', cursive;
-        }
 
         /* General page styling */
         body, html {
@@ -161,6 +158,7 @@
         <!-- Texts for start -->
         <h1 id="sceneHeader">{{ scene_header | safe }}</h1>
         
+        <h2 id="sceneSubHeader">{{ scene_subheader | safe }}</h2>
         
         <div id="sceneBody" style="text-align: left;">
             {{ scene_body | safe }}
@@ -170,8 +168,8 @@
         <p id="waitroomText" style="display: none;"> {{ waitroomText }}</p>
 
         <!-- Texts for game, initially hidden -->
-        <h1 id="gameHeaderText" style="display: none;">{{ game_header_text }}</h1>
-        <p id="gamePageText" style="display: none;">{{ game_page_text | safe }}</p>
+        <!-- <h1 id="gameHeaderText" style="display: none;">{{ game_header_text }}</h1> -->
+        <!-- <p id="gamePageText" style="display: none;">{{ game_page_text | safe }}</p> -->
 
         <div id="resetGame", class="text-center" style="display:none"></div>
         <div id="invalidSession", class="text-center" style="display:none"> "Invalid Session. Please refresh the page!</div>
@@ -181,7 +179,6 @@
 
         <!-- Game container -->
         <div id="gameContainer"></div>
-
 
 
         <!-- Start button -->

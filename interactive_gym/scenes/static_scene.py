@@ -32,13 +32,16 @@ class StaticScene(scene.Scene):
 
     """
 
-    def __init__(self, scene_id: str, ig_config: dict):
-        super().__init__(scene_id, ig_config)
-        self.html_body: str = ""
+    def __init__(self, scene_id: str, experiment_config: dict):
+        super().__init__(scene_id, experiment_config)
+        self.scene_header: str = ""
+        self.scene_subheader: str = ""
+        self.self_body: str = ""
 
     def display(
         self,
         scene_header: str = NotProvided,
+        scene_subheader: str = NotProvided,
         scene_body: str = NotProvided,
         scene_body_filepath: str = NotProvided,
     ) -> StaticScene:
@@ -68,6 +71,9 @@ class StaticScene(scene.Scene):
 
         if scene_header is not NotProvided:
             self.scene_header = scene_header
+
+        if scene_subheader is not NotProvided:
+            self.scene_subheader = scene_subheader
 
         return self
 
@@ -114,8 +120,8 @@ class StartScene(StaticScene):
     The StartScene is a special Scene that marks the beginning of the Stager sequence.
     """
 
-    def __init__(self, scene_id: str, ig_config: dict):
-        super().__init__(scene_id, ig_config)
+    def __init__(self, scene_id: str, experiment_config: dict):
+        super().__init__(scene_id, experiment_config)
 
 
 class EndScene(StaticScene):
@@ -127,8 +133,8 @@ class EndScene(StaticScene):
     are forwarding them to personalized surveys, etc.)
     """
 
-    def __init__(self, scene_id: str, ig_config: dict):
-        super().__init__(scene_id, ig_config)
+    def __init__(self, scene_id: str, experiment_config: dict):
+        super().__init__(scene_id, experiment_config)
         self.url: str | None = None
         self.append_subject_id: bool = False
 
@@ -145,8 +151,10 @@ class EndScene(StaticScene):
 
 
 class OptionBoxes(StaticScene):
-    def __init__(self, scene_id: str, ig_config: dict, options: list[str]):
-        super().__init__(scene_id, ig_config)
+    def __init__(
+        self, scene_id: str, experiment_config: dict, options: list[str]
+    ):
+        super().__init__(scene_id, experiment_config)
 
         self.scene_body = self._create_html_option_boxes(options)
 
