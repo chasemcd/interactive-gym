@@ -108,6 +108,10 @@ socket.on('connect', function() {
     console.log("connecting")
     // Emit an event to the server with the subject_id
     socket.emit('register_subject', { subject_id: subjectName });
+    $("#invalidSession").hide();
+    $('#hudText').hide()
+
+
 });
 
 
@@ -463,12 +467,14 @@ function startStaticScene(data) {
 
     $("#sceneBody").show();
 
+    $("#advanceButton").attr("disabled", false);
+    $("#advanceButton").show();
+
     $("#sceneHeader").html(data.scene_header);
     $("#sceneSubHeader").html(data.scene_subheader);
     $("#sceneBody").html(data.scene_body);
 
-    $("#advanceButton").attr("disabled", false);
-    $("#advanceButton").show();
+
 
 };
 
