@@ -163,6 +163,7 @@ class OptionBoxes(StaticScene):
         Given a list of N options, creates HTML code to display a horizontal line of N boxes,
         each with a unique color. Each box is labeled by a string in the options list.
         When a user clicks a box, it becomes highlighted.
+        The advance button is only enabled when a box is clicked.
         """
         colors = [
             "#FF6F61",
@@ -197,18 +198,28 @@ class OptionBoxes(StaticScene):
         html += "</div>\n"
         html += """
         <script>
+        $("#advanceButton").attr("disabled", true);
+        $("#advanceButton").show();
+
         document.querySelectorAll('.option-box').forEach(function(box) {
             box.addEventListener('click', function() {
+                // Reset all boxes
                 document.querySelectorAll('.option-box').forEach(function(b) {
                     b.style.border = '2px solid transparent';
                     b.style.transform = 'scale(1)';
                     b.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
                 });
+
+                // Highlight the clicked box
                 box.style.border = '2px solid black';
                 box.style.transform = 'scale(1.05)';
                 box.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.2)';
+
+                // Enable the advance button
+                document.getElementById('advanceButton').disabled = false;
             });
         });
+
         </script>
         """
 
