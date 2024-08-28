@@ -215,7 +215,7 @@ cc_gym_scene_2 = (
         "After this round, you will provide your preference "
         "between the two partners you interacted with. "
         "When the button activates, click it to begin. "
-        "</p>/center>",
+        "</p></center>",
     )
 )
 
@@ -237,10 +237,10 @@ end_scene = (
 stager = stager.Stager(
     scenes=[
         start_scene,
-        # tutorial_gym_scene,
-        # cr_gym_scene_1,
-        # cr_gym_scene_2,
-        # options_scene_1,
+        tutorial_gym_scene,
+        cr_gym_scene_1,
+        cr_gym_scene_2,
+        options_scene_1,
         cc_gym_scene_1,
         cc_gym_scene_2,
         options_scene_2,
