@@ -41,11 +41,6 @@ POLICY_MAPPING = {
 }
 
 
-def env_creator(*args, **kwargs):
-    """Generic function to return the Gymnasium environment"""
-    return registry.make("Overcooked-RandomizedLayout-V0", render_mode=None)
-
-
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
 action_mapping = {
     "ArrowLeft": MoveLeft,
@@ -76,7 +71,7 @@ with open(
     cc_env_initialization = f.read()
 
 start_scene = static_scene.StartScene(
-    scene_id="start_scene", ig_config={}
+    scene_id="start_scene", experiment_config={}
 ).display(
     scene_header="Welcome",
     scene_body=(
@@ -89,7 +84,7 @@ start_scene = static_scene.StartScene(
 
 
 tutorial_gym_scene = (
-    gym_scene.GymScene(scene_id="overcooked_tutorial", ig_config={})
+    gym_scene.GymScene(scene_id="overcooked_tutorial", experiment_config={})
     .policies(
         policy_mapping={
             0: configuration_constants.PolicyTypes.Human,
@@ -114,11 +109,15 @@ tutorial_gym_scene = (
         scene_header="Overcooked Tutorial",
         scene_body_filepath="interactive_gym/server/static/templates/overcooked_instructions.html",
         in_game_scene_body="""
+        <center>
+        <p>
         Use the arrow keys <img src="static/assets/keys/arrow_keys_2.png" alt="Keyboard arrow keys" height="24" width="20" style="vertical-align:middle;"> 
         to control your chef <img src="static/assets/overcooked/blue_chef.png" alt="Blue Chef" height="24" width="24" style="vertical-align:middle;"> 
         and press <img src="static/assets/keys/icons8-w-key-50.png" alt="W key" height="24" width="24" style="vertical-align:middle;"> to pick up and 
         drop objects. Try to deliver as many dishes as possible by combining onions in the pot, plating the cooked onions, 
         and delivering them to the grey delivery zone.
+        </p>
+        </center>
         <br><br>
         """,
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
@@ -131,7 +130,7 @@ tutorial_gym_scene = (
 )
 
 cr_gym_scene_1 = (
-    gym_scene.GymScene(scene_id="overcooked_randomized", ig_config={})
+    gym_scene.GymScene(scene_id="overcooked_randomized", experiment_config={})
     .policies(policy_mapping=POLICY_MAPPING, frame_skip=5)
     .rendering(
         fps=30,
@@ -149,8 +148,16 @@ cr_gym_scene_1 = (
         input_mode=configuration_constants.InputModes.SingleKeystroke,
     )
     .user_experience(
-        scene_header="Overcooked (Round 1/2)",
-        scene_body="You'll now play with Partner 1 for a single round. This will be followed by a round with Partner 2. When the button turns green, click it to begin.",
+        scene_header="Overcooked (Game 1/2)",
+        scene_body="<center><p>"
+        "You'll now play with a partner for a single round. "
+        "This will be followed by a round with a different partner "
+        "in the same environment layout."
+        "<br><br> "
+        "You will be playing on the layout pictured below. "
+        '<center><img src="static/assets/overcooked/cramped_room.png" alt="Annotated Overcooked environment." height="270" width="315"></center>'
+        "When the button activates, click it to begin. "
+        "</p></center>",
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
     )
     .pyodide(
@@ -162,20 +169,35 @@ cr_gym_scene_1 = (
 
 cr_gym_scene_2 = copy.deepcopy(cr_gym_scene_1).user_experience(
     scene_header="Overcooked (Round 1/2)",
-    scene_body="You'll now play with Partner 2 on the same layout for a single round. After this round, you will provide your preference between the two partners. When the button turns green, click it to begin.",
+    scene_body="<center><p> "
+    "You'll now play another round on the same layout. "
+    "After this round, you will provide your preference "
+    "between the two partners you interacted with. "
+    "When the button activates, click it to begin. "
+    "</p></center>",
     game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
 )
 
 options_scene_1 = static_scene.OptionBoxes(
-    scene_id="options_scene_1", ig_config={}, options=["Partner 1", "Partner 2"]
-).display(scene_header="Did you prefer Partner 1 or 2?")
+    scene_id="options_scene_1",
+    experiment_config={},
+    options=["Round 1", "Round 2"],
+).display(scene_subheader="Did you prefer your Round 1 or Round 2 partner?")
 
 cc_gym_scene_1 = (
     copy.deepcopy(cr_gym_scene_1)
     .pyodide(environment_initialization_code=cc_env_initialization)
     .user_experience(
-        scene_header="Overcooked (2/2)",
-        scene_body="You'll now play with Partner 1 for a single round. This will be followed by a round with Partner 2. When the button turns green, click it to begin.",
+        scene_header="Overcooked (Game 2/2)",
+        scene_body="<center><p>"
+        "You'll now play with a partner for a single round. "
+        "This will be followed by a round with a different partner "
+        "in the same environment layout."
+        "<br> "
+        "You will be playing on the layout pictured below. "
+        '<center><img src="static/assets/overcooked/counter_circuit.png" alt="Annotated Overcooked environment." height="270" width="315"></center>'
+        "When the button activates, click it to begin. "
+        "</p></center>",
     )
     .rendering(
         game_width=overcooked_utils.TILE_SIZE * 7,
@@ -187,17 +209,24 @@ cc_gym_scene_2 = (
     copy.deepcopy(cc_gym_scene_1)
     .pyodide(environment_initialization_code=cc_env_initialization)
     .user_experience(
-        scene_header="Overcooked (2/2)",
-        scene_body="You'll now play with Partner 2 on the same layout for a single round. After this round, you will provide your preference between the two partners. When the button turns green, click it to begin.",
+        scene_header="Overcooked (Game 2/2)",
+        scene_body="<center><p>"
+        "You'll now play another round on the same layout. "
+        "After this round, you will provide your preference "
+        "between the two partners you interacted with. "
+        "When the button activates, click it to begin. "
+        "</p>/center>",
     )
 )
 
 options_scene_2 = static_scene.OptionBoxes(
-    scene_id="options_scene_1", ig_config={}, options=["Partner 1", "Partner 2"]
-).display(scene_header="Did you prefer Partner 1 or 2?")
+    scene_id="options_scene_2",
+    experiment_config={},
+    options=["Round 1", "Round 2"],
+).display(scene_subheader="Did you prefer your Round 1 or Round 2 partner?")
 
 end_scene = (
-    static_scene.EndScene(scene_id="end_scene", ig_config={})
+    static_scene.EndScene(scene_id="end_scene", experiment_config={})
     .display(
         scene_header="Thank you for participating!",
         scene_body="The experiment is over. Please click the button below to be directed to a follow-up survey.",
@@ -208,10 +237,10 @@ end_scene = (
 stager = stager.Stager(
     scenes=[
         start_scene,
-        tutorial_gym_scene,
-        cr_gym_scene_1,
-        cr_gym_scene_2,
-        options_scene_1,
+        # tutorial_gym_scene,
+        # cr_gym_scene_1,
+        # cr_gym_scene_2,
+        # options_scene_1,
         cc_gym_scene_1,
         cc_gym_scene_2,
         options_scene_2,
@@ -227,10 +256,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    ig_config = (
+    experiment_config = (
         experiment_config.ExperimentConfig()
         .experiment(stager=stager, experiment_id="overcooked_test")
         .hosting(port=5702, host="0.0.0.0")
     )
 
-    app.run(ig_config)
+    app.run(experiment_config)
