@@ -74,12 +74,13 @@ start_scene = static_scene.StartScene(
     scene_id="start_scene", experiment_config={}
 ).display(
     scene_header="Welcome",
-    scene_body=(
-        "To begin the experiment, please click the button below. You will first be brought to an instructions page "
-        "that outlines the task you will be completing and provides a brief tutorial. "
-        "After the tutorial, you will proceed through the experiment, where you will interact with different AI partners "
-        "in a task and provide your preferences between interacting with two of them."
-    ),
+    # scene_body=(
+    #     "To begin the experiment, please click the button below. You will first be brought to an instructions page "
+    #     "that outlines the task you will be completing and provides a brief tutorial. "
+    #     "After the tutorial, you will proceed through the experiment, where you will interact with different AI partners "
+    #     "in a task and provide your preferences between interacting with two of them."
+    # ),
+    scene_body_filepath="interactive_gym/server/static/templates/overcooked_instructions.html",
 )
 
 
@@ -107,7 +108,7 @@ tutorial_gym_scene = (
     )
     .user_experience(
         scene_header="Overcooked Tutorial",
-        scene_body_filepath="interactive_gym/server/static/templates/overcooked_instructions.html",
+        scene_body_filepath="interactive_gym/server/static/templates/overcooked_controls.html",
         in_game_scene_body="""
         <center>
         <p>
