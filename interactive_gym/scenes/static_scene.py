@@ -57,7 +57,7 @@ class StaticScene(scene.Scene):
         """
         if scene_body_filepath is not NotProvided:
             assert (
-                self.scene_body is NotProvided and scene_body is NotProvided
+                scene_body is NotProvided
             ), "Cannot set both filepath and html_body."
 
             with open(scene_body_filepath, "r", encoding="utf-8") as f:
