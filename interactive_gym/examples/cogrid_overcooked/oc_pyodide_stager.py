@@ -126,7 +126,7 @@ tutorial_gym_scene = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code=tutorial_cr_env_initialization,
-        packages_to_install=["numpy", "cogrid==0.0.3"],
+        packages_to_install=["numpy", "cogrid==0.0.4"],
     )
 )
 
@@ -149,7 +149,7 @@ cr_gym_scene_1 = (
         input_mode=configuration_constants.InputModes.SingleKeystroke,
     )
     .user_experience(
-        scene_header="Overcooked (Game 1/2)",
+        scene_header="Overcooked (Round 1/4)",
         scene_body="<center><p>"
         "You'll now play with a partner for a single round. "
         "This will be followed by a round with a different partner "
@@ -169,7 +169,7 @@ cr_gym_scene_1 = (
 )
 
 cr_gym_scene_2 = copy.deepcopy(cr_gym_scene_1).user_experience(
-    scene_header="Overcooked (Round 1/2)",
+    scene_header="Overcooked (Round 2/4)",
     scene_body="<center><p> "
     "You'll now play another round on the same layout. "
     "After this round, you will provide your preference "
@@ -179,22 +179,23 @@ cr_gym_scene_2 = copy.deepcopy(cr_gym_scene_1).user_experience(
     game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
 )
 
-options_scene_1 = static_scene.OptionBoxes(
+options_scene_1 = static_scene.OptionBoxesWithTextBox(
     scene_id="options_scene_1",
     experiment_config={},
-    options=["Round 1", "Round 2"],
-).display(scene_subheader="Did you prefer your Round 1 or Round 2 partner?")
+    options=["First Partner", "Second Partner"],
+    text_box_header="Please describe the reasoning for your preference.",
+).display(scene_subheader="Did you prefer your first or second partner?")
 
 cc_gym_scene_1 = (
     copy.deepcopy(cr_gym_scene_1)
     .pyodide(environment_initialization_code=cc_env_initialization)
     .user_experience(
-        scene_header="Overcooked (Game 2/2)",
+        scene_header="Overcooked (Round 3/4)",
         scene_body="<center><p>"
         "You'll now play with a partner for a single round. "
         "This will be followed by a round with a different partner "
         "in the same environment layout."
-        "<br> "
+        "<br><br> "
         "You will be playing on the layout pictured below. "
         '<center><img src="static/assets/overcooked/counter_circuit.png" alt="Annotated Overcooked environment." height="270" width="315"></center>'
         "When the button activates, click it to begin. "
@@ -210,7 +211,7 @@ cc_gym_scene_2 = (
     copy.deepcopy(cc_gym_scene_1)
     .pyodide(environment_initialization_code=cc_env_initialization)
     .user_experience(
-        scene_header="Overcooked (Game 2/2)",
+        scene_header="Overcooked (Round 4/4)",
         scene_body="<center><p>"
         "You'll now play another round on the same layout. "
         "After this round, you will provide your preference "
@@ -220,11 +221,12 @@ cc_gym_scene_2 = (
     )
 )
 
-options_scene_2 = static_scene.OptionBoxes(
+options_scene_2 = static_scene.OptionBoxesWithTextBox(
     scene_id="options_scene_2",
     experiment_config={},
-    options=["Round 1", "Round 2"],
-).display(scene_subheader="Did you prefer your Round 1 or Round 2 partner?")
+    options=["First Partner", "Second Partner"],
+    text_box_header="Please describe the reasoning for your preference.",
+).display(scene_subheader="Did you prefer your first or second partner?")
 
 end_scene = (
     static_scene.EndScene(scene_id="end_scene", experiment_config={})
