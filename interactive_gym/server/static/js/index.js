@@ -366,11 +366,6 @@ socket.on('end_game', function(data) {
     $('#hudText').hide();
     ui_utils.disableKeyListener();
     socket.emit("leave_game", {session_id: window.sessionId});
-
-    // $('#finalPageHeaderText').show()
-    // $('#finalPageText').show()
-    // $("#gameHeaderText").hide();
-    // $("#gamePageText").hide();
     $("#gameContainer").hide();
 
     if (data.message != undefined) {
