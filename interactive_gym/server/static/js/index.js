@@ -569,6 +569,12 @@ function terminateGymScene(data) {
     
     $("#startButton").hide();
     $("#gameContainer").hide();
+
+    $('#hudText').hide()
+    $('#hudText').text("")
+    $('#hudText').html("")
+
+
 };
 
 
@@ -598,9 +604,46 @@ var checkPyodideDone;
 function enableCheckPyodideDone() {
     checkPyodideDone = setInterval(() => {
         if (pyodideRemoteGame !== undefined && pyodideRemoteGame.isDone()) {
-            socket.emit("advance_scene", {session_id: window.sessionId});
-            pyodideRemoteGame = undefined;
+            clearInterval(checkPyodideDone);
             clearInterval(refreshStartButton);
+            pyodideRemoteGame = undefined;
+            
+            // Create and show the countdown popup
+            const popup = document.createElement('div');
+            popup.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 20px 40px;
+                border-radius: 10px;
+                font-family: Arial, sans-serif;
+                font-size: 18px;
+                text-align: center;
+                z-index: 1000;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            `;
+            const gameContainer = document.getElementById('gameContainer');
+            gameContainer.style.position = 'relative';
+            gameContainer.appendChild(popup);
+            
+            let countdown = 3;
+            const updatePopup = () => {
+                popup.innerHTML = `
+                    <h2 style="margin-bottom: 10px; color: white;">Done!</h2>
+                    <p>Continuing in <span style="font-weight: bold; font-size: 24px;">${countdown}</span> seconds...</p>
+                `;
+                if (countdown === 0) {
+                    gameContainer.removeChild(popup);
+                    socket.emit("advance_scene", {session_id: window.sessionId});
+                } else {
+                    countdown--;
+                    setTimeout(updatePopup, 1000);
+                }
+            };
+            updatePopup();
         } 
     }, 100);
 }

@@ -108,7 +108,6 @@ obs, rewards, terminateds, truncateds, infos, render_state
 
             if (this.num_episodes >= this.max_episodes) {
                 this.state = "done";
-                ui_utils.hideHUD();
             } else {
                 this.shouldReset = true;
             }
