@@ -346,9 +346,9 @@ overcooked_randomized_config = {
     "behavior_weights": {
         agent_id: {
             "delivery_reward": 1,
-            "delivery_act_reward": 1,
-            "onion_in_pot_reward": 1,
-            "soup_in_dish_reward": 1,
+            "delivery_act_reward": 0,
+            "onion_in_pot_reward": 0,
+            "soup_in_dish_reward": 0,
         }
         for agent_id in range(2)
     },
