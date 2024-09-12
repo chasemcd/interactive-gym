@@ -37,7 +37,7 @@ Noop = 6
 
 POLICY_MAPPING = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "static/assets/overcooked/models/recurrent_ibc_0.onnx",
+    1: "static/assets/overcooked/models/recurrent_ibc_200_100p.onnx",
 }
 
 
@@ -179,11 +179,19 @@ cr_gym_scene_2 = copy.deepcopy(cr_gym_scene_1).user_experience(
     game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
 )
 
-options_scene_1 = static_scene.OptionBoxesWithTextBox(
+options_scene_1 = static_scene.OptionBoxesWithScalesAndTextBox(
     scene_id="options_scene_1",
     experiment_config={},
     options=["First Partner", "Second Partner"],
-    text_box_header="Please describe the reasoning for your preference.",
+    scale_questions=[
+        "My partner and I coordinated our actions well together.",
+        "My partner perceived accurately what tasks I was trying to accomplish.",
+        "I was able to understand and predict what tasks my partner was trying to accomplish.",
+        "My partner felt human-like.",
+    ],
+    pre_scale_header="Now, please indicate the relative extent to which you agree with the following statements about each partner. Move the slider to the left if the statement holds more for the first partner, and to the right for the second partner.",
+    scale_labels=["First Partner", "No Difference", "Second Partner"],
+    text_box_header="Please describe any additional reasoning for your preference. This might include specific actions or behaviors that you liked or disliked. You may write N/A if you do not have any anything to add.",
 ).display(scene_subheader="Did you prefer your first or second partner?")
 
 cc_gym_scene_1 = (
@@ -221,11 +229,19 @@ cc_gym_scene_2 = (
     )
 )
 
-options_scene_2 = static_scene.OptionBoxesWithTextBox(
+options_scene_2 = static_scene.OptionBoxesWithScalesAndTextBox(
     scene_id="options_scene_2",
     experiment_config={},
     options=["First Partner", "Second Partner"],
-    text_box_header="Please describe the reasoning for your preference.",
+    scale_questions=[
+        "My partner and I coordinated our actions well together.",
+        "My partner and I coordinated our actions better as the episode progressed.",
+        "My partner perceived accurately what tasks I was trying to accomplish.",
+        "I was able to understand and predict what tasks my partner was trying to accomplish.",
+    ],
+    pre_scale_header="Now, please indicate the relative extent to which you agree with the following statements about each partner. Move the slider to the left if the statement holds more for the first partner, and to the right for the second partner.",
+    scale_labels=["First Partner", "No Difference", "Second Partner"],
+    text_box_header="Please describe any additional reasoning for your preference. This might include specific actions or behaviors that you liked or disliked. You may write N/A if you do not have any anything to add.",
 ).display(scene_subheader="Did you prefer your first or second partner?")
 
 end_scene = (
@@ -240,10 +256,10 @@ end_scene = (
 stager = stager.Stager(
     scenes=[
         start_scene,
-        tutorial_gym_scene,
-        cr_gym_scene_1,
-        cr_gym_scene_2,
-        options_scene_1,
+        # tutorial_gym_scene,
+        # cr_gym_scene_1,
+        # cr_gym_scene_2,
+        # options_scene_1,
         cc_gym_scene_1,
         cc_gym_scene_2,
         options_scene_2,
