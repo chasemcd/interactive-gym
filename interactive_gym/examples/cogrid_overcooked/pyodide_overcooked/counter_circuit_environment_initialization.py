@@ -147,6 +147,53 @@ feature_space.register_feature(
 )
 
 
+class OvercookedBehaviorVFFeatures(feature.Feature):
+
+    def __init__(self, env: cogrid_env.CoGridEnv, **kwargs):
+
+        self.features = [BehaviorFeatures()]
+
+        full_shape = np.sum([feature.shape for feature in self.features])
+
+        super().__init__(
+            low=-np.inf,
+            high=np.inf,
+            shape=(full_shape,),
+            name="vf_features",
+            **kwargs,
+        )
+
+    def generate(
+        self, env: cogrid_env.CoGridEnv, player_id, **kwargs
+    ) -> np.ndarray:
+        player_encodings = []
+
+        for pid in env.agent_ids:
+            if pid == player_id:
+                continue
+            player_encodings.append(self.generate_player_encoding(env, pid))
+
+        encoding = np.hstack(player_encodings).astype(np.float32)
+
+        assert np.array_equal(self.shape, encoding.shape)
+
+        return encoding
+
+    def generate_player_encoding(
+        self, env: cogrid_env.CoGridEnv, player_id: str | int
+    ) -> np.ndarray:
+        encoded_features = []
+        for feature in self.features:
+            encoded_features.append(feature.generate(env, player_id))
+
+        return np.hstack(encoded_features)
+
+
+feature_space.register_feature(
+    "overcooked_vf_features", OvercookedBehaviorVFFeatures
+)
+
+
 class SoupDeliveryActReward(reward.Reward):
     """Provide a reward for delivery an OnionSoup to a DeliveryZone."""
 
@@ -225,9 +272,9 @@ class OvercookedRewardEnv(overcooked.Overcooked):
             {
                 agent_id: {
                     "delivery_reward": 1,
-                    "delivery_act_reward": 0,
-                    "onion_in_pot_reward": 0,
-                    "soup_in_dish_reward": 0,
+                    "delivery_act_reward": 0.5,
+                    "onion_in_pot_reward": 0.5,
+                    "soup_in_dish_reward": 0.5,
                 }
                 for agent_id in self.agents
             },
@@ -331,7 +378,7 @@ overcooked_randomized_config = {
     "name": "overcooked",
     "num_agents": 2,
     "action_set": "cardinal_actions",
-    "features": ["overcooked_behavior_features"],
+    "features": ["overcooked_behavior_features", "overcooked_vf_features"],
     "rewards": [
         "delivery_reward",
         "delivery_act_reward",
@@ -346,9 +393,9 @@ overcooked_randomized_config = {
     "behavior_weights": {
         agent_id: {
             "delivery_reward": 1,
-            "delivery_act_reward": 0,
-            "onion_in_pot_reward": 0,
-            "soup_in_dish_reward": 0,
+            "delivery_act_reward": 0.5,
+            "onion_in_pot_reward": 0.5,
+            "soup_in_dish_reward": 0.5,
         }
         for agent_id in range(2)
     },
@@ -788,7 +835,7 @@ overcooked_randomized_config = {
     "name": "overcooked",
     "num_agents": 2,
     "action_set": "cardinal_actions",
-    "features": ["overcooked_behavior_features"],
+    "features": ["overcooked_behavior_features", "overcooked_vf_features"],
     "rewards": [
         "delivery_reward",
         "delivery_act_reward",
@@ -803,9 +850,9 @@ overcooked_randomized_config = {
     "behavior_weights": {
         agent_id: {
             "delivery_reward": 1,
-            "delivery_act_reward": 0,
-            "onion_in_pot_reward": 0,
-            "soup_in_dish_reward": 0,
+            "delivery_act_reward": 0.5,
+            "onion_in_pot_reward": 0.5,
+            "soup_in_dish_reward": 0.5,
         }
         for agent_id in range(2)
     },
