@@ -457,6 +457,11 @@ def on_exit():
         game_manager.tear_down()
 
 
+@socketio.on("data_emission")
+def data_emission(data):
+    print("Data emission", data)
+
+
 # def periodic_log() -> None:
 #     """Log information at specified 30s interval"""
 #     while True:

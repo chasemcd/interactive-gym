@@ -52,10 +52,11 @@ env
         this.shouldReset = false;
         const result = await this.pyodide.runPythonAsync(`
 obs, infos = env.reset()
-render_state = env.env_to_render_fn()
-obs, infos, render_state
+data = env.get_data()
+render_state = env.render()
+obs, infos, render_state, data
         `);
-        let [obs, infos, render_state] = await this.pyodide.toPy(result).toJs();
+        let [obs, infos, render_state, data] = await this.pyodide.toPy(result).toJs();
         render_state = {
             "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
         };
@@ -71,7 +72,7 @@ obs, infos, render_state
         ui_utils.updateHUDText(this.getHUDText());
 
 
-        return [obs, infos, render_state]
+        return [obs, infos, render_state, data]
     }
 
 
@@ -80,12 +81,13 @@ obs, infos, render_state
         const result = await this.pyodide.runPythonAsync(`
 actions = {int(k): v for k, v in ${pyActions}.items()}
 obs, rewards, terminateds, truncateds, infos = env.step(actions)
-render_state = env.env_to_render_fn()
-obs, rewards, terminateds, truncateds, infos, render_state
+render_state = env.render()
+data = env.get_data()
+obs, rewards, terminateds, truncateds, infos, render_state, data
         `);
 
         // Convert everything from python objects to JS objects
-        let [obs, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide.toPy(result).toJs();
+        let [obs, rewards, terminateds, truncateds, infos, render_state, data] = await this.pyodide.toPy(result).toJs();
         
         for (let [key, value] of rewards.entries()) {
             this.cumulative_rewards[key] += value;
@@ -114,7 +116,7 @@ obs, rewards, terminateds, truncateds, infos, render_state
             
         }
 
-        return [obs, rewards, terminateds, truncateds, infos, render_state]
+        return [obs, rewards, terminateds, truncateds, infos, render_state, data]
     };
 
     getHUDText() {

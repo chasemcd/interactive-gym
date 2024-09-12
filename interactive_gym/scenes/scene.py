@@ -24,6 +24,9 @@ class Scene:
         self.sio: flask_socketio.SocketIO | None = None
         self.status = SceneStatus.Inactive
 
+        # These are the elements IDs that we'll log the values of at the end of every scene
+        self.element_ids = []
+
     def build(self) -> list[Scene]:
         """
         Build the Scene.
@@ -60,6 +63,7 @@ class Scene:
         return {
             "scene_id": self.scene_id,
             "scene_type": self.__class__.__name__,
+            "element_ids": self.element_ids,
         }
 
     @property

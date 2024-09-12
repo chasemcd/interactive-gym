@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from typing import Any
 
 from flask_socketio import SocketIO
@@ -352,8 +351,8 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
         self.scale_size = scale_size
         self.scale_questions = scale_questions
         self.scale_labels = scale_labels
-
         self.scene_body = self._create_html(options, text_box_header)
+        self.element_ids = self.get_data_element_ids()
 
     def _create_html(self, options: list[str], text_box_header: str) -> str:
         """
@@ -379,7 +378,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
                 i % len(colors)
             ]  # Cycle through colors if there are more options than colors
             html += f"""
-            <div id="option-{i}" class="option-box" style="
+            <div id="option-{i}" class="option-box" data-option="{option}" style="
                 background-color: {color};
                 padding: 20px;
                 cursor: pointer;
@@ -393,6 +392,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
             """
 
         html += "</div>\n"
+        html += '<input type="hidden" id="selected-option-box" name="selected-option-box" value="">\n'
 
         # Add more space between option boxes and pre-scale header
         html += '<div style="margin-top: 50px;"></div>\n'
@@ -474,6 +474,9 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
                 box.style.transform = 'scale(1.05)';
                 box.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.2)';
 
+                // Set the selected option
+                document.getElementById('selected-option-box').value = box.getAttribute('data-option');
+
                 checkInputs();
             });
         });
@@ -486,3 +489,24 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
         """
 
         return html
+
+    def get_data_element_ids(self) -> list[str]:
+        """
+        Identifies and returns a list of element IDs that should be retrieved to store user input data.
+
+        Returns:
+            list[str]: A list of element IDs corresponding to user input data.
+        """
+        element_ids = []
+
+        # Add the ID for the selected option box
+        element_ids.append("selected-option-box")
+
+        # Add the ID for the text input
+        element_ids.append("user-input")
+
+        # Add IDs for all range inputs (scales)
+        for i in range(len(self.scale_questions)):
+            element_ids.append(f"scale-{i}")
+
+        return element_ids

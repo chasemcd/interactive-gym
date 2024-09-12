@@ -816,6 +816,29 @@ def temp_object_creation(obj: grid_object.GridObj):
 
 
 class InteractiveGymOvercooked(OvercookedRewardEnv):
+    def render(self):
+        return self.env_to_render_fn()
+
+    def get_data(self):
+        agent_positions = {
+            f"agent_{agent_id}_pos": agent.pos
+            for agent_id, agent in self.grid.grid_agents.items()
+        }
+        agent_directions = {
+            f"agent_{agent_id}_dir": agent.dir
+            for agent_id, agent in self.grid.grid_agents.items()
+        }
+
+        agent_rewards = {
+            f"agent_{agent_id}_reward": reward
+            for agent_id, reward in self.prev_rewards.items()
+        }
+
+        return {
+            "t": self.t,
+            **agent_positions,
+            **agent_directions,
+        }
 
     def env_to_render_fn(self):
         render_objects = []

@@ -259,7 +259,7 @@ stager = stager.Stager(
         # tutorial_gym_scene,
         # cr_gym_scene_1,
         # cr_gym_scene_2,
-        # options_scene_1,
+        options_scene_1,
         cc_gym_scene_1,
         cc_gym_scene_2,
         options_scene_2,

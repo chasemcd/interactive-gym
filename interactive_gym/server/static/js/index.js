@@ -433,8 +433,59 @@ socket.on("activate_scene", function(data) {
 
 
 socket.on("terminate_scene", function(data) {
+    if (data.element_ids && data.element_ids.length > 0) {
+        let retrievedData = getData(data.element_ids);
+        console.log("Retrieved data:", retrievedData);
+        socket.emit("send_data", {data: retrievedData, scene_id: data.scene_id, session_id: window.sessionId});
+    }
+    
     terminateScene(data);
-}); 
+    console.log("Terminating scene", data.scene_id);
+    // Add any cleanup logic here if needed
+});
+
+
+function getData(elementIds) {
+    let retrievedData = {};
+    elementIds.forEach(id => {
+        let element = document.getElementById(id);
+        if (element) {
+            switch(element.tagName.toLowerCase()) {
+                case 'input':
+                    switch(element.type.toLowerCase()) {
+                        case 'checkbox':
+                            retrievedData[id] = element.checked;
+                            break;
+                        case 'radio':
+                            let checkedRadio = document.querySelector(`input[name="${element.name}"]:checked`);
+                            retrievedData[id] = checkedRadio ? checkedRadio.value : null;
+                            break;
+                        case 'range':
+                            retrievedData[id] = parseFloat(element.value);
+                            break;
+                        default:
+                            retrievedData[id] = element.value;
+                    }
+                    break;
+                case 'select':
+                    retrievedData[id] = Array.from(element.selectedOptions).map(option => option.value);
+                    break;
+                case 'textarea':
+                    retrievedData[id] = element.value;
+                    break;
+                case 'button':
+                    retrievedData[id] = element.textContent;
+                    break;
+                default:
+                    retrievedData[id] = element.textContent;
+            }
+        } else {
+            console.warn(`Element with id '${id}' not found`);
+            retrievedData[id] = null;
+        }
+    });
+    return retrievedData;
+};
 
 
 function activateScene(data) {
