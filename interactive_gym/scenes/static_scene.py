@@ -327,3 +327,162 @@ class OptionBoxesWithTextBox(StaticScene):
         """
 
         return html
+
+
+class OptionBoxesWithScalesAndTextBox(StaticScene):
+    def __init__(
+        self,
+        scene_id: str,
+        experiment_config: dict,
+        options: list[str],
+        text_box_header: str,  # TODO(chase): Move this to .display()
+        pre_scale_header: str,
+        scale_questions: list[str],
+        scale_size: int = 5,
+        scale_labels: list[str] = [
+            "Strongly Disagree",
+            "Disagree",
+            "Neutral",
+            "Agree",
+            "Strongly Agree",
+        ],
+    ):
+        super().__init__(scene_id, experiment_config)
+        self.pre_scale_header = pre_scale_header
+        self.scale_size = scale_size
+        self.scale_questions = scale_questions
+        self.scale_labels = scale_labels
+
+        self.scene_body = self._create_html(options, text_box_header)
+
+    def _create_html(self, options: list[str], text_box_header: str) -> str:
+        """
+        Given a list of N options, creates HTML code to display a horizontal line of N boxes,
+        each with a unique color. Each box is labeled by a string in the options list.
+        When a user clicks a box, it becomes highlighted.
+        The advance button is only enabled when a box is clicked.
+        """
+        colors = [
+            "#FF6F61",
+            "#6B5B95",
+            "#88B04B",
+            "#F7CAC9",
+            "#92A8D1",
+            "#955251",
+            "#B565A7",
+            "#009B77",
+        ]  # Example colors
+        html = '<div id="option-boxes-container" style="display: flex; justify-content: space-around; gap: 10px;">\n'
+
+        for i, option in enumerate(options):
+            color = colors[
+                i % len(colors)
+            ]  # Cycle through colors if there are more options than colors
+            html += f"""
+            <div id="option-{i}" class="option-box" style="
+                background-color: {color};
+                padding: 20px;
+                cursor: pointer;
+                border-radius: 10px;
+                border: 2px solid transparent;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                text-align: center;
+                transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <span style="font-size: 16px; color: white;">{option}</span>
+            </div>
+            """
+
+        html += "</div>\n"
+
+        # Add more space between option boxes and pre-scale header
+        html += '<div style="margin-top: 50px;"></div>\n'
+
+        # Add pre-scale header
+        html += f'<p style="text-align: center;">{self.pre_scale_header}</p>\n'
+
+        # Add slider scales
+        html += (
+            '<div id="scale-questions-container" style="margin-top: 20px;">\n'
+        )
+        for i, question in enumerate(self.scale_questions):
+            html += f"""
+            <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+                <div style="border: 1px solid #ccc; padding: 10px; display: inline-block; margin: 0 auto; width: 80%;">
+                    <p style="margin: 0 0 10px 0;">{question}</p>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="flex: 1; text-align: left; font-size: 12px;">{self.scale_labels[0]}</span>
+                        <span style="flex: 1; text-align: center; font-size: 12px;">{self.scale_labels[len(self.scale_labels)//2]}</span>
+                        <span style="flex: 1; text-align: right; font-size: 12px;">{self.scale_labels[-1]}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: center;">
+                        <input type="range" id="scale-{i}" min="0" max="{self.scale_size - 1}" value="{(self.scale_size - 1) // 2}" style="margin: 10px 0; -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: #d3d3d3; outline: none; opacity: 0.7; transition: opacity .2s;">
+                    </div>
+                </div>
+            </div>
+            <style>
+                #scale-{i}::-webkit-slider-thumb {{
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    background: #4CAF50;
+                    cursor: pointer;
+                }}
+                #scale-{i}::-moz-range-thumb {{
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    background: #4CAF50;
+                    cursor: pointer;
+                }}
+            </style>
+            """
+        html += "</div>\n"
+
+        # Add text box
+        html += f"""
+        <div style="margin-top: 20px; text-align: center;">
+            <p>{text_box_header}</p>
+            <textarea id="user-input" rows="4" cols="50" style="width: 100%; max-width: 500px;"></textarea>
+        </div>
+        """
+
+        html += """
+        <script>
+        $("#advanceButton").attr("disabled", true);
+        $("#advanceButton").show();
+
+        function checkInputs() {
+            var boxSelected = document.querySelector('.option-box[style*="border: 2px solid black"]') !== null;
+            var textEntered = document.getElementById('user-input').value.trim() !== '';
+            var allScalesSet = Array.from(document.querySelectorAll('input[type="range"]')).every(scale => scale.value !== scale.min);
+            document.getElementById('advanceButton').disabled = !(boxSelected && textEntered && allScalesSet);
+        }
+
+        document.querySelectorAll('.option-box').forEach(function(box) {
+            box.addEventListener('click', function() {
+                // Reset all boxes
+                document.querySelectorAll('.option-box').forEach(function(b) {
+                    b.style.border = '2px solid transparent';
+                    b.style.transform = 'scale(1)';
+                    b.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+                });
+
+                // Highlight the clicked box
+                box.style.border = '2px solid black';
+                box.style.transform = 'scale(1.05)';
+                box.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.2)';
+
+                checkInputs();
+            });
+        });
+
+        document.getElementById('user-input').addEventListener('input', checkInputs);
+        document.querySelectorAll('input[type="range"]').forEach(function(scale) {
+            scale.addEventListener('input', checkInputs);
+        });
+        </script>
+        """
+
+        return html
