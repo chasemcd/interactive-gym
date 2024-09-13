@@ -788,6 +788,19 @@ class InteractiveGymOvercooked(OvercookedRewardEnv):
     def render(self):
         return self.env_to_render_fn()
 
+    def get_infos(self, **kwargs):
+        """Add the agent positions and directions to the infos dictionary"""
+        infos = super().get_infos(**kwargs)
+
+        for agent_id, agent in self.grid.grid_agents.items():
+            row, col = agent.pos
+            infos[agent_id]["row"] = int(row)
+            infos[agent_id]["col"] = int(col)
+            infos[agent_id]["direction"] = int(agent.dir)
+            infos[agent_id]["layout_id"] = self.current_layout_id
+
+        return infos
+
     def env_to_render_fn(self):
         render_objects = []
 

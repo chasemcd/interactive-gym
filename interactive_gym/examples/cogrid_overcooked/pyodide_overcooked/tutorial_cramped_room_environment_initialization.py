@@ -1,30 +1,36 @@
-from typing import Any
-import numpy as np
-import copy
-import random
-
-
 import functools
-from cogrid.feature_space import feature
-from cogrid.envs.overcooked import overcooked_features
+import random
+from typing import Any
 
-from cogrid import cogrid_env
-from cogrid.core import layouts
-from cogrid.core import grid_object
 from cogrid.envs import overcooked
-from cogrid.envs.overcooked import overcooked_grid_objects
+import functools
+
+from cogrid.envs.overcooked import overcooked
 from cogrid.envs import registry
+from cogrid.feature_space import feature_space
+from cogrid.core import layouts
+import collections
+
+
+import copy
+from cogrid.feature_space import feature
 from cogrid.feature_space import features
 from cogrid.feature_space import feature_space
+from cogrid.core import grid_utils
+from cogrid import cogrid_env
+from cogrid.core import grid_object
+from cogrid.envs.overcooked import overcooked_grid_objects
+from cogrid.envs.overcooked import rewards as overcooked_rewards
+from cogrid.envs.overcooked import overcooked_features
+from cogrid.core import typing as cogrid_typing
+import numpy as np
+from cogrid.core import reward
 from cogrid.core import reward
 from cogrid.core import actions as cogrid_actions
 from cogrid.core.grid import Grid
-from cogrid.core import typing as cogrid_typing
-from cogrid.envs.overcooked import rewards as overcooked_rewards
-
-
+from cogrid.envs.overcooked import overcooked_grid_objects
+from cogrid.core import typing
 import dataclasses
-import typing
 
 
 class BehaviorFeatures(feature.Feature):
@@ -62,6 +68,7 @@ class OvercookedCollectedBehaviorFeatures(feature.Feature):
             features.AgentDir(),
             overcooked_features.OvercookedInventory(),
             overcooked_features.NextToCounter(),
+            overcooked_features.NextToPot(),
             overcooked_features.ClosestObj(
                 focal_object_type=overcooked_grid_objects.Onion
             ),
@@ -88,10 +95,14 @@ class OvercookedCollectedBehaviorFeatures(feature.Feature):
                 num_other_players=max_num_agents - 1
             ),
             features.AgentPosition(),
+            features.CanMoveDirection(),
             overcooked_features.LayoutID(),
         ]
 
-        self.individual_features = [BehaviorFeatures()]
+        self.individual_features = [
+            BehaviorFeatures(),
+            overcooked_features.LayoutID(),
+        ]
 
         full_shape = max_num_agents * np.sum(
             [feature.shape for feature in self.shared_features]
@@ -144,6 +155,53 @@ class OvercookedCollectedBehaviorFeatures(feature.Feature):
 
 feature_space.register_feature(
     "overcooked_behavior_features", OvercookedCollectedBehaviorFeatures
+)
+
+
+class OvercookedBehaviorVFFeatures(feature.Feature):
+
+    def __init__(self, env: cogrid_env.CoGridEnv, **kwargs):
+
+        self.features = [BehaviorFeatures()]
+
+        full_shape = np.sum([feature.shape for feature in self.features])
+
+        super().__init__(
+            low=-np.inf,
+            high=np.inf,
+            shape=(full_shape,),
+            name="vf_features",
+            **kwargs,
+        )
+
+    def generate(
+        self, env: cogrid_env.CoGridEnv, player_id, **kwargs
+    ) -> np.ndarray:
+        player_encodings = []
+
+        for pid in env.agent_ids:
+            if pid == player_id:
+                continue
+            player_encodings.append(self.generate_player_encoding(env, pid))
+
+        encoding = np.hstack(player_encodings).astype(np.float32)
+
+        assert np.array_equal(self.shape, encoding.shape)
+
+        return encoding
+
+    def generate_player_encoding(
+        self, env: cogrid_env.CoGridEnv, player_id: str | int
+    ) -> np.ndarray:
+        encoded_features = []
+        for feature in self.features:
+            encoded_features.append(feature.generate(env, player_id))
+
+        return np.hstack(encoded_features)
+
+
+feature_space.register_feature(
+    "overcooked_vf_features", OvercookedBehaviorVFFeatures
 )
 
 
@@ -291,9 +349,12 @@ class OvercookedRewardEnv(overcooked.Overcooked):
             )
 
             # Add component rewards to per agent reward
+            # NOTE(chase): We're not multiplying by the reward weights here
+            # because interactive gym will display the returned value
+            # and we only want to display the delivery reward.
             for agent_id, reward_value in calculated_rewards.items():
-                self.per_agent_reward[agent_id] += (
-                    reward_value * self.reward_weights[agent_id][reward.name]
+                self.per_agent_reward[agent_id] += reward_value * int(
+                    isinstance(reward, overcooked_rewards.SoupDeliveryReward)
                 )
 
             # Save reward by component
@@ -313,51 +374,6 @@ class OvercookedRewardEnv(overcooked.Overcooked):
         truncateds["__all__"] = all(truncateds.values())
         return obs, rewards, terminateds, truncateds, infos
 
-
-def randomized_layout_fn(**kwargs):
-    layout_name = random.choice(
-        [
-            "overcooked_cramped_room_v0",
-            "overcooked_asymmetric_advantages_v0",
-            "overcooked_coordination_ring_v0",
-            "overcooked_forced_coordination_v0",
-            "overcooked_counter_circuit_v0",
-        ]
-    )
-    return layout_name, *layouts.get_layout(layout_name)
-
-
-overcooked_randomized_config = {
-    "name": "overcooked",
-    "num_agents": 2,
-    "action_set": "cardinal_actions",
-    "features": ["overcooked_behavior_features"],
-    "rewards": [
-        "delivery_reward",
-        "delivery_act_reward",
-        "onion_in_pot_reward_1.0coeff",
-        "soup_in_dish_reward_1.0coeff",
-    ],
-    "grid": {"layout_fn": randomized_layout_fn},
-    "scope": "overcooked",
-    "max_steps": 1000,
-    "unshaped_proportion": 1.0,
-    "enable_weight_randomization": False,
-    "behavior_weights": {
-        agent_id: {
-            "delivery_reward": 1,
-            "delivery_act_reward": 0,
-            "onion_in_pot_reward": 0,
-            "soup_in_dish_reward": 0,
-        }
-        for agent_id in range(2)
-    },
-}
-
-registry.register(
-    "Overcooked-RandomizedLayout-RewardObs-Unshaped-V0",
-    functools.partial(OvercookedRewardEnv, config=overcooked_randomized_config),
-)
 
 reward.register_reward(
     "onion_in_pot_reward_1.0coeff",
@@ -769,6 +785,21 @@ def temp_object_creation(obj: grid_object.GridObj):
 
 
 class InteractiveGymOvercooked(OvercookedRewardEnv):
+    def render(self):
+        return self.env_to_render_fn()
+
+    def get_infos(self, **kwargs):
+        """Add the agent positions and directions to the infos dictionary"""
+        infos = super().get_infos(**kwargs)
+
+        for agent_id, agent in self.grid.grid_agents.items():
+            row, col = agent.pos
+            infos[agent_id]["row"] = int(row)
+            infos[agent_id]["col"] = int(col)
+            infos[agent_id]["direction"] = int(agent.dir)
+            infos[agent_id]["layout_id"] = self.current_layout_id
+
+        return infos
 
     def env_to_render_fn(self):
         render_objects = []
@@ -784,11 +815,11 @@ class InteractiveGymOvercooked(OvercookedRewardEnv):
         return [obj.as_dict() for obj in render_objects]
 
 
-overcooked_randomized_config = {
+overcooked_config = {
     "name": "overcooked",
     "num_agents": 1,
     "action_set": "cardinal_actions",
-    "features": ["overcooked_behavior_features"],
+    "features": ["overcooked_behavior_features", "overcooked_vf_features"],
     "rewards": [
         "delivery_reward",
         "delivery_act_reward",
@@ -812,10 +843,12 @@ overcooked_randomized_config = {
 }
 
 registry.register(
-    environment_id="Overcooked-BehaviorFeatures-RandomizedLayout-EnvToRender",
+    environment_id="Overcooked-BehaviorFeatures-CrampedRoom-Tutorial-EnvToRender",
     env_class=functools.partial(
-        InteractiveGymOvercooked, config=overcooked_randomized_config
+        InteractiveGymOvercooked, config=overcooked_config
     ),
 )
 
-env = registry.make("Overcooked-BehaviorFeatures-RandomizedLayout-EnvToRender")
+env = registry.make(
+    "Overcooked-BehaviorFeatures-CrampedRoom-Tutorial-EnvToRender"
+)
