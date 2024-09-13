@@ -306,3 +306,22 @@ class GymScene(scene.Scene):
         of if they're waiting for other players or not.
         """
         return max(self.waitroom_time_randomization_interval_s) > 0
+
+    def get_complete_scene_metadata(self) -> dict:
+        """ """
+        metadata = super().scene_metadata
+
+        # Add all of the class properties to the metadata
+        for k, v in self.__dict__.items():
+            if k not in metadata and k != "sio":
+                if (
+                    isinstance(v, (str, int, float, bool, list, dict))
+                    or v is None
+                ):
+                    metadata[k] = v
+                elif hasattr(v, "__dict__"):
+                    metadata[k] = v.__dict__
+                else:
+                    metadata[k] = str(v)
+
+        return metadata
