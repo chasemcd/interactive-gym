@@ -436,8 +436,7 @@ socket.on("activate_scene", function(data) {
 socket.on("terminate_scene", function(data) {
     if (data.element_ids && data.element_ids.length > 0) {
         let retrievedData = getData(data.element_ids);
-        console.log("Retrieved data:", retrievedData);
-        socket.emit("send_data", {data: retrievedData, scene_id: data.scene_id, session_id: window.sessionId});
+        socket.emit("static_scene_data_emission", {data: retrievedData, scene_id: data.scene_id, session_id: window.sessionId});
     }
     
     terminateScene(data);
