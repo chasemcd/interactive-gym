@@ -49,50 +49,68 @@ let currentObservations = {};
 class RemoteGameDataLogger {
     constructor() {
         this.data = {
-            observations: [],
-            actions: [],
-            rewards: [],
-            terminateds: [],
-            truncateds: [],
-            infos: [],
+            observations: {},
+            actions: {},
+            rewards: {},
+            terminateds: {},
+            truncateds: {},
+            infos: {},
             episode_num: [],
-            t: 0
         };
     }
 
     logData(gameData) {
-        if (gameData.observations) {
-            this.data.observations.push(gameData.observations);
+        const logDataForField = (field) => {
+            if (gameData[field] !== undefined ) {
+                const data = gameData[field] instanceof Map ? Object.fromEntries(gameData[field]) : gameData[field];
+                for (let agentId in data) {
+                    if (!this.data[field][agentId]) {
+                        this.data[field][agentId] = [];
+
+                    }
+
+                    if (field !== 'observations') {
+                        this.data[field][agentId].push(data[agentId]);
+                    }
+                   
+                }
+            }
+        };
+
+        ['observations', 'actions', 'rewards', 'terminateds', 'truncateds'].forEach(logDataForField);
+        
+        if (gameData.infos !== undefined) {
+            const infos = gameData.infos instanceof Map ? Object.fromEntries(gameData.infos) : gameData.infos;
+            for (let agentId in infos) {
+                if (!this.data.infos[agentId]) {
+                    this.data.infos[agentId] = {};
+                }
+                for (let key in infos[agentId]) {
+                    if (!this.data.infos[agentId][key]) {
+                        this.data.infos[agentId][key] = [];
+                    }
+                    this.data.infos[agentId][key].push(infos[agentId][key]);
+                }
+            }
         }
-        if (gameData.rewards) {
-            this.data.rewards.push(gameData.rewards);
-        }
-        if (gameData.terminateds) {
-            this.data.terminateds.push(gameData.terminateds);
-        }
-        if (gameData.truncateds) {
-            this.data.truncateds.push(gameData.truncateds);
-        }
-        if (gameData.infos) {
-            this.data.infos.push(gameData.infos);
-        }
-        if (gameData.episode_num) {
+
+        if (gameData.episode_num !== undefined) {
             this.data.episode_num.push(gameData.episode_num);
-        }
-        this.data.t++;
+        } 
     }
 
     getData() {
-        return this.data;
+        return JSON.parse(JSON.stringify(this.data));
     }
 
     reset() {
         this.data = {
-            observations: [],
-            rewards: [],
-            terminateds: [],
-            truncateds: [],
-            infos: [],
+            observations: {},
+            actions: {},
+            rewards: {},
+            terminateds: {},
+            truncateds: {},
+            infos: {},
             episode_num: [],
             t: 0
         };
@@ -248,7 +266,7 @@ class GymScene extends Phaser.Scene {
             if (this.pyodide_remote_game.shouldReset) {
                 this.removeAllObjects();
                 [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
-                remoteGameLogger.logData({observations: currentObservations, infos: infos});
+                remoteGameLogger.logData({observations: currentObservations, infos: infos, episode_num: this.pyodide_remote_game.num_episodes});
             } else {
                 const actions = await this.buildPyodideActionDict();
                 previousSubmittedActions = actions;
