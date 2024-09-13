@@ -388,9 +388,10 @@ socket.on('end_game_redirect', function(data) {
 });
 
 
-// socket.on('update_game_page_text', function(data) {
-//     $("#sceneBody").html(data.game_page_text);
-// })
+socket.on('update_game_page_text', function(data) {
+    $("#sceneBody").html(data.game_page_text);
+    $("#sceneBody").show();
+})
 
 
 // var pressedKeys = {};
@@ -497,9 +498,6 @@ function activateScene(data) {
         startGymScene(data);
     } else {
         // Treat all other scenes as static scenes
-        //if (data.scene_type == "StaticScene" || data.scene_type == "StartScene") {
-    //     startStaticScene(data);
-    // } else
         startStaticScene(data);
     }
 };
@@ -610,8 +608,9 @@ function terminateGymScene(data) {
     graphics_end();
 
     let remoteGameData = getRemoteGameData();
-    console.log(remoteGameData);
-    socket.emit("emit_remote_game_data", {data: remoteGameData, scene_id: data.scene_id, session_id: window.sessionId});
+    console.log("emitting data", remoteGameData)
+    const binaryData = msgpack.encode(remoteGameData);
+    socket.emit("emit_remote_game_data", {data: binaryData, scene_id: data.scene_id, session_id: window.sessionId});
 
     $("#sceneHeader").show();
     $("#sceneHeader").html("");

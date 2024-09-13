@@ -10,6 +10,11 @@ import secrets
 import threading
 import time
 import uuid
+import msgpack
+import pandas as pd
+import os
+import flatten_dict
+import json
 
 import eventlet
 import flask
@@ -464,7 +469,44 @@ def data_emission(data):
 
 @socketio.on("emit_remote_game_data")
 def receive_remote_game_data(data):
-    print("received remote game data", data)
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+
+    # Decode the msgpack data
+    decoded_data = msgpack.unpackb(data["data"])
+
+    # Flatten any nested dictionaries
+    flattened_data = flatten_dict.flatten(decoded_data, reducer="dot")
+
+    # Find the maximum length among all values
+    max_length = max(
+        len(value) if isinstance(value, list) else 1
+        for value in flattened_data.values()
+    )
+
+    # Pad shorter lists with None and convert non-list values to lists
+    padded_data = {}
+    for key, value in flattened_data.items():
+        if not isinstance(value, list):
+            padded_data[key] = [value] + [None] * (max_length - 1)
+        else:
+            padded_data[key] = value + [None] * (max_length - len(value))
+
+    for key, value in padded_data.items():
+        print(key, type(value), len(value))
+
+    # Convert to DataFrame
+    df = pd.DataFrame(padded_data)
+    print(df.head())
+
+    # Create a directory for the CSV files if it doesn't exist
+    os.makedirs(f"data/{data['scene_id']}/", exist_ok=True)
+
+    # Generate a unique filename
+    filename = f"data/{data['scene_id']}/{subject_id}.csv"
+
+    # Save as CSV
+    print("Saving to", filename)
+    df.to_csv(filename, index=False)
 
 
 # def periodic_log() -> None:
