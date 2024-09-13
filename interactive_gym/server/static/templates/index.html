@@ -31,6 +31,8 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
             overflow: hidden; /* Prevents overflow from showing */
         }
 
@@ -40,7 +42,6 @@
             margin-bottom: 20px;
             font-size: 28px;
         }
-
 
         h2 {
             color: #2c3e50;
@@ -54,9 +55,10 @@
             text-align: left;
             line-height: 1.6;
             overflow-y: auto; /* Adds a scrollbar when content overflows */
-            max-height: calc(100vh - 200px); /* Adjust based on your header sizes */
+            flex-grow: 1; /* Allow this to grow and take available space */
             padding: 15px 25px 15px 15px; /* Extra padding on the right for the scrollbar */
-            box-sizing: content-box; /* Ensure padding doesn't interfere with width */
+            box-sizing: border-box; /* Include padding in the element's total width and height */
+            margin-bottom: 20px; /* Add some space between sceneBody and buttons */
         }
 
         #startButton, #advanceButton, #redirectButton {
@@ -138,7 +140,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100%;
         }
     </style>
 </head>
@@ -166,7 +167,6 @@
             <button id="redirectButton">Finish</button>
         </div>
 
-
     </div>
 
     <div id="latencyContainer">
@@ -184,6 +184,7 @@
     <script src="static/js/onnx_inference.js" type="module"></script>
     <script src="static/js/phaser_gym_graphics.js" type="module"></script>
     <script src="static/js/pyodide_remote_game.js" type="module"></script>
+    <script src="static/js/msgpack.min.js" type="module"></script>
 
     <script type="text/javascript">
         var subjectName = "{{ subject_id }}";
