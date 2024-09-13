@@ -11,8 +11,8 @@ pip install git+https://github.com/chasemcd/cogrid.git
 
 To run on `localhost`, use the following command, where `-l` specifies the local IP option:
 
-`./up.sh --module examples.cogrid_overcooked.overcooked_human_ai_server -n 1 -l`
+`./up.sh --module interactive_gym.examples.cogrid_overcooked.overcooked_human_ai_server -n 1 -l`
 
 To run on, e.g., four ports with load balancind and a Redis message queue:
 
-`./up.sh --module examples.cogrid_overcooked.overcooked_human_ai_server -n 4 -r -b`
+`./up.sh --module interactive_gym.examples.cogrid_overcooked.overcooked_human_ai_server -n 4 -r -b`
