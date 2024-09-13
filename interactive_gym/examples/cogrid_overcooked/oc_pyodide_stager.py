@@ -37,7 +37,7 @@ Noop = 6
 
 POLICY_MAPPING = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "static/assets/overcooked/models/recurrent_ibc_200_100p.onnx",
+    1: "static/assets/overcooked/models/sp_00217.onnx",
 }
 
 
@@ -126,7 +126,7 @@ tutorial_gym_scene = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code=tutorial_cr_env_initialization,
-        packages_to_install=["numpy", "cogrid==0.0.4"],
+        packages_to_install=["numpy", "cogrid==0.0.5"],
     )
 )
 
@@ -164,7 +164,7 @@ cr_gym_scene_1 = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code=cr_env_initialization,
-        packages_to_install=["numpy", "cogrid==0.0.3"],
+        packages_to_install=["numpy", "cogrid==0.0.5"],
     )
 )
 
@@ -257,8 +257,8 @@ stager = stager.Stager(
     scenes=[
         start_scene,
         # tutorial_gym_scene,
-        # cr_gym_scene_1,
-        # cr_gym_scene_2,
+        cr_gym_scene_1,
+        cr_gym_scene_2,
         options_scene_1,
         cc_gym_scene_1,
         cc_gym_scene_2,
