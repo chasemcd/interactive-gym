@@ -256,7 +256,7 @@ end_scene = (
 stager = stager.Stager(
     scenes=[
         start_scene,
-        # tutorial_gym_scene,
+        tutorial_gym_scene,
         cr_gym_scene_1,
         cr_gym_scene_2,
         options_scene_1,
