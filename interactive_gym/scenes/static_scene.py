@@ -359,7 +359,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
         Given a list of N options, creates HTML code to display a horizontal line of N boxes,
         each with a unique color. Each box is labeled by a string in the options list.
         When a user clicks a box, it becomes highlighted.
-        The advance button is only enabled when a box is clicked.
+        The advance button is only enabled when a box is clicked, all scales are interacted with, and text is entered.
         """
         colors = [
             "#FF6F61",
@@ -415,7 +415,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
                         <span style="flex: 1; text-align: right; font-size: 12px;">{self.scale_labels[-1]}</span>
                     </div>
                     <div style="display: flex; align-items: center; justify-content: center;">
-                        <input type="range" id="scale-{i}" min="0" max="{self.scale_size - 1}" value="{(self.scale_size - 1) // 2}" style="margin: 10px 0; -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: #d3d3d3; outline: none; opacity: 0.7; transition: opacity .2s;">
+                        <input type="range" id="scale-{i}" class="scale-input" min="0" max="{self.scale_size - 1}" value="{(self.scale_size - 1) // 2}" style="margin: 10px 0; -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: #d3d3d3; outline: none; opacity: 0.7; transition: opacity .2s;">
                     </div>
                 </div>
             </div>
@@ -426,15 +426,23 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
                     width: 20px;
                     height: 20px;
                     border-radius: 50%;
-                    background: #4CAF50;
+                    background: #d3d3d3;
                     cursor: pointer;
+                    transition: background 0.3s ease;
                 }}
                 #scale-{i}::-moz-range-thumb {{
                     width: 20px;
                     height: 20px;
                     border-radius: 50%;
-                    background: #4CAF50;
+                    background: #d3d3d3;
                     cursor: pointer;
+                    transition: background 0.3s ease;
+                }}
+                #scale-{i}.interacted::-webkit-slider-thumb {{
+                    background: #4CAF50;
+                }}
+                #scale-{i}.interacted::-moz-range-thumb {{
+                    background: #4CAF50;
                 }}
             </style>
             """
@@ -456,8 +464,8 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
         function checkInputs() {
             var boxSelected = document.querySelector('.option-box[style*="border: 2px solid black"]') !== null;
             var textEntered = document.getElementById('user-input').value.trim() !== '';
-            var allScalesSet = Array.from(document.querySelectorAll('input[type="range"]')).every(scale => scale.value !== scale.min);
-            document.getElementById('advanceButton').disabled = !(boxSelected && textEntered && allScalesSet);
+            var allScalesInteracted = Array.from(document.querySelectorAll('.scale-input')).every(scale => scale.classList.contains('interacted'));
+            document.getElementById('advanceButton').disabled = !(boxSelected && textEntered && allScalesInteracted);
         }
 
         document.querySelectorAll('.option-box').forEach(function(box) {
@@ -482,8 +490,13 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
         });
 
         document.getElementById('user-input').addEventListener('input', checkInputs);
-        document.querySelectorAll('input[type="range"]').forEach(function(scale) {
-            scale.addEventListener('input', checkInputs);
+        document.querySelectorAll('.scale-input').forEach(function(scale) {
+            scale.addEventListener('input', function() {
+                if (!this.classList.contains('interacted')) {
+                    this.classList.add('interacted');
+                }
+                checkInputs();
+            });
         });
         </script>
         """
