@@ -462,9 +462,33 @@ def on_exit():
         game_manager.tear_down()
 
 
-@socketio.on("data_emission")
+@socketio.on("static_scene_data_emission")
 def data_emission(data):
-    print("Data emission", data)
+    """Save the static scene data to a csv file."""
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+    print("data_emission", data)
+    # Save to a csv in data/{scene_id}/{subject_id}.csv
+    # Save the static scene data to a csv file.
+    scene_id = data.get("scene_id")
+    if not scene_id:
+        logger.error("Scene ID is required to save data.")
+        return
+
+    # Create a directory for the CSV files if it doesn't exist
+    os.makedirs(f"data/{scene_id}/", exist_ok=True)
+
+    # Generate a unique filename
+    filename = f"data/{scene_id}/{subject_id}.csv"
+
+    # Save as CSV
+    logger.info(f"Saving {filename}")
+
+    # convert to a list so we can save it as a csv
+    for k, v in data["data"].items():
+        data["data"][k] = [v]
+    df = pd.DataFrame(data["data"])
+
+    df.to_csv(filename, index=False)
 
 
 @socketio.on("emit_remote_game_data")
@@ -496,7 +520,6 @@ def receive_remote_game_data(data):
 
     # Convert to DataFrame
     df = pd.DataFrame(padded_data)
-    print(df.head())
 
     # Create a directory for the CSV files if it doesn't exist
     os.makedirs(f"data/{data['scene_id']}/", exist_ok=True)
@@ -505,8 +528,23 @@ def receive_remote_game_data(data):
     filename = f"data/{data['scene_id']}/{subject_id}.csv"
 
     # Save as CSV
-    print("Saving to", filename)
+    logger.info(f"Saving {filename}")
     df.to_csv(filename, index=False)
+
+    # Also get the current scene for this participant and save the metadata
+    participant_stager = STAGERS.get(subject_id, None)
+    if participant_stager is None:
+        logger.error(
+            f"Subject {subject_id} tried to save data but they don't have a Stager."
+        )
+        return
+
+    current_scene = participant_stager.current_scene
+    current_scene_metadata = current_scene.get_complete_scene_metadata()
+
+    # save the metadata to a json file
+    with open(f"data/{data['scene_id']}/{subject_id}_metadata.json", "w") as f:
+        json.dump(current_scene_metadata, f)
 
 
 # def periodic_log() -> None:
