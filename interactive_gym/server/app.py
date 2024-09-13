@@ -462,6 +462,11 @@ def data_emission(data):
     print("Data emission", data)
 
 
+@socketio.on("emit_remote_game_data")
+def receive_remote_game_data(data):
+    print("received remote game data", data)
+
+
 # def periodic_log() -> None:
 #     """Log information at specified 30s interval"""
 #     while True:

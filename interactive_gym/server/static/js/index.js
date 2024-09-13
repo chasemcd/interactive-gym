@@ -1,4 +1,4 @@
-import {graphics_start, graphics_end, addStateToBuffer} from './phaser_gym_graphics.js';
+import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData} from './phaser_gym_graphics.js';
 import {RemoteGame} from './pyodide_remote_game.js';
 import * as ui_utils from './ui_utils.js';
 
@@ -608,7 +608,11 @@ function terminateStaticScene(data) {
 function terminateGymScene(data) {
     ui_utils.disableKeyListener();
     graphics_end();
-    
+
+    let remoteGameData = getRemoteGameData();
+    console.log(remoteGameData);
+    socket.emit("emit_remote_game_data", {data: remoteGameData, scene_id: data.scene_id, session_id: window.sessionId});
+
     $("#sceneHeader").show();
     $("#sceneHeader").html("");
     

@@ -46,6 +46,64 @@ var previousSubmittedActions = {};
 
 let currentObservations = {};
 
+class RemoteGameDataLogger {
+    constructor() {
+        this.data = {
+            observations: [],
+            actions: [],
+            rewards: [],
+            terminateds: [],
+            truncateds: [],
+            infos: [],
+            episode_num: [],
+            t: 0
+        };
+    }
+
+    logData(gameData) {
+        if (gameData.observations) {
+            this.data.observations.push(gameData.observations);
+        }
+        if (gameData.rewards) {
+            this.data.rewards.push(gameData.rewards);
+        }
+        if (gameData.terminateds) {
+            this.data.terminateds.push(gameData.terminateds);
+        }
+        if (gameData.truncateds) {
+            this.data.truncateds.push(gameData.truncateds);
+        }
+        if (gameData.infos) {
+            this.data.infos.push(gameData.infos);
+        }
+        if (gameData.episode_num) {
+            this.data.episode_num.push(gameData.episode_num);
+        }
+        this.data.t++;
+    }
+
+    getData() {
+        return this.data;
+    }
+
+    reset() {
+        this.data = {
+            observations: [],
+            rewards: [],
+            terminateds: [],
+            truncateds: [],
+            infos: [],
+            episode_num: [],
+            t: 0
+        };
+    }
+}
+
+let remoteGameLogger = new RemoteGameDataLogger();
+
+export function getRemoteGameData() {
+    return remoteGameLogger.getData();
+}
 
 export function graphics_start(graphics_config) {
     game_graphics = new GraphicsManager(game_config, graphics_config);
@@ -190,10 +248,12 @@ class GymScene extends Phaser.Scene {
             if (this.pyodide_remote_game.shouldReset) {
                 this.removeAllObjects();
                 [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
+                remoteGameLogger.logData({observations: currentObservations, infos: infos});
             } else {
                 const actions = await this.buildPyodideActionDict();
                 previousSubmittedActions = actions;
                 [currentObservations, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide_remote_game.step(actions);
+                remoteGameLogger.logData({observations: currentObservations, actions: actions, rewards: rewards, terminateds: terminateds, truncateds: truncateds, infos: infos, episode_num: this.pyodide_remote_game.num_episodes});
             }             
             addStateToBuffer(render_state);
         }

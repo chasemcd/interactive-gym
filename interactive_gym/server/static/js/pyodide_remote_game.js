@@ -1,6 +1,7 @@
 import * as ui_utils from './ui_utils.js';
 
 
+
 export class RemoteGame {
     constructor(config) {
         this.config = config;
@@ -52,11 +53,10 @@ env
         this.shouldReset = false;
         const result = await this.pyodide.runPythonAsync(`
 obs, infos = env.reset()
-data = env.get_data()
 render_state = env.render()
-obs, infos, render_state, data
+obs, infos, render_state
         `);
-        let [obs, infos, render_state, data] = await this.pyodide.toPy(result).toJs();
+        let [obs, infos, render_state] = await this.pyodide.toPy(result).toJs();
         render_state = {
             "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
         };
@@ -72,22 +72,21 @@ obs, infos, render_state, data
         ui_utils.updateHUDText(this.getHUDText());
 
 
-        return [obs, infos, render_state, data]
+        return [obs, infos, render_state]
     }
 
 
     async step(actions) {
         const pyActions = this.pyodide.toPy(actions);
         const result = await this.pyodide.runPythonAsync(`
-actions = {int(k): v for k, v in ${pyActions}.items()}
-obs, rewards, terminateds, truncateds, infos = env.step(actions)
+agent_actions = {int(k): v for k, v in ${pyActions}.items()}
+obs, rewards, terminateds, truncateds, infos = env.step(agent_actions)
 render_state = env.render()
-data = env.get_data()
-obs, rewards, terminateds, truncateds, infos, render_state, data
+obs, rewards, terminateds, truncateds, infos, render_state
         `);
 
         // Convert everything from python objects to JS objects
-        let [obs, rewards, terminateds, truncateds, infos, render_state, data] = await this.pyodide.toPy(result).toJs();
+        let [obs, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide.toPy(result).toJs();
         
         for (let [key, value] of rewards.entries()) {
             this.cumulative_rewards[key] += value;
@@ -116,7 +115,7 @@ obs, rewards, terminateds, truncateds, infos, render_state, data
             
         }
 
-        return [obs, rewards, terminateds, truncateds, infos, render_state, data]
+        return [obs, rewards, terminateds, truncateds, infos, render_state]
     };
 
     getHUDText() {
