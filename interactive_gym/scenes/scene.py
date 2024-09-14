@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 import random
+from interactive_gym.scenes.utils import NotProvided
 
 import flask_socketio
 
@@ -18,21 +19,40 @@ class Scene:
     An Interactive Gym Scene defines an stage of interaction that a participant will have with the application.
     """
 
-    def __init__(self, scene_id: str, experiment_config: dict, **kwargs):
-        self.scene_id = scene_id
-        self.experiment_config = experiment_config
+    def __init__(self, **kwargs):
+        self.scene_id = None
+        self.experiment_config: dict = {}
         self.sio: flask_socketio.SocketIO | None = None
+        self.room: str | int | None = None
         self.status = SceneStatus.Inactive
 
         # These are the elements IDs that we'll log the values of at the end of every scene
         self.element_ids = []
 
+    def scene(
+        self,
+        scene_id: str = NotProvided,
+        experiment_config: dict = NotProvided,
+        **kwargs,
+    ):
+        if scene_id is not NotProvided:
+            self.scene_id = scene_id
+        if experiment_config is not NotProvided:
+            self.experiment_config = experiment_config
+
+        return self
+
     def build(self) -> list[Scene]:
         """
         Build the Scene.
         """
-        scene_copy = copy.deepcopy(self)
-        return [scene_copy]
+        return [self.copy()]
+
+    def copy(self) -> Scene:
+        """
+        Copy the scene.
+        """
+        return copy.deepcopy(self)
 
     def unpack(self) -> list[Scene]:
         """
@@ -40,20 +60,23 @@ class Scene:
         """
         return [self]
 
-    def activate(self, sio: flask_socketio.SocketIO):
+    def activate(self, sio: flask_socketio.SocketIO, room: str | int):
         """
         Activate the current scene.
         """
         self.status = SceneStatus.Active
         self.sio = sio
-        self.sio.emit("activate_scene", {**self.scene_metadata})
+        self.room = room
+        self.sio.emit("activate_scene", {**self.scene_metadata}, room=room)
 
     def deactivate(self):
         """
         Deactivate the current scene.
         """
         self.status = SceneStatus.Done
-        self.sio.emit("terminate_scene", {**self.scene_metadata})
+        self.sio.emit(
+            "terminate_scene", {**self.scene_metadata}, room=self.room
+        )
 
     @property
     def scene_metadata(self) -> dict:
@@ -138,7 +161,7 @@ class SceneWrapper:
 
         scenes = []
         for scene in self.unpack():
-            scenes.append(scene.build())
+            scenes.extend(scene.build())
 
         return scenes
 
@@ -164,7 +187,7 @@ class RandomizeOrder(SceneWrapper):
     ):
         super().__init__(scenes, **kwargs)
 
-    def buld(self) -> RandomizeOrder:
+    def build(self) -> RandomizeOrder:
         """
         Randomize the order before building the SceneWrapper.
         """

@@ -21,9 +21,9 @@ class GymScene(scene.Scene):
     """
 
     def __init__(
-        self, scene_id: str, experiment_config: remote_config.RemoteConfig
+        self,
     ):
-        super().__init__(scene_id, experiment_config)
+        super().__init__()
 
         # Environment
         self.env_creator: Callable | None = None
@@ -282,6 +282,7 @@ class GymScene(scene.Scene):
         self,
         run_through_pyodide: bool = NotProvided,
         environment_initialization_code: str = NotProvided,
+        environment_initialization_code_filepath: str = NotProvided,
         packages_to_install: list[str] = NotProvided,
     ):
         if run_through_pyodide is not NotProvided:
@@ -292,6 +293,15 @@ class GymScene(scene.Scene):
             self.environment_initialization_code = (
                 environment_initialization_code
             )
+
+        if environment_initialization_code_filepath is not NotProvided:
+            assert (
+                environment_initialization_code is NotProvided
+            ), "Cannot set both filepath and code!"
+            with open(
+                environment_initialization_code_filepath, "r", encoding="utf-8"
+            ) as f:
+                self.environment_initialization_code = f.read()
 
         if packages_to_install is not NotProvided:
             self.packages_to_install = packages_to_install

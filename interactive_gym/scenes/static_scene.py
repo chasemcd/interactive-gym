@@ -31,8 +31,8 @@ class StaticScene(scene.Scene):
 
     """
 
-    def __init__(self, scene_id: str, experiment_config: dict):
-        super().__init__(scene_id, experiment_config)
+    def __init__(self):
+        super().__init__()
         self.scene_header: str = ""
         self.scene_subheader: str = ""
         self.self_body: str = ""
@@ -119,8 +119,8 @@ class StartScene(StaticScene):
     The StartScene is a special Scene that marks the beginning of the Stager sequence.
     """
 
-    def __init__(self, scene_id: str, experiment_config: dict):
-        super().__init__(scene_id, experiment_config)
+    def __init__(self):
+        super().__init__()
 
 
 class EndScene(StaticScene):
@@ -132,8 +132,8 @@ class EndScene(StaticScene):
     are forwarding them to personalized surveys, etc.)
     """
 
-    def __init__(self, scene_id: str, experiment_config: dict):
-        super().__init__(scene_id, experiment_config)
+    def __init__(self):
+        super().__init__()
         self.url: str | None = None
         self.append_subject_id: bool = False
 
@@ -331,8 +331,6 @@ class OptionBoxesWithTextBox(StaticScene):
 class OptionBoxesWithScalesAndTextBox(StaticScene):
     def __init__(
         self,
-        scene_id: str,
-        experiment_config: dict,
         options: list[str],
         text_box_header: str,  # TODO(chase): Move this to .display()
         pre_scale_header: str,
@@ -346,7 +344,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
             "Strongly Agree",
         ],
     ):
-        super().__init__(scene_id, experiment_config)
+        super().__init__()
         self.pre_scale_header = pre_scale_header
         self.scale_size = scale_size
         self.scale_questions = scale_questions
