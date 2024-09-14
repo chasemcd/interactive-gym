@@ -120,7 +120,9 @@ class RemoteGameDataLogger {
 let remoteGameLogger = new RemoteGameDataLogger();
 
 export function getRemoteGameData() {
-    return remoteGameLogger.getData();
+    let data = remoteGameLogger.getData();
+    remoteGameLogger.reset();
+    return data;
 }
 
 export function graphics_start(graphics_config) {
