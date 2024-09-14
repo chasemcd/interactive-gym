@@ -134,9 +134,6 @@ class GameManager:
         if game_id in self.waiting_games:
             self.waiting_games.remove(game_id)
 
-        if game_id in self.active_games:
-            del self.active_games[game_id]
-
         del self.games[game_id]
         del self.reset_events[game_id]
         del self.waitroom_timeouts[game_id]
@@ -175,10 +172,6 @@ class GameManager:
             )
 
             if self.scene.game_page_html_fn is not None:
-                print(
-                    "Emitting update_game_page_text",
-                    self.scene.game_page_html_fn(game, subject_id),
-                )
                 self.sio.emit(
                     "update_game_page_text",
                     {

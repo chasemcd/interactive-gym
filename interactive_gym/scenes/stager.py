@@ -63,7 +63,7 @@ class Stager:
         """
         self.scenes = scenes
 
-    def start(self, sio: flask_socketio.SocketIO):
+    def start(self, sio: flask_socketio.SocketIO, room: str | int):
         """
         Initialize the Stager by activating the first Scene in the sequence.
         """
@@ -71,9 +71,9 @@ class Stager:
         assert isinstance(
             self.current_scene, static_scene.StartScene
         ), f"start() was called with a current_scene other than StartScene. Got {type(self.current_scene)}."
-        self.current_scene.activate(sio)
+        self.current_scene.activate(sio, room)
 
-    def advance(self, sio: flask_socketio.SocketIO):
+    def advance(self, sio: flask_socketio.SocketIO, room: str | int):
         """
         Move to the next Scene in the sequence.
         """
@@ -84,4 +84,4 @@ class Stager:
             return None
 
         self.current_scene = self.scenes[self.current_scene_index]
-        self.current_scene.activate(sio=sio)
+        self.current_scene.activate(sio=sio, room=room)

@@ -1,47 +1,26 @@
 from __future__ import annotations
 
 import atexit
-import base64
-import itertools
 import logging
 import os
-import random
 import secrets
 import threading
-import time
 import uuid
 import msgpack
 import pandas as pd
 import os
 import flatten_dict
-import json
 
-import eventlet
 import flask
 import flask_socketio
 import redis
-from eventlet import queue
 
-from interactive_gym.utils.typing import SubjectID, GameID, SceneID
+from interactive_gym.utils.typing import SubjectID, SceneID
 from interactive_gym.scenes import gym_scene
 from interactive_gym.server import game_manager as gm
 
-
-try:
-    import cv2
-except ImportError:
-    cv2 = None
-    print(
-        "cv2 not installed. This is required if you're not "
-        "defining a rendering function and want to (inefficiently) "
-        "have the canvas display whatever is returned from `env.render('rgb_array')`."
-    )
-
-from interactive_gym.configurations import (
-    configuration_constants,
-    remote_config,
-)
-from interactive_gym.server import remote_game, utils
+from interactive_gym.configurations import remote_config
+from interactive_gym.server import utils
 from interactive_gym.scenes import stager
 from interactive_gym.server import game_manager as gm
 
@@ -97,8 +76,8 @@ SESSION_ID_TO_SUBJECT_ID = utils.ThreadSafeDict()
 
 
 def get_subject_id_from_session_id(session_id: str) -> SubjectID:
-    print("session_id", session_id, SESSION_ID_TO_SUBJECT_ID)
-    return SESSION_ID_TO_SUBJECT_ID.get(session_id, None)
+    subject_id = SESSION_ID_TO_SUBJECT_ID.get(session_id, None)
+    return subject_id
 
 
 # List of subject names that have entered a game (collected on end_game)
@@ -163,16 +142,10 @@ def user_index(subject_id):
 
     participant_stager = GENERIC_STAGER.build_instance()
     STAGERS[subject_id] = participant_stager
-    participant_stager.start(socketio)
-
-    participant_stager = STAGERS[subject_id]
-    start_scene = participant_stager.current_scene
 
     return flask.render_template(
         "index.html",
         async_mode=socketio.async_mode,
-        scene_header=start_scene.scene_header,
-        scene_body=start_scene.scene_body,
         subject_id=subject_id,
     )
 
@@ -185,8 +158,9 @@ def register_subject(data):
     sid = flask.request.sid
     flask.session["subject_id"] = subject_id
     SESSION_ID_TO_SUBJECT_ID[sid] = subject_id
-    print("registering subject")
     logger.info(f"Registered session ID {sid} with subject {subject_id}")
+    participant_stager = STAGERS[subject_id]
+    participant_stager.start(socketio, room=sid)
 
 
 # @socketio.on("connect")
@@ -218,14 +192,17 @@ def advance_scene(data):
     participant_stager: stager.Stager | None = STAGERS.get(subject_id, None)
     if participant_stager is None:
         raise ValueError(f"No stager found for subject {subject_id}")
-
-    participant_stager.advance(socketio)
+    participant_stager.advance(socketio, room=flask.request.sid)
 
     # If the current scene is a GymScene, we'll instantiate a
     # corresponding GameManager to handle game logic, connections,
     # and waiting rooms.
     current_scene = participant_stager.get_current_scene()
+    logger.info(f"Advanced to scene: {current_scene.scene_id}")
     if isinstance(current_scene, gym_scene.GymScene):
+        logger.info(
+            f"Instantiating game manager for scene {current_scene.scene_id}"
+        )
         game_manager = gm.GameManager(
             scene=current_scene, experiment_config=CONFIG, sio=socketio
         )
@@ -256,6 +233,12 @@ def join_game(data):
         current_scene = participant_stager.current_scene
         game_manager = GAME_MANAGERS.get(current_scene.scene_id, None)
 
+        if game_manager is None:
+            logger.error(
+                f"Subject {subject_id} tried to join a game but no game manager was found for scene {current_scene.scene_id}."
+            )
+            return
+
         # Check if the participant is already in a game in this scene, they should not be.
         if game_manager.subject_in_game(subject_id):
             logger.error(
@@ -281,7 +264,7 @@ def is_valid_session(
         flask_socketio.emit(
             "invalid_session",
             {"message": "Session is invalid. Please reconnect."},
-            room=subject_id,
+            room=flask.request.sid,
         )
 
     return valid_session
@@ -466,7 +449,6 @@ def on_exit():
 def data_emission(data):
     """Save the static scene data to a csv file."""
     subject_id = get_subject_id_from_session_id(flask.request.sid)
-    print("data_emission", data)
     # Save to a csv in data/{scene_id}/{subject_id}.csv
     # Save the static scene data to a csv file.
     scene_id = data.get("scene_id")
@@ -515,9 +497,6 @@ def receive_remote_game_data(data):
         else:
             padded_data[key] = value + [None] * (max_length - len(value))
 
-    for key, value in padded_data.items():
-        print(key, type(value), len(value))
-
     # Convert to DataFrame
     df = pd.DataFrame(padded_data)
 
@@ -532,19 +511,23 @@ def receive_remote_game_data(data):
     df.to_csv(filename, index=False)
 
     # Also get the current scene for this participant and save the metadata
-    participant_stager = STAGERS.get(subject_id, None)
-    if participant_stager is None:
-        logger.error(
-            f"Subject {subject_id} tried to save data but they don't have a Stager."
-        )
-        return
+    # TODO(chase): this has issues where the data may not be received before the
+    # scene is advanced, which results in this getting the metadata for the _next_
+    # scene.
 
-    current_scene = participant_stager.current_scene
-    current_scene_metadata = current_scene.get_complete_scene_metadata()
+    # participant_stager = STAGERS.get(subject_id, None)
+    # if participant_stager is None:
+    #     logger.error(
+    #         f"Subject {subject_id} tried to save data but they don't have a Stager."
+    #     )
+    #     return
 
-    # save the metadata to a json file
-    with open(f"data/{data['scene_id']}/{subject_id}_metadata.json", "w") as f:
-        json.dump(current_scene_metadata, f)
+    # current_scene = participant_stager.current_scene
+    # current_scene_metadata = current_scene.get_complete_scene_metadata()
+
+    # # save the metadata to a json file
+    # with open(f"data/{data['scene_id']}/{subject_id}_metadata.json", "w") as f:
+    #     json.dump(current_scene_metadata, f)
 
 
 # def periodic_log() -> None:
