@@ -520,7 +520,7 @@ def get_x_y(
 
 ASSET_PATH = "static/assets/overcooked/sprites"
 TILE_SIZE = 45
-WIDTH = 7 * TILE_SIZE
+WIDTH = 10 * TILE_SIZE
 HEIGHT = 7 * TILE_SIZE
 DIR_TO_CARDINAL_DIRECTION = {
     0: "EAST",

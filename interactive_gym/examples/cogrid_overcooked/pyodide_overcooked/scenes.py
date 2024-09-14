@@ -227,7 +227,7 @@ counter_circuit_sp_0 = (
         "</p></center>",
     )
     .rendering(
-        game_width=overcooked_utils.TILE_SIZE * 7,
+        game_width=overcooked_utils.TILE_SIZE * 9,
         game_height=overcooked_utils.TILE_SIZE * 7,
     )
 )
@@ -286,8 +286,8 @@ forced_coordination_sp_0 = (
         "</p></center>",
     )
     .rendering(
-        game_width=overcooked_utils.TILE_SIZE * 5,
-        game_height=overcooked_utils.TILE_SIZE * 5,
+        game_width=overcooked_utils.TILE_SIZE * 7,
+        game_height=overcooked_utils.TILE_SIZE * 7,
     )
 )
 forced_coordination_ibc_1 = (
@@ -343,8 +343,8 @@ asymmetric_advantages_sp_0 = (
         "</p></center>",
     )
     .rendering(
-        game_width=overcooked_utils.TILE_SIZE * 7,
-        game_height=overcooked_utils.TILE_SIZE * 5,
+        game_width=overcooked_utils.TILE_SIZE * 11,
+        game_height=overcooked_utils.TILE_SIZE * 7,
     )
 )
 asymmetric_advantages_ibc_1 = (
