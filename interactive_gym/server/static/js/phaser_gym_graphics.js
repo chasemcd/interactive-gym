@@ -56,6 +56,7 @@ class RemoteGameDataLogger {
             truncateds: {},
             infos: {},
             episode_num: [],
+            t: []
         };
     }
 
@@ -112,7 +113,7 @@ class RemoteGameDataLogger {
             truncateds: {},
             infos: {},
             episode_num: [],
-            t: 0
+            t: []
         };
     }
 }
@@ -268,12 +269,12 @@ class GymScene extends Phaser.Scene {
             if (this.pyodide_remote_game.shouldReset) {
                 this.removeAllObjects();
                 [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
-                remoteGameLogger.logData({observations: currentObservations, infos: infos, episode_num: this.pyodide_remote_game.num_episodes});
+                remoteGameLogger.logData({observations: currentObservations, infos: infos, episode_num: this.pyodide_remote_game.num_episodes, t: this.pyodide_remote_game.step_num});
             } else {
                 const actions = await this.buildPyodideActionDict();
                 previousSubmittedActions = actions;
                 [currentObservations, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide_remote_game.step(actions);
-                remoteGameLogger.logData({observations: currentObservations, actions: actions, rewards: rewards, terminateds: terminateds, truncateds: truncateds, infos: infos, episode_num: this.pyodide_remote_game.num_episodes});
+                remoteGameLogger.logData({observations: currentObservations, actions: actions, rewards: rewards, terminateds: terminateds, truncateds: truncateds, infos: infos, episode_num: this.pyodide_remote_game.num_episodes, t: this.pyodide_remote_game.step_num});
             }             
             addStateToBuffer(render_state);
         }
