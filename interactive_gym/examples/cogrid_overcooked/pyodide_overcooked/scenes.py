@@ -44,7 +44,7 @@ SP_POLICY_MAPPING = {
 
 IBC_POLICY_MAPPING = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "static/assets/overcooked/models/sp_00217.onnx",
+    1: "static/assets/overcooked/models/ibc_000136.onnx",
 }
 
 
