@@ -183,7 +183,7 @@ cramped_room_ibc_0 = (
     )
 )
 cramped_room_sp_1 = (
-    copy.deepcopy(cramped_room_sp_0)
+    copy.deepcopy(cramped_room_ibc_0)
     .scene(scene_id="cramped_room_sp_1", experiment_config={})
     .policies(policy_mapping=SP_POLICY_MAPPING)
 )
