@@ -16,7 +16,7 @@ class ExperimentConfig:
         # Hosting
         self.host = None
         self.port = 8000
-        self.max_ping = 200
+        self.max_ping = 100000
         self.min_ping_measurements = 5
 
     def experiment(
