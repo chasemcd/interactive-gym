@@ -149,6 +149,27 @@ class EndScene(StaticScene):
         return self
 
 
+class CompletionCodeScene(EndScene):
+    def __init__(self):
+        super().__init__()
+
+    def build(self):
+        self.scene_body, completion_code = self._create_html_completion_code()
+        # TODO(chase): figure out how to associate this completion code with the participant
+        return super().build()
+
+    def _create_html_completion_code(self) -> str:
+        import uuid
+
+        completion_code = str(uuid.uuid4())
+        html = f"""
+        <p>Your completion code is:</p>
+        <h2 style="font-family: monospace; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">{completion_code}</h2>
+        <p>Please copy this code and submit it to validate your participation.</p>
+        """
+        return html, completion_code
+
+
 class OptionBoxes(StaticScene):
     def __init__(
         self, scene_id: str, experiment_config: dict, options: list[str]
@@ -335,7 +356,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
         text_box_header: str,  # TODO(chase): Move this to .display()
         pre_scale_header: str,
         scale_questions: list[str],
-        scale_size: int = 5,
+        scale_size: int = 21,
         scale_labels: list[str] = [
             "Strongly Disagree",
             "Disagree",

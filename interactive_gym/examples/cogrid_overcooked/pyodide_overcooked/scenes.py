@@ -453,17 +453,6 @@ coordination_ring_options_scene_1 = copy.deepcopy(
 ).scene(scene_id="coordination_ring_options_scene_1", experiment_config={})
 
 
-end_scene = (
-    static_scene.EndScene()
-    .scene(scene_id="end_scene", experiment_config={})
-    .display(
-        scene_header="Thank you for participating!",
-        scene_body="The experiment is over. Please click the button below to be directed to a follow-up survey.",
-    )
-    .redirect(url="https://www.google.com")
-)
-
-
 cramped_room_0 = scene.SceneWrapper(
     scenes=[cramped_room_sp_0, cramped_room_ibc_0, cramped_room_options_scene_0]
 )
@@ -525,4 +514,14 @@ coordination_ring_1 = scene.SceneWrapper(
         coordination_ring_sp_1,
         coordination_ring_options_scene_1,
     ]
+)
+
+
+end_scene = (
+    static_scene.CompletionCodeScene()
+    .scene(scene_id="end_completion_code_scene", experiment_config={})
+    .display(
+        scene_header="Thank you for participating!",
+    )
+    # .redirect(url="https://www.google.com")
 )

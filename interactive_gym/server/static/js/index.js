@@ -491,7 +491,7 @@ function getData(elementIds) {
 function activateScene(data) {
     console.log(data);
     currentSceneMetadata = data;
-    if (data.scene_type == "EndScene") {
+    if (data.scene_type == "EndScene" || data.scene_type == "CompletionCodeScene") {
         startEndScene(data);
     } else if (data.scene_type == "GymScene") {
         startGymScene(data);
@@ -531,7 +531,9 @@ function startEndScene(data) {
     $("#sceneSubHeader").html(data.scene_subheader);
 
     $("#sceneBody").html(data.scene_body);
-    
+    $("#redirectButton").hide();
+    $("#advanceButton").hide();
+
     if (data.url !== undefined) {
         $("#redirectButton").show();
 
