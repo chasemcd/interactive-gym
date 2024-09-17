@@ -141,7 +141,6 @@ def user_index(subject_id):
     SUBJECTS[subject_id] = threading.Lock()
 
     participant_stager = GENERIC_STAGER.build_instance()
-    save_participant_stager_metadata(participant_stager)
     STAGERS[subject_id] = participant_stager
 
     return flask.render_template(
@@ -199,7 +198,9 @@ def advance_scene(data):
     # corresponding GameManager to handle game logic, connections,
     # and waiting rooms.
     current_scene = participant_stager.get_current_scene()
-    logger.info(f"Advanced to scene: {current_scene.scene_id}")
+    logger.info(
+        f"Advanced to scene: {current_scene.scene_id}. Metadata export: {current_scene.should_export_metadata}"
+    )
     if isinstance(current_scene, gym_scene.GymScene):
         logger.info(
             f"Instantiating game manager for scene {current_scene.scene_id}"
@@ -209,7 +210,8 @@ def advance_scene(data):
         )
         GAME_MANAGERS[current_scene.scene_id] = game_manager
 
-    current_scene.save_metadata(subject_id)
+    if current_scene.should_export_metadata:
+        current_scene.export_metadata(subject_id)
 
 
 @socketio.on("join_game")

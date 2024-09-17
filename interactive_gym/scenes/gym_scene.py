@@ -40,6 +40,7 @@ class GymScene(scene.Scene):
 
         # gameplay
         self.num_episodes: int = 1
+        self.max_steps: int = 1e4
         self.action_mapping: dict[str, int] = dict()
         self.human_id: str | int | None = None
         self.default_action: int | str | None = None
@@ -182,6 +183,7 @@ class GymScene(scene.Scene):
         action_mapping: dict = NotProvided,
         human_id: str | int = NotProvided,
         num_episodes: int = NotProvided,
+        max_steps: int = NotProvided,
         default_action: int | str = NotProvided,
         action_population_method: str = NotProvided,
         input_mode: str = NotProvided,
@@ -210,6 +212,9 @@ class GymScene(scene.Scene):
                 type(num_episodes) == int and num_episodes >= 1
             ), "Must pass an int >=1 to num episodes."
             self.num_episodes = num_episodes
+
+        if max_steps is not NotProvided:
+            self.max_steps = max_steps
 
         if default_action is not NotProvided:
             self.default_action = default_action

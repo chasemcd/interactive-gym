@@ -534,7 +534,7 @@ function startEndScene(data) {
     $("#redirectButton").hide();
     $("#advanceButton").hide();
 
-    if (data.url !== undefined) {
+    if (data.url !== undefined && data.url !== null) {
         $("#redirectButton").show();
 
         let url = data.url;

@@ -828,7 +828,7 @@ overcooked_config = {
     ],
     "grid": {"layout": "overcooked_coordination_ring_v0"},
     "scope": "overcooked",
-    "max_steps": 1000,
+    "max_steps": 2000,
     "unshaped_proportion": 1.0,
     "enable_weight_randomization": False,
     "behavior_weights": {

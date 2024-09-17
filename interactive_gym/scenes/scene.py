@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import os
 import copy
 import json
 import random
@@ -34,7 +34,7 @@ class Scene:
         self,
         scene_id: str = NotProvided,
         experiment_config: dict = NotProvided,
-        should_export_metadata: bool = False,
+        should_export_metadata: bool = NotProvided,
         **kwargs,
     ):
         if scene_id is not NotProvided:
@@ -108,6 +108,7 @@ class Scene:
 
     def export_metadata(self, subject_id: str):
         """Save the metadata for the current scene."""
+        os.makedirs(f"data/{self.scene_id}", exist_ok=True)
         with open(f"data/{self.scene_id}/{subject_id}_metadata.json", "w") as f:
             json.dump(self.scene_metadata, f)
 
@@ -191,14 +192,20 @@ class RandomizeOrder(SceneWrapper):
     def __init__(
         self,
         scenes: Scene | SceneWrapper | list[Scene],
+        keep_n: int | None = None,
         seed: int | None = None,
         **kwargs,
     ):
         super().__init__(scenes, **kwargs)
+        self.keep_n = keep_n
 
     def build(self) -> RandomizeOrder:
         """
         Randomize the order before building the SceneWrapper.
         """
         random.shuffle(self.scenes)
+
+        if self.keep_n is not None:
+            self.scenes = self.scenes[: self.keep_n]
+
         return super().build()

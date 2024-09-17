@@ -97,6 +97,7 @@ tutorial_gym_scene = (
         default_action=Noop,
         action_mapping=action_mapping,
         num_episodes=1,
+        max_steps=1000,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
     )
     .user_experience(
@@ -141,6 +142,7 @@ cramped_room_sp_0 = (
         default_action=Noop,
         action_mapping=action_mapping,
         num_episodes=1,
+        max_steps=2000,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
     )
     .user_experience(
@@ -519,7 +521,11 @@ coordination_ring_1 = scene.SceneWrapper(
 
 end_scene = (
     static_scene.CompletionCodeScene()
-    .scene(scene_id="end_completion_code_scene", experiment_config={})
+    .scene(
+        scene_id="end_completion_code_scene",
+        should_export_metadata=True,
+        experiment_config={},
+    )
     .display(
         scene_header="Thank you for participating!",
     )

@@ -14,7 +14,7 @@ export class RemoteGame {
         this.num_episodes = 0;
         this.max_episodes = config.num_episodes;
         this.step_num = 0;
-        this.max_steps = 1000; // TODO(chase): get from config/env
+        this.max_steps = config.max_steps; // TODO(chase): get from config/env
         this.cumulative_rewards = {};
         this.shouldReset = true;
         this.state = null;
