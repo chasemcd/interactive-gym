@@ -340,7 +340,7 @@ overcooked_randomized_config = {
     ],
     "grid": {"layout_fn": randomized_layout_fn},
     "scope": "overcooked",
-    "max_steps": 2000,
+    "max_steps": 1350,
     "unshaped_proportion": 1.0,
     "enable_weight_randomization": False,
     "behavior_weights": {
@@ -797,7 +797,7 @@ overcooked_randomized_config = {
     ],
     "grid": {"layout_fn": randomized_layout_fn},
     "scope": "overcooked",
-    "max_steps": 2000,
+    "max_steps": 1350,
     "unshaped_proportion": 1.0,
     "enable_weight_randomization": False,
     "behavior_weights": {

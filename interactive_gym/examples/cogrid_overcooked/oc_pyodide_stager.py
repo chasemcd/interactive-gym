@@ -47,7 +47,6 @@ stager = stager.Stager(
                 oc_scenes.coordination_ring_0,
                 oc_scenes.coordination_ring_1,
             ],
-            keep_n=2,
         ),
         oc_scenes.end_scene,
     ]
