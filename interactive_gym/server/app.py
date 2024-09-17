@@ -141,6 +141,7 @@ def user_index(subject_id):
     SUBJECTS[subject_id] = threading.Lock()
 
     participant_stager = GENERIC_STAGER.build_instance()
+    save_participant_stager_metadata(participant_stager)
     STAGERS[subject_id] = participant_stager
 
     return flask.render_template(
@@ -207,6 +208,8 @@ def advance_scene(data):
             scene=current_scene, experiment_config=CONFIG, sio=socketio
         )
         GAME_MANAGERS[current_scene.scene_id] = game_manager
+
+    current_scene.save_metadata(subject_id)
 
 
 @socketio.on("join_game")

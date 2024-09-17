@@ -76,43 +76,6 @@ class StaticScene(scene.Scene):
 
         return self
 
-    def process_page_elements(
-        self, page_elements: dict[str, Any]
-    ) -> dict[str, Any]:
-        """
-
-        TODO(chase): Use
-
-            function emitAllElements() {
-                const elements = document.querySelectorAll('input, textarea, select');  // Add more selectors as needed
-                const data = {};
-
-                elements.forEach(element => {
-                    if (element.name) {
-                        data[element.name] = element.value;
-                    }
-                });
-
-                socket.emit('page_elements', data);
-            }
-
-        to emit all of the elements on the page to the server, then pass it to this function as needed.
-
-
-        Process the elements of the page when the continue button is pressed.
-
-        We'll get a dictionary of:
-            getElementsByTagName(*)
-
-        Args:
-            data (Any): All of the elements on the page.
-
-        Returns:
-            StaticScene: The StaticScene object.
-
-        """
-        pass
-
 
 class StartScene(StaticScene):
     """
@@ -152,9 +115,13 @@ class EndScene(StaticScene):
 class CompletionCodeScene(EndScene):
     def __init__(self):
         super().__init__()
+        self.completion_code = None
+        self.should_export_metadata = True
 
     def build(self):
-        self.scene_body, completion_code = self._create_html_completion_code()
+        self.scene_body, self.completion_code = (
+            self._create_html_completion_code()
+        )
         # TODO(chase): figure out how to associate this completion code with the participant
         return super().build()
 
@@ -168,6 +135,15 @@ class CompletionCodeScene(EndScene):
         <p>Please copy this code and submit it to validate your participation.</p>
         """
         return html, completion_code
+
+    @property
+    def scene_metadata(self) -> dict:
+        """
+        Return the metadata for the current scene that will be passed through the Flask app.
+        """
+        metadata = super().scene_metadata
+        metadata["completion_code"] = self.completion_code
+        return metadata
 
 
 class OptionBoxes(StaticScene):

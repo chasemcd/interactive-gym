@@ -28,17 +28,21 @@ class Scene:
 
         # These are the elements IDs that we'll log the values of at the end of every scene
         self.element_ids = []
+        self.should_export_metadata: bool = False
 
     def scene(
         self,
         scene_id: str = NotProvided,
         experiment_config: dict = NotProvided,
+        should_export_metadata: bool = False,
         **kwargs,
     ):
         if scene_id is not NotProvided:
             self.scene_id = scene_id
         if experiment_config is not NotProvided:
             self.experiment_config = experiment_config
+        if should_export_metadata is not NotProvided:
+            self.should_export_metadata = should_export_metadata
 
         return self
 
@@ -78,16 +82,16 @@ class Scene:
             "terminate_scene", {**self.scene_metadata}, room=self.room
         )
 
-    @property
-    def scene_metadata(self) -> dict:
-        """
-        Return the metadata for the current scene that will be passed through the Flask app.
-        """
-        return {
-            "scene_id": self.scene_id,
-            "scene_type": self.__class__.__name__,
-            "element_ids": self.element_ids,
-        }
+    # @property
+    # def scene_metadata(self) -> dict:
+    #     """
+    #     Return the metadata for the current scene that will be passed through the Flask app.
+    #     """
+    #     return {
+    #         "scene_id": self.scene_id,
+    #         "scene_type": self.__class__.__name__,
+    #         "element_ids": self.element_ids,
+    #     }
 
     @property
     def scene_metadata(self) -> dict:
@@ -101,6 +105,11 @@ class Scene:
             "scene_type": self.__class__.__name__,
             **metadata,
         }
+
+    def export_metadata(self, subject_id: str):
+        """Save the metadata for the current scene."""
+        with open(f"data/{self.scene_id}/{subject_id}_metadata.json", "w") as f:
+            json.dump(self.scene_metadata, f)
 
 
 def serialize_dict(data):
