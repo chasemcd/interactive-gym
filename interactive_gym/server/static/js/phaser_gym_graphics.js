@@ -98,6 +98,9 @@ class RemoteGameDataLogger {
         if (gameData.episode_num !== undefined) {
             this.data.episode_num.push(gameData.episode_num);
         } 
+        if (gameData.t !== undefined) {
+            this.data.t.push(gameData.t);
+        }
     }
 
     getData() {
@@ -269,12 +272,28 @@ class GymScene extends Phaser.Scene {
             if (this.pyodide_remote_game.shouldReset) {
                 this.removeAllObjects();
                 [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
-                remoteGameLogger.logData({observations: currentObservations, infos: infos, episode_num: this.pyodide_remote_game.num_episodes, t: this.pyodide_remote_game.step_num});
+                remoteGameLogger.logData(
+                    {
+                        observations: currentObservations, 
+                        infos: infos, 
+                        episode_num: this.pyodide_remote_game.num_episodes, 
+                        t: this.pyodide_remote_game.step_num
+                    });
             } else {
                 const actions = await this.buildPyodideActionDict();
                 previousSubmittedActions = actions;
                 [currentObservations, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide_remote_game.step(actions);
-                remoteGameLogger.logData({observations: currentObservations, actions: actions, rewards: rewards, terminateds: terminateds, truncateds: truncateds, infos: infos, episode_num: this.pyodide_remote_game.num_episodes, t: this.pyodide_remote_game.step_num});
+                remoteGameLogger.logData(
+                    {
+                        observations: currentObservations, 
+                        actions: actions, 
+                        rewards: rewards, 
+                        terminateds: terminateds, 
+                        truncateds: truncateds, 
+                        infos: infos, 
+                        episode_num: this.pyodide_remote_game.num_episodes, 
+                        t: this.pyodide_remote_game.step_num
+                    });
             }             
             addStateToBuffer(render_state);
         }
