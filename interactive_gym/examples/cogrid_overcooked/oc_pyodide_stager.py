@@ -33,7 +33,7 @@ from interactive_gym.configurations import experiment_config
 stager = stager.Stager(
     scenes=[
         oc_scenes.start_scene,
-        # oc_scenes.tutorial_gym_scene,
+        oc_scenes.tutorial_gym_scene,
         scene.RandomizeOrder(
             scenes=[
                 oc_scenes.cramped_room_0,
