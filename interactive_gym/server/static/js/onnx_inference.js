@@ -18,6 +18,39 @@ export async function actionFromONNX(policyID, observation) {
 }
 
 async function inferenceONNXPolicy(policyID, observation) {
+
+    // If the observation is an Array of Arrays or a dictionary with some values being Arrays of Arrays,
+    // flatten them to a single Array
+    if (Array.isArray(observation)) {
+        observation = observation.flat(Infinity);
+    } else if (typeof observation === 'object') {
+        for (let key in observation) {
+            if (Array.isArray(observation[key])) {
+                observation[key] = observation[key].flat(Infinity);
+            }
+        }
+    }
+
+    
+
+
+    // Ensure observation is a Float32Array
+    if (typeof observation === 'object' && !Array.isArray(observation)) {
+        // If observation is a dictionary
+        for (let key in observation) {
+            if (Array.isArray(observation[key])) {
+                observation[key] = new Float32Array(observation[key]);
+            }
+        }
+    } else if (Array.isArray(observation)) {
+        // If observation is already an array
+        observation = new Float32Array(observation);
+    } else {
+        throw new Error('Observation must be either an object or an array');
+    }
+
+    // If there are any image observations, make sure that they are appropriately shaped
+    // toJs will return an Array full of Array objects, but we need a single 3-D array
     
     // Load the model if not already loaded
     if (!loadedModels[policyID]) {
@@ -114,8 +147,12 @@ function flattenObservation(observation) {
     // Initialize an empty Float32Array
     let concatenatedArray = new Float32Array(0);
 
-    // Iterate over each value (which should be an array) in the observation dictionary
-    for (const array of Object.values(observation)) {
+    // Sort the keys of the observation dictionary
+    const sortedKeys = Object.keys(observation).sort();
+
+    // Iterate over each value (which should be an array) in the sorted observation dictionary
+    for (const key of sortedKeys) {
+        const array = observation[key];
         // Continuously concatenate each array using Float32Concat
         concatenatedArray = Float32Concat(concatenatedArray, new Float32Array(array));
     }

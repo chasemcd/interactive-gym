@@ -56,7 +56,8 @@ class RemoteGameDataLogger {
             truncateds: {},
             infos: {},
             episode_num: [],
-            t: []
+            t: [],
+            timestamp: []
         };
     }
 
@@ -101,6 +102,10 @@ class RemoteGameDataLogger {
         if (gameData.t !== undefined) {
             this.data.t.push(gameData.t);
         }
+
+        
+        // Always add the current timestamp
+        this.data.timestamp.push(Date.now());
     }
 
     getData() {
@@ -116,7 +121,8 @@ class RemoteGameDataLogger {
             truncateds: {},
             infos: {},
             episode_num: [],
-            t: []
+            t: [],
+            timestamp: []
         };
     }
 }

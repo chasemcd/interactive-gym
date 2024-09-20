@@ -51,12 +51,20 @@ env
 
     async reset() {
         this.shouldReset = false;
+        const startTime = performance.now();
         const result = await this.pyodide.runPythonAsync(`
 obs, infos = env.reset()
 render_state = env.render()
+
+# TODO(chase): make this more generic
+obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
+
 obs, infos, render_state
         `);
+        const endTime = performance.now();
+        console.log(`Reset operation took ${endTime - startTime} milliseconds`);
         let [obs, infos, render_state] = await this.pyodide.toPy(result).toJs();
+
         render_state = {
             "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
         };
@@ -78,12 +86,16 @@ obs, infos, render_state
 
     async step(actions) {
         const pyActions = this.pyodide.toPy(actions);
+        // const startTime = performance.now();
         const result = await this.pyodide.runPythonAsync(`
 agent_actions = {int(k): v for k, v in ${pyActions}.items()}
 obs, rewards, terminateds, truncateds, infos = env.step(agent_actions)
 render_state = env.render()
+obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
 obs, rewards, terminateds, truncateds, infos, render_state
         `);
+        // const endTime = performance.now();
+        // console.log(`Step operation took ${endTime - startTime} milliseconds`);
 
         // Convert everything from python objects to JS objects
         let [obs, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide.toPy(result).toJs();
