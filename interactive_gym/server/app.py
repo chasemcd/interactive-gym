@@ -473,7 +473,10 @@ def data_emission(data):
     # convert to a list so we can save it as a csv
     for k, v in data["data"].items():
         data["data"][k] = [v]
+
     df = pd.DataFrame(data["data"])
+
+    df["timestamp"] = pd.to_datetime("now")
 
     df.to_csv(filename, index=False)
 
