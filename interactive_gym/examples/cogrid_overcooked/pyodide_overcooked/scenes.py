@@ -214,9 +214,10 @@ cramped_room_options_scene_0 = (
         pre_scale_header="Now, please indicate the relative extent to which you agree with the following statements about each partner. Move the slider to the left if the statement holds more for the first partner, and to the right for the second partner.",
         scale_labels=["First Partner", "No Difference", "Second Partner"],
         text_box_header="Please describe any additional reasoning for your preference. This might include specific actions or behaviors that you liked or disliked. You may write N/A if you do not have any anything to add.",
+        option_box_header="Did you prefer your first or second partner?",
     )
     .scene(scene_id="cramped_room_options_scene_0", experiment_config={})
-    .display(scene_subheader="Did you prefer your first or second partner?")
+    .display(scene_subheader="Partner Feedback")
 )
 cramped_room_options_scene_1 = copy.deepcopy(
     cramped_room_options_scene_0
@@ -516,6 +517,14 @@ coordination_ring_1 = scene.SceneWrapper(
         coordination_ring_sp_1,
         coordination_ring_options_scene_1,
     ]
+)
+
+
+feedback_scene = static_scene.TextBoxOnly(
+    text_box_header="If desired, please provide any additional feedback on your experience with this game. You will receive a completion code on the next page.",
+    required=False,
+).scene(
+    scene_id="feedback_scene",
 )
 
 
