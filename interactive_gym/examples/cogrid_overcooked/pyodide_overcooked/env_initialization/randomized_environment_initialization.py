@@ -62,36 +62,40 @@ class OvercookedCollectedBehaviorFeatures(feature.Feature):
             features.AgentDir(),
             overcooked_features.OvercookedInventory(),
             overcooked_features.NextToCounter(),
+            overcooked_features.NextToPot(),
             overcooked_features.ClosestObj(
-                focal_object_type=overcooked_grid_objects.Onion
+                focal_object_type=overcooked_grid_objects.Onion, n=4
             ),
             overcooked_features.ClosestObj(
-                focal_object_type=overcooked_grid_objects.Plate
+                focal_object_type=overcooked_grid_objects.Plate, n=4
             ),
             overcooked_features.ClosestObj(
-                focal_object_type=overcooked_grid_objects.PlateStack
+                focal_object_type=overcooked_grid_objects.PlateStack, n=2
             ),
             overcooked_features.ClosestObj(
-                focal_object_type=overcooked_grid_objects.OnionStack
+                focal_object_type=overcooked_grid_objects.OnionStack, n=2
             ),
             overcooked_features.ClosestObj(
-                focal_object_type=overcooked_grid_objects.OnionSoup
+                focal_object_type=overcooked_grid_objects.OnionSoup, n=4
             ),
             overcooked_features.ClosestObj(
-                focal_object_type=overcooked_grid_objects.DeliveryZone
+                focal_object_type=overcooked_grid_objects.DeliveryZone, n=2
             ),
             overcooked_features.ClosestObj(
-                focal_object_type=grid_object.Counter
+                focal_object_type=grid_object.Counter, n=4
             ),
             overcooked_features.OrderedPotFeatures(num_pots=max_num_pots),
             overcooked_features.DistToOtherPlayers(
                 num_other_players=max_num_agents - 1
             ),
             features.AgentPosition(),
-            overcooked_features.LayoutID(),
+            features.CanMoveDirection(),
         ]
 
-        self.individual_features = [BehaviorFeatures()]
+        self.individual_features = [
+            BehaviorFeatures(),
+            overcooked_features.LayoutID(),
+        ]
 
         full_shape = max_num_agents * np.sum(
             [feature.shape for feature in self.shared_features]
@@ -331,7 +335,14 @@ overcooked_randomized_config = {
     "name": "overcooked",
     "num_agents": 2,
     "action_set": "cardinal_actions",
-    "features": ["overcooked_behavior_features"],
+    "features": {
+        0: [],
+        1: [
+            "overcooked_behavior_features",
+            # "overcooked_vf_features",
+            "full_map_resized_grayscale_image",
+        ],
+    },
     "rewards": [
         "delivery_reward",
         "delivery_act_reward",
@@ -784,11 +795,29 @@ class InteractiveGymOvercooked(OvercookedRewardEnv):
         return [obj.as_dict() for obj in render_objects]
 
 
-overcooked_randomized_config = {
+class ScaledFullMapEncoding(features.FullMapEncoding):
+    def generate(self, env, player_id, **kwargs):
+        encoding = super().generate(env, player_id, **kwargs)
+        return encoding / 100.0
+
+
+feature_space.register_feature(
+    "scaled_full_map_encoding", ScaledFullMapEncoding
+)
+
+
+overcooked_config = {
     "name": "overcooked",
     "num_agents": 2,
     "action_set": "cardinal_actions",
-    "features": ["overcooked_behavior_features"],
+    "features": {
+        0: [],
+        1: [
+            "overcooked_behavior_features",
+            # "overcooked_vf_features",
+            "scaled_full_map_encoding",
+        ],
+    },
     "rewards": [
         "delivery_reward",
         "delivery_act_reward",

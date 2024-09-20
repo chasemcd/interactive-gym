@@ -8,15 +8,12 @@ import functools
 from cogrid.envs.overcooked import overcooked
 from cogrid.envs import registry
 from cogrid.feature_space import feature_space
-from cogrid.core import layouts
-import collections
 
 
 import copy
 from cogrid.feature_space import feature
 from cogrid.feature_space import features
 from cogrid.feature_space import feature_space
-from cogrid.core import grid_utils
 from cogrid import cogrid_env
 from cogrid.core import grid_object
 from cogrid.envs.overcooked import overcooked_grid_objects
@@ -768,11 +765,29 @@ class InteractiveGymOvercooked(OvercookedRewardEnv):
         return [obj.as_dict() for obj in render_objects]
 
 
+class ScaledFullMapEncoding(features.FullMapEncoding):
+    def generate(self, env, player_id, **kwargs):
+        encoding = super().generate(env, player_id, **kwargs)
+        return encoding / 100.0
+
+
+feature_space.register_feature(
+    "scaled_full_map_encoding", ScaledFullMapEncoding
+)
+
+
 overcooked_config = {
     "name": "overcooked",
     "num_agents": 1,
     "action_set": "cardinal_actions",
-    "features": ["overcooked_behavior_features"],
+    "features": {
+        0: [
+            "overcooked_behavior_features",
+            # "overcooked_vf_features",
+            # "full_map_resized_grayscale_image",
+            "scaled_full_map_encoding",
+        ],
+    },
     "rewards": [
         "delivery_reward",
         "delivery_act_reward",
