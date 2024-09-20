@@ -39,12 +39,12 @@ Noop = 6
 
 SP_POLICY_MAPPING = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "static/assets/overcooked/models/sp_00217.onnx",
+    1: "static/assets/overcooked/models/sp_encoding_00.onnx",
 }
 
 IBC_POLICY_MAPPING = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "static/assets/overcooked/models/ibc_000136.onnx",
+    1: "static/assets/overcooked/models/ibc_encoding_01.onnx",
 }
 
 
@@ -120,7 +120,7 @@ tutorial_gym_scene = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code_filepath="interactive_gym/examples/cogrid_overcooked/pyodide_overcooked/env_initialization/tutorial_cramped_room_environment_initialization.py",
-        packages_to_install=["numpy", "cogrid==0.0.5", "opencv-python"],
+        packages_to_install=["numpy", "cogrid==0.0.8", "opencv-python"],
     )
 )
 
@@ -173,7 +173,7 @@ cramped_room_sp_0 = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code_filepath="interactive_gym/examples/cogrid_overcooked/pyodide_overcooked/env_initialization/cramped_room_environment_initialization.py",
-        packages_to_install=["numpy", "cogrid==0.0.5", "opencv-python"],
+        packages_to_install=["numpy", "cogrid==0.0.8", "opencv-python"],
     )
 )
 cramped_room_ibc_1 = (
