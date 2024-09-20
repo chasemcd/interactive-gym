@@ -222,6 +222,49 @@ class OptionBoxes(StaticScene):
         return html
 
 
+class TextBoxOnly(StaticScene):
+    def __init__(
+        self,
+        text_box_header: str,
+        required: bool = True,
+    ):
+        super().__init__()
+        self.required = required
+        self.scene_body = self._create_html_text_box(text_box_header)
+        self.element_ids = ["user-input"]
+
+    def _create_html_text_box(self, text_box_header: str) -> str:
+        """
+        Creates HTML code to display a text box with a header.
+        The advance button is only enabled when text is entered.
+        """
+        html = f"""
+        <div style="margin-top: 20px; text-align: center;">
+            <h3>{text_box_header}</h3>
+            <textarea id="user-input" rows="4" cols="50" style="width: 100%; max-width: 500px;"></textarea>
+        </div>
+        """
+
+        if self.required:
+            html += """
+            <script>
+            $(document).ready(function() {
+                $("#advanceButton").attr("disabled", true);
+                $("#advanceButton").show();
+                $("#user-input").on("input", function() {
+                    if ($(this).val().trim().length > 0) {
+                        $("#advanceButton").attr("disabled", false);
+                    } else {
+                        $("#advanceButton").attr("disabled", true);
+                    }
+                });
+            });
+            </script>
+            """
+
+        return html
+
+
 class OptionBoxesWithTextBox(StaticScene):
     def __init__(
         self,
@@ -332,6 +375,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
         text_box_header: str,  # TODO(chase): Move this to .display()
         pre_scale_header: str,
         scale_questions: list[str],
+        option_box_header: str,
         scale_size: int = 21,
         scale_labels: list[str] = [
             "Strongly Disagree",
@@ -346,6 +390,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
         self.scale_size = scale_size
         self.scale_questions = scale_questions
         self.scale_labels = scale_labels
+        self.option_box_header = option_box_header
         self.scene_body = self._create_html(options, text_box_header)
         self.element_ids = self.get_data_element_ids()
 
@@ -366,7 +411,8 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
             "#B565A7",
             "#009B77",
         ]  # Example colors
-        html = '<div id="option-boxes-container" style="display: flex; justify-content: space-around; gap: 10px;">\n'
+        html = f'<p style="text-align: center;">{self.option_box_header} <span style="color: red;">*</span></p>\n'
+        html += '<div id="option-boxes-container" style="display: flex; justify-content: space-around; gap: 10px;">\n'
 
         for i, option in enumerate(options):
             color = colors[
@@ -403,7 +449,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
             html += f"""
             <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
                 <div style="border: 1px solid #ccc; padding: 10px; display: inline-block; margin: 0 auto; width: 80%;">
-                    <p style="margin: 0 0 10px 0;">{question}</p>
+                    <p style="margin: 0 0 10px 0;">{question} <span style="color: red;">*</span></p>
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <span style="flex: 1; text-align: left; font-size: 12px;">{self.scale_labels[0]}</span>
                         <span style="flex: 1; text-align: center; font-size: 12px;">{self.scale_labels[len(self.scale_labels)//2]}</span>
@@ -446,7 +492,7 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
         # Add text box
         html += f"""
         <div style="margin-top: 20px; text-align: center;">
-            <p>{text_box_header}</p>
+            <p>{text_box_header} <span style="color: red;">*</span></p>
             <textarea id="user-input" rows="4" cols="50" style="width: 100%; max-width: 500px;"></textarea>
         </div>
         """
