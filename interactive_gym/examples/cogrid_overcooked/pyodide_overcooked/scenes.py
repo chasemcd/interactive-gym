@@ -64,7 +64,11 @@ action_mapping = {
 # Define the start scene, which is the landing page for participants.
 start_scene = (
     static_scene.StartScene()
-    .scene(scene_id="overcooked_start_scene", experiment_config={})
+    .scene(
+        scene_id="overcooked_start_scene",
+        experiment_config={},
+        should_export_metadata=True,
+    )
     .display(
         scene_header="Welcome",
         scene_body_filepath="interactive_gym/server/static/templates/overcooked_instructions.html",

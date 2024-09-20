@@ -3,6 +3,7 @@ import os
 import copy
 import json
 import random
+from datetime import datetime
 from interactive_gym.scenes.utils import NotProvided
 
 import flask_socketio
@@ -103,6 +104,7 @@ class Scene:
         return {
             "scene_id": self.scene_id,
             "scene_type": self.__class__.__name__,
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             **metadata,
         }
 

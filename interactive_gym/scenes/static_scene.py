@@ -84,6 +84,7 @@ class StartScene(StaticScene):
 
     def __init__(self):
         super().__init__()
+        self.should_export_metadata = True
 
 
 class EndScene(StaticScene):

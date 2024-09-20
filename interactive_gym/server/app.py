@@ -162,6 +162,8 @@ def register_subject(data):
     participant_stager = STAGERS[subject_id]
     participant_stager.start(socketio, room=sid)
 
+    participant_stager.current_scene.export_metadata(subject_id)
+
 
 # @socketio.on("connect")
 # def on_connect():
