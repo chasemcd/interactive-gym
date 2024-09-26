@@ -16,6 +16,109 @@ There are two ways to run Interactive Gym, depending on your use cases and requi
     associated with client server communication. Indeed, if participants do not have a stable internet connection (or are far from your sever), fast client-server communication
     can't be guaranteed and participant experience may degrade. In the browser-based approach, we also conduct model inference in the browser via ONNX.
 
+Usage
+------
+
+At a high level, an Interactive Gym experiment is defined by a set of scenes. 
+Each scene defines what should be displayed to participants and what interactions can 
+occur. 
+
+There are two core types of scenes: ``StaticScene`` and ``GymScene``. The former just
+displays static informaiton to clients and can also be used to collect some forms of data 
+(e.g., text boxes, option buttons, etc.). The latter defines an interaction with a simulation 
+environment and is where the core interactions occur. 
+
+Interactive Gym utilizes a ``Stager``, which manages participants' progression through a sequence
+of scenes. A ``Stager`` is initialized with a list of scenes and, when a participant joins, a stager
+is initialized for that participant to track their progress through the scenes. 
+
+A sequence of scenes must start with a ``StartScene`` and end with an ``EndScene``, both of which
+are particular instances of a ``StaticScene``. At each ``StartScene`` and all intermediate ``StaticScene`` instances, 
+a "Continue" button is displayed to allow participants to advance to the next scene. It is also possible to disable this button
+until some condition is met (e.g., a participant must complete a particular action or selection before 
+advancing).
+
+A ``GymScenes`` takes in all parameters to configure interaction with a 
+simulation environment (in ``PettingZoo`` parallel environment format).
+
+The structure of an Interactive Gym experiment is as follows:
+
+.. code-block:: python
+
+    start_scene = (
+        static_scene.StartScene()
+        .scene(
+            scene_id="my_start_scene",
+            should_export_metadata=True,
+        )
+        .display(
+            scene_header="Welcome to my Interactive Gym Experiment!",
+            scene_body_filepath="This is an example body text for a start scene.",
+        )
+    )
+
+    my_gym_scene = (
+        gym_scene.GymScene()
+        # Define all GymScene parameters here with the 
+        # various GymScene configuration functions.
+        # [...]
+    )
+
+    end_scene = static_scene.EndScene().display(
+        scene_header="Thank you for playing!",
+    )
+
+    stager = stager.Stager(
+        scenes=[
+            start_scene,
+            my_gym_scene,
+            end_scene,
+        ]
+    )
+
+
+    if __name__ == "__main__":
+        experiment_config = (
+            experiment_config.ExperimentConfig()
+            .experiment(stager=stager, experiment_id="my_experiment")
+            .hosting(port=8000, host="0.0.0.0")
+        )
+
+        app.run(experiment_config)
+
+
+
+
+Examples
+---------
+
+Two examples are provided: CoGrid Overcooked and Slime Volleyball. Interactive experiments with humans and AI or human-human pairs can be run, respectively, via the following commands.
+
+CoGrid Overcooked
+
+.. code-block:: bash
+
+    python -m examples.cogrid_overcooked.human_ai_server
+    python -m examples.cogrid_overcooked.human_human_server
+    python -m examples.cogrid_overcooked.human_ai_pyodide
+
+Slime Volleyball
+
+.. code-block:: bash
+
+    python -m examples.slime_volleyball.human_ai_server
+    python -m examples.slime_volleyball.human_human_server
+
+Instructions for installation can be found in the respective README.md files in the ``examples/`` directory.
+
+In both examples we follow the same file structure with three key files:
+1. ``{game}_callback.py``: This file defines how we collect data using hooks in the app.
+2. ``{game}_*_server.py``: This file launches the app for a particular experiment.
+3. ``{game}_utils.py``: In the utils file, we define the process by which we render objects in the browser (e.g., defining a function that specifies sprite relationship, canvas objects, etc.).
+
+Example AI policies as ONNX files are also included in the ``policies/`` directory.
+
+
 Structure
 -------------
 
@@ -75,51 +178,6 @@ The repository has the following structure:
     ├── requirements.txt
     └── up.sh
 
-
-The ``server/`` directory provides all functionality to execute rendering and client-facing interfaces. ``app.py`` defines the Flask app that serves information to the front end, for which all templates are included in ``server/static/``.
-The ``remote_game.py`` file defines the logic that operates over a ``gymnasium`` environment.
-
-Callbacks can be used for data logging and provide hooks for a user to execute specific code at various points in the user experiences, their definition is in ``server/callback.py``
-
-
-Usage
-------
-
-To run an interactive experiment, a user should define a file with the following general structure:
-
-.. code-block:: python
-
-    # TODO
-
-
-Examples
----------
-
-Two examples are provided: CoGrid Overcooked and Slime Volleyball. Interactive experiments with humans and AI or human-human pairs can be run, respectively, via the following commands.
-
-CoGrid Overcooked
-
-.. code-block:: bash
-
-    python -m examples.cogrid_overcooked.human_ai_server
-    python -m examples.cogrid_overcooked.human_human_server
-    python -m examples.cogrid_overcooked.human_ai_pyodide
-
-Slime Volleyball
-
-.. code-block:: bash
-
-    python -m examples.slime_volleyball.human_ai_server
-    python -m examples.slime_volleyball.human_human_server
-
-Instructions for installation can be found in the respective README.md files in the ``examples/`` directory.
-
-In both examples we follow the same file structure with three key files:
-1. ``{game}_callback.py``: This file defines how we collect data using hooks in the app.
-2. ``{game}_*_server.py``: This file launches the app for a particular experiment.
-3. ``{game}_utils.py``: In the utils file, we define the process by which we render objects in the browser (e.g., defining a function that specifies sprite relationship, canvas objects, etc.).
-
-Example AI policies as ONNX files are also included in the ``policies/`` directory.
 
 Acknowledgements
 ---------------------
