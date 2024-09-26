@@ -9,33 +9,34 @@ from interactive_gym.scenes.utils import NotProvided
 
 
 class StaticScene(scene.Scene):
-    """StaticScene is a Scene that represents a static web page with text/images displayed.
+    """
+    A class representing a static scene in the Interactive Gym.
 
-    HTML Scenes will all have a "Continue" button on the bottom of the page. This button will be immediately
-    available unless a canContinue element is provided in the HTML file. If the canContinue element included provided,
-    the button will only be enabled once the element evaluates to true, e.g.,:
+    StaticScene is used to display static content to participants, such as
+    instructions, information, or data collection forms. It extends the base
+    Scene class and provides methods to set the content of the scene.
 
-        let canContinue = document.getElemendById("canContinue");
-        if (canContinue == undefined) {
-                 $("#continueButton").attr("disabled", false);
-            } else {
-                canContinue.onchange = function() {
-                    if (canContinue.value == "true") {
-                        $("#continueButton").attr("disabled", false);
-                    } else {
-                        $("#continueButton").attr("disabled", true);
-                    }
-                }
-            }
-        }
+    The most critical component of this class is the `scene_body` attribute,
+    which should contain plaintext or HTML (and Javascript) to display
+    to the user.
 
+    If you would like to put restrictions on the user being able to advance the
+    scene, you can add Javascript to the `scene_body` attribute that conditionally
+    disables/enables the #advanceButton element (which will be globally accessible).
+
+    If you are creating elements that require data collection, add the element IDs to
+    the StaticScene.element_ids list. These IDs will be used to retrieve the data from the
+    client and send it back to the server to be saved. This process happens automatically.
     """
 
     def __init__(self):
         super().__init__()
+        # The main header text for the scene
         self.scene_header: str = ""
+        # A subheader text for the scene
         self.scene_subheader: str = ""
-        self.self_body: str = ""
+        # The main content body of the scene, which can be HTML
+        self.scene_body: str = ""  # Fixed typo: 'self_body' to 'scene_body'
 
     def display(
         self,
@@ -44,15 +45,23 @@ class StaticScene(scene.Scene):
         scene_body: str = NotProvided,
         scene_body_filepath: str = NotProvided,
     ) -> StaticScene:
-        """Set the HTML file to be displayed in the scene.
+        """Sets the content to be displayed in the static scene.
 
-        Args:
-            filepath (str): The path to the HTML file to display in the scene.
-            html_text (str): The HTML text to display in the scene.
+        This method allows you to set the header, subheader, and body content of the static scene.
+        You can provide the body content directly as a string or specify a filepath to load the content from.
 
-        Returns:
-            StaticScene: The StaticScene object.
+        :param scene_header: The main header text for the scene, defaults to NotProvided
+        :type scene_header: str, optional
+        :param scene_subheader: A subheader text for the scene, defaults to NotProvided
+        :type scene_subheader: str, optional
+        :param scene_body: The main content body of the scene as a string (can be HTML), defaults to NotProvided
+        :type scene_body: str, optional
+        :param scene_body_filepath: Path to a file containing the scene body content, defaults to NotProvided
+        :type scene_body_filepath: str, optional
+        :return: The current StaticScene instance for method chaining
+        :rtype: StaticScene
 
+        :raises AssertionError: If both scene_body and scene_body_filepath are provided
         """
         if scene_body_filepath is not NotProvided:
             assert (
@@ -104,6 +113,15 @@ class EndScene(StaticScene):
     def redirect(
         self, url: str = NotProvided, append_subject_id: bool = NotProvided
     ) -> EndScene:
+        """Configure the redirect URL for the EndScene.
+
+        :param url: The URL to redirect to after the EndScene, defaults to NotProvided
+        :type url: str, optional
+        :param append_subject_id: Whether to append the subject_id to the redirect URL, defaults to NotProvided
+        :type append_subject_id: bool, optional
+        :return: The current EndScene instance for method chaining
+        :rtype: EndScene
+        """
         if url is not NotProvided:
             self.url = url
 
@@ -114,6 +132,12 @@ class EndScene(StaticScene):
 
 
 class CompletionCodeScene(EndScene):
+    """A special EndScene that generates and displays a unique completion code.
+
+    This scene is typically used at the end of an experiment to provide participants
+    with a unique code that they can use to verify their participation or claim compensation.
+    """
+
     def __init__(self):
         super().__init__()
         self.completion_code = None
@@ -126,6 +150,14 @@ class CompletionCodeScene(EndScene):
         return super().build()
 
     def _create_html_completion_code(self) -> str:
+        """Create HTML content for displaying a completion code.
+
+        This method generates a unique completion code using UUIDs and formats it as HTML.
+        It also includes instructions for participants to copy and submit the code.
+
+        :return: A tuple containing the HTML content and the completion code
+        :rtype: tuple[str, str]
+        """
         import uuid
 
         completion_code = str(uuid.uuid4())
@@ -147,6 +179,12 @@ class CompletionCodeScene(EndScene):
 
 
 class OptionBoxes(StaticScene):
+    """A StaticScene that presents a set of clickable option boxes to the user.
+
+    This scene displays a horizontal line of colored boxes, each representing an option.
+    Users can click on a box to select it, which enables the advance button.
+    """
+
     def __init__(
         self, scene_id: str, experiment_config: dict, options: list[str]
     ):
@@ -223,6 +261,12 @@ class OptionBoxes(StaticScene):
 
 
 class TextBox(StaticScene):
+    """A StaticScene that displays a text box for user input.
+
+    This scene includes a text box where users can enter text. The advance button
+    is only enabled when text is entered.
+    """
+
     def __init__(
         self,
         text_box_header: str,
@@ -238,15 +282,16 @@ class TextBox(StaticScene):
         text_box_header: str = NotProvided,
         **kwargs,
     ) -> StaticScene:
-        """Set the HTML file to be displayed in the scene.
+        """Display the TextBox scene with the given header.
 
-        Args:
-            filepath (str): The path to the HTML file to display in the scene.
-            html_text (str): The HTML text to display in the scene.
+        This method configures the display of the TextBox scene. If a new text_box_header
+        is provided, it updates the scene's body with a new text box using that header.
 
-        Returns:
-            StaticScene: The StaticScene object.
-
+        :param text_box_header: The header text to display above the text box. If not provided,
+                                the existing header will be used, defaults to NotProvided
+        :type text_box_header: str, optional
+        :return: The current StaticScene instance
+        :rtype: StaticScene
         """
         super().display(**kwargs)
 
@@ -288,6 +333,15 @@ class TextBox(StaticScene):
 
 
 class OptionBoxesWithTextBox(StaticScene):
+    """A StaticScene subclass that displays option boxes and a text box.
+
+    This class creates a scene with multiple clickable option boxes and a text input box.
+    It allows users to select an option and provide additional text input.
+
+    :param StaticScene: The parent class for static scenes in the Interactive Gym.
+    :type StaticScene: StaticScene
+    """
+
     def __init__(
         self,
         scene_id: str,
@@ -391,6 +445,15 @@ class OptionBoxesWithTextBox(StaticScene):
 
 
 class OptionBoxesWithScalesAndTextBox(StaticScene):
+    """A StaticScene subclass that displays option boxes with scales and a text box.
+
+    This class creates a static scene with multiple interactive elements:
+    - Option boxes that can be selected
+    - Likert scales for rating different aspects
+    - A text box for additional input
+
+    """
+
     def __init__(
         self,
         options: list[str],
