@@ -88,7 +88,6 @@ Examples
 Two examples are provided: CoGrid Overcooked and Slime Volleyball. Interactive experiments with humans and AI or human-human pairs can be run, respectively, via the following commands.
 
 CoGrid Overcooked
-==================
 
 .. code-block:: bash
 
@@ -99,7 +98,6 @@ CoGrid Overcooked
 
 
 Slime Volleyball
-=================
 
 .. code-block:: bash
 
