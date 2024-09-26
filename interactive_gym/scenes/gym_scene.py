@@ -18,6 +18,39 @@ class GymScene(scene.Scene):
     All gym scenes begin with a static HTML page that loads the necessary assets and initializes the environment.
     Participants then click the "Start" button to begin interaction with the scene.
 
+    Attributes:
+        env_creator (Callable | None): Function to create the environment.
+        env_config (dict[str, Any] | None): Configuration for the environment.
+        env_seed (int): Seed for the environment's random number generator.
+        load_policy_fn (Callable | None): Function to load policies.
+        policy_inference_fn (Callable | None): Function for policy inference.
+        policy_mapping (dict[str, Any]): Mapping of agents to policies.
+        available_policies (dict[str, Any]): Available policies for the scene.
+        policy_configs (dict[str, Any]): Configurations for the policies.
+        frame_skip (int): Number of frames to skip between actions.
+        num_episodes (int): Number of episodes to run.
+        max_steps (int): Maximum number of steps per episode.
+        action_mapping (dict[str, int]): Mapping of action names to action indices.
+        human_id (str | int | None): Identifier for the human player.
+        default_action (int | str | None): Default action to take if none is provided.
+        action_population_method (str): Method for populating actions.
+        input_mode (str): Mode of input for the scene.
+        game_has_composite_actions (bool): Whether the game has composite actions.
+        max_ping (int | None): Maximum allowed ping.
+        min_ping_measurements (int): Minimum number of ping measurements required.
+        callback (None): Callback function for the scene.
+        env_to_state_fn (Callable | None): Function to convert environment state to renderable state.
+        preload_specs (list[dict[str, str | int | float]] | None): Specifications for preloading assets.
+        hud_text_fn (Callable | None): Function to generate HUD text.
+        location_representation (str): Representation of locations ('relative' or 'pixels').
+        game_width (int | None): Width of the game window.
+        game_height (int | None): Height of the game window.
+        fps (int): Frames per second for rendering.
+        background (str): Background color of the scene.
+        state_init (list): Initial state of the scene.
+        assets_dir (str): Directory containing assets.
+        assets_to_preload (list[str]): List of assets to preload.
+        animation_configs (list): Configurations for animations.
     """
 
     def __init__(
@@ -89,6 +122,17 @@ class GymScene(scene.Scene):
         env_config: dict[str, Any] = NotProvided,
         seed: int = NotProvided,
     ):
+        """Specify the environment settings for the scene.
+
+        :param env_creator: A function that creates the environment with optional keyword arguments, defaults to NotProvided.
+        :type env_creator: Callable, optional
+        :param env_config: A dictionary of configurations for the environment.
+        :type env_config: dict[str, Any], optional
+        :param seed: Random seed for the environment, defaults to NotProvided
+        :type seed: int, optional
+        :return: This scene object
+        :rtype: GymScene
+        """
         if env_creator is not NotProvided:
             self.env_creator = env_creator
 
@@ -115,6 +159,35 @@ class GymScene(scene.Scene):
         assets_to_preload: list[str] = NotProvided,
         animation_configs: list = NotProvided,
     ):
+        """_summary_
+
+        :param fps: Frames per second for rendering the game, defaults to NotProvided
+        :type fps: int, optional
+        :param env_to_state_fn: Function to convert environment state to renderable state, defaults to NotProvided
+        :type env_to_state_fn: Callable, optional
+        :param preload_specs: Specifications for preloading assets, defaults to NotProvided
+        :type preload_specs: list[dict[str, str  |  float  |  int]], optional
+        :param hud_text_fn: Function to generate HUD text, defaults to NotProvided
+        :type hud_text_fn: Callable, optional
+        :param location_representation: How locations are represented ('relative' or 'pixels'), defaults to NotProvided
+        :type location_representation: str, optional
+        :param game_width: Width of the game screen in pixels, defaults to NotProvided
+        :type game_width: int, optional
+        :param game_height: Height of the game screen in pixels, defaults to NotProvided
+        :type game_height: int, optional
+        :param background: Background color or image for the game, defaults to NotProvided
+        :type background: str, optional
+        :param state_init: Initial state of the game, defaults to NotProvided
+        :type state_init: list, optional
+        :param assets_dir: Directory containing game assets, defaults to NotProvided
+        :type assets_dir: str, optional
+        :param assets_to_preload: List of asset filenames to preload, defaults to NotProvided
+        :type assets_to_preload: list[str], optional
+        :param animation_configs: Configurations for game animations, defaults to NotProvided
+        :type animation_configs: list, optional
+        :return: This scene object
+        :rtype: GymScene
+        """
         if env_to_state_fn is not NotProvided:
             self.env_to_state_fn = env_to_state_fn
 
@@ -164,6 +237,19 @@ class GymScene(scene.Scene):
         policy_inference_fn: Callable = NotProvided,
         frame_skip: int = NotProvided,
     ):
+        """_summary_
+
+        :param policy_mapping: A dictionary mapping agent IDs to policy names, defaults to NotProvided
+        :type policy_mapping: dict, optional
+        :param load_policy_fn: A function to load policies, defaults to NotProvided
+        :type load_policy_fn: Callable, optional
+        :param policy_inference_fn: A function for policy inference, defaults to NotProvided
+        :type policy_inference_fn: Callable, optional
+        :param frame_skip: Number of frames to skip between actions, defaults to NotProvided
+        :type frame_skip: int, optional
+        :return: The GymScene instance
+        :rtype: GymScene
+        """
         if policy_mapping is not NotProvided:
             self.policy_mapping = policy_mapping
 
@@ -190,6 +276,29 @@ class GymScene(scene.Scene):
         callback: None = NotProvided,  # TODO(chase): add callback typehint without circular import
         reset_freeze_s: int = NotProvided,
     ):
+        """Configure gameplay settings for the GymScene.
+
+        :param action_mapping: Mapping of action names to action indices, defaults to NotProvided
+        :type action_mapping: dict, optional
+        :param human_id: Identifier for the human player, defaults to NotProvided
+        :type human_id: str | int, optional
+        :param num_episodes: Number of episodes to run, defaults to NotProvided
+        :type num_episodes: int, optional
+        :param max_steps: Maximum number of steps per episode, defaults to NotProvided
+        :type max_steps: int, optional
+        :param default_action: Default action to take if none is provided, defaults to NotProvided
+        :type default_action: int | str, optional
+        :param action_population_method: Method for populating actions, defaults to NotProvided
+        :type action_population_method: str, optional
+        :param input_mode: Mode of input for the scene, defaults to NotProvided
+        :type input_mode: str, optional
+        :param callback: Callback function for the scene, defaults to NotProvided
+        :type callback: None, optional
+        :param reset_freeze_s: Number of seconds to freeze the scene after reset, defaults to NotProvided
+        :type reset_freeze_s: int, optional
+        :return: The GymScene instance
+        :rtype: GymScene
+        """
         if action_mapping is not NotProvided:
             # ensure the composite action tuples are sorted
             sorted_tuple_action_map = {}
@@ -240,6 +349,25 @@ class GymScene(scene.Scene):
         waitroom_timeout_redirect_url: str = NotProvided,
         game_page_html_fn: Callable = NotProvided,
     ):
+        """Configure the user experience for the GymScene.
+
+        :param scene_header: Header text for the scene, defaults to NotProvided
+        :type scene_header: str, optional
+        :param scene_body: HTML body content for the scene, defaults to NotProvided
+        :type scene_body: str, optional
+        :param scene_body_filepath: Path to a file containing HTML body content, defaults to NotProvided
+        :type scene_body_filepath: str, optional
+        :param in_game_scene_body: HTML body content displayed during gameplay, defaults to NotProvided
+        :type in_game_scene_body: str, optional
+        :param in_game_scene_body_filepath: Path to a file containing in-game HTML body content, defaults to NotProvided
+        :type in_game_scene_body_filepath: str, optional
+        :param waitroom_timeout_redirect_url: URL to redirect to if waitroom times out, defaults to NotProvided
+        :type waitroom_timeout_redirect_url: str, optional
+        :param game_page_html_fn: Function to generate custom game page HTML, defaults to NotProvided
+        :type game_page_html_fn: Callable, optional
+        :return: The GymScene instance
+        :rtype: GymScene
+        """
         if scene_header is not NotProvided:
             self.scene_header = scene_header
 
@@ -290,6 +418,22 @@ class GymScene(scene.Scene):
         environment_initialization_code_filepath: str = NotProvided,
         packages_to_install: list[str] = NotProvided,
     ):
+        """Configure Pyodide-related settings for the GymScene.
+
+        This method sets up parameters related to running the environment through Pyodide,
+        which allows Python code to run in the browser.
+
+        :param run_through_pyodide: Whether to run the environment through Pyodide, defaults to NotProvided
+        :type run_through_pyodide: bool, optional
+        :param environment_initialization_code: Python code to initialize the environment in Pyodide, defaults to NotProvided
+        :type environment_initialization_code: str, optional
+        :param environment_initialization_code_filepath: Path to a file containing Python code to initialize the environment, defaults to NotProvided
+        :type environment_initialization_code_filepath: str, optional
+        :param packages_to_install: List of Python packages to install in the Pyodide environment, defaults to NotProvided
+        :type packages_to_install: list[str], optional
+        :return: The GymScene instance (self)
+        :rtype: GymScene
+        """
         if run_through_pyodide is not NotProvided:
             assert isinstance(run_through_pyodide, bool)
             self.run_through_pyodide = run_through_pyodide
@@ -315,15 +459,31 @@ class GymScene(scene.Scene):
 
     @property
     def simulate_waiting_room(self) -> bool:
-        """
+        """Determines if the scene should simulate a waiting room.
+
+        This property checks if there's any randomization in the waiting room time,
+        which would necessitate simulating a waiting room experience.
+
         Returns a boolean indicating whether or not we're
         forcing all participants to be in a waiting room, regardless
         of if they're waiting for other players or not.
+
+        :return: True if the maximum waiting room time randomization interval is greater than 0, False otherwise.
+        :rtype: bool
         """
         return max(self.waitroom_time_randomization_interval_s) > 0
 
     def get_complete_scene_metadata(self) -> dict:
-        """ """
+        """Get the complete metadata for the scene.
+
+        This method returns a dictionary containing all the metadata for the scene,
+        including all class properties that are not already in the base scene metadata.
+        It handles various data types, converting complex objects to dictionaries or strings
+        to ensure all data is serializable.
+
+        :return: A dictionary containing all the scene's metadata
+        :rtype: dict
+        """
         metadata = super().scene_metadata
 
         # Add all of the class properties to the metadata
