@@ -106,11 +106,6 @@ Slime Volleyball
 
 Instructions for installation can be found in the respective README.md files in the ``examples/`` directory.
 
-In both examples we follow the same file structure with three key files:
-1. ``{game}_callback.py``: This file defines how we collect data using hooks in the app.
-2. ``{game}_*_server.py``: This file launches the app for a particular experiment.
-3. ``{game}_utils.py``: In the utils file, we define the process by which we render objects in the browser (e.g., defining a function that specifies sprite relationship, canvas objects, etc.).
-
 Example AI policies as ONNX files are also included in the ``policies/`` directory.
 
 
@@ -179,8 +174,6 @@ Acknowledgements
 
 The Phaser integration and server implementation are inspired by and derived from the 
 Overcooked AI demo by Carroll et al. (https://github.com/HumanCompatibleAI/overcooked-demo/tree/master).
-
-
 
 
 Installation
