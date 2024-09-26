@@ -49,7 +49,6 @@ The structure of an Interactive Gym experiment is as follows:
         static_scene.StartScene()
         .scene(
             scene_id="my_start_scene",
-            should_export_metadata=True,
         )
         .display(
             scene_header="Welcome to my Interactive Gym Experiment!",
@@ -68,13 +67,7 @@ The structure of an Interactive Gym experiment is as follows:
         scene_header="Thank you for playing!",
     )
 
-    stager = stager.Stager(
-        scenes=[
-            start_scene,
-            my_gym_scene,
-            end_scene,
-        ]
-    )
+    stager = stager.Stager(scenes=[start_scene, my_gym_scene, end_scene])
 
 
     if __name__ == "__main__":
@@ -95,6 +88,7 @@ Examples
 Two examples are provided: CoGrid Overcooked and Slime Volleyball. Interactive experiments with humans and AI or human-human pairs can be run, respectively, via the following commands.
 
 CoGrid Overcooked
+==================
 
 .. code-block:: bash
 
@@ -102,7 +96,10 @@ CoGrid Overcooked
     python -m examples.cogrid_overcooked.human_human_server
     python -m examples.cogrid_overcooked.human_ai_pyodide
 
+
+
 Slime Volleyball
+=================
 
 .. code-block:: bash
 
