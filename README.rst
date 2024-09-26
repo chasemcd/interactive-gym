@@ -1,6 +1,12 @@
 Interactive Gym
 ================
 
+
+.. raw:: html
+
+   <span style="color: red; font-weight: bold;">Note! We are currently building in more advanced functionality for extending experiments and running Python environments directly in the browser. Please see `feature/pyodide-integration` for the latest updates. </span>
+
+
 .. image:: interactive_gym_logo.png
     :alt: Interactive Gym Logo
     :align: center
