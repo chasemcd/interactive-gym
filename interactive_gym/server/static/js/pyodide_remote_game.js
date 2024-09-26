@@ -4,20 +4,25 @@ import * as ui_utils from './ui_utils.js';
 
 export class RemoteGame {
     constructor(config) {
+        this.setAttributes(config);
+        this.installed_packages = [];
+        this.initialize(); 
+    }
+
+    setAttributes(config) {
         this.config = config;
         this.micropip = null;
         this.pyodideReady = false;
-        this.initialize(); 
+        this.state = null;
         this.objects_to_render = [];
         this.observations = [];
         this.render_state = null;
         this.num_episodes = 0;
         this.max_episodes = config.num_episodes;
         this.step_num = 0;
-        this.max_steps = config.max_steps; // TODO(chase): get from config/env
+        this.max_steps = config.max_steps;
         this.cumulative_rewards = {};
         this.shouldReset = true;
-        this.state = null;
     }
 
     isDone(){
@@ -33,8 +38,48 @@ export class RemoteGame {
         if (this.config.packages_to_install !== undefined) {
             console.log("Installing packages via micropip: ", this.config.packages_to_install);
             await this.micropip.install(this.config.packages_to_install);
+
+            // Append the installed packages to the list of installed packages
+            this.installed_packages.push(...this.config.packages_to_install);
         }
 
+        // The code executed here must instantiate an environment `env`
+        const env = await this.pyodide.runPythonAsync(`
+${this.config.environment_initialization_code}
+env
+        `);
+
+        if (env == undefined) {
+            throw new Error("The environment was not initialized correctly. Ensure the the environment_initialization_code correctly creates an `env` object.");
+        }
+
+        this.state = "ready";
+        this.pyodideReady = true;
+    }
+
+
+
+    async reinitialize_environment(config) {
+        this.pyodide_ready = false;
+        // If we need additional packages from micropip,
+        // install them. Look at config.packages_to_install
+        // and compare it to this.installed_packages.
+        // If there are any packages in config.packages_to_install
+        // that are not in this.installed_packages, then install them.
+        if (config.packages_to_install !== undefined) {
+            let new_packages = [];
+            for (let pkg of config.packages_to_install) {
+                if (!this.installed_packages.includes(pkg)) {
+                    new_packages.push(pkg);
+                }
+            }
+
+            if (new_packages.length > 0) {
+                await this.micropip.install(new_packages);
+                this.installed_packages.push(...new_packages);    
+            }
+        }
+    
         // The code executed here must instantiate an environment `env`
         const env = await this.pyodide.runPythonAsync(`
 ${this.config.environment_initialization_code}

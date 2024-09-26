@@ -651,8 +651,14 @@ $(function() {
 
 // GymScene
 
-function initializePyodideRemoteGame(data) {
-    pyodideRemoteGame = new RemoteGame(data);
+async function initializePyodideRemoteGame(data) {
+    // Only initialize a new RemoteGame if we don't already have one
+    if (pyodideRemoteGame === null) {
+        pyodideRemoteGame = new RemoteGame(data);
+    } else {
+        console.log("Not initializing a new RemoteGame because one already exists");
+        pyodideRemoteGame.reinitialize_environment(data);
+    }
 };
 
 var checkPyodideDone;
@@ -661,7 +667,7 @@ function enableCheckPyodideDone() {
         if (pyodideRemoteGame !== undefined && pyodideRemoteGame.isDone()) {
             clearInterval(checkPyodideDone);
             clearInterval(refreshStartButton);
-            pyodideRemoteGame = undefined;
+            // pyodideRemoteGame = undefined;
             
             // Create and show the countdown popup
             const popup = document.createElement('div');
