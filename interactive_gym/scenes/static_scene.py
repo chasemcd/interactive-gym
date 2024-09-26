@@ -123,7 +123,6 @@ class CompletionCodeScene(EndScene):
         self.scene_body, self.completion_code = (
             self._create_html_completion_code()
         )
-        # TODO(chase): figure out how to associate this completion code with the participant
         return super().build()
 
     def _create_html_completion_code(self) -> str:
@@ -223,7 +222,7 @@ class OptionBoxes(StaticScene):
         return html
 
 
-class TextBoxOnly(StaticScene):
+class TextBox(StaticScene):
     def __init__(
         self,
         text_box_header: str,
@@ -233,6 +232,28 @@ class TextBoxOnly(StaticScene):
         self.required = required
         self.scene_body = self._create_html_text_box(text_box_header)
         self.element_ids = ["user-input"]
+
+    def display(
+        self,
+        text_box_header: str = NotProvided,
+        **kwargs,
+    ) -> StaticScene:
+        """Set the HTML file to be displayed in the scene.
+
+        Args:
+            filepath (str): The path to the HTML file to display in the scene.
+            html_text (str): The HTML text to display in the scene.
+
+        Returns:
+            StaticScene: The StaticScene object.
+
+        """
+        super().display(**kwargs)
+
+        if text_box_header is not NotProvided:
+            self.scene_body = self._create_html_text_box(text_box_header)
+
+        return self
 
     def _create_html_text_box(self, text_box_header: str) -> str:
         """

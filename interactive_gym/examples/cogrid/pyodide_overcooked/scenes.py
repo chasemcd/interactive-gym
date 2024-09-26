@@ -5,26 +5,16 @@ import copy
 
 eventlet.monkey_patch()
 
-import argparse
-from datetime import datetime
-
-from cogrid.envs import registry
 
 from interactive_gym.configurations import (
     configuration_constants,
-    remote_config,
 )
-from interactive_gym.examples.cogrid_overcooked import (
-    overcooked_callback,
+from interactive_gym.examples.cogrid import (
     overcooked_utils,
 )
-from interactive_gym.server import app
 from interactive_gym.scenes import gym_scene
 from interactive_gym.scenes import static_scene
 from interactive_gym.scenes import scene
-from interactive_gym.scenes import stager
-
-from interactive_gym.configurations import experiment_config
 
 
 # Constants for controls/actions/etc.
@@ -123,7 +113,7 @@ tutorial_gym_scene = (
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid_overcooked/pyodide_overcooked/env_initialization/tutorial_cramped_room_environment_initialization.py",
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/tutorial_cramped_room_environment_initialization.py",
         packages_to_install=["numpy", "cogrid==0.0.8", "opencv-python"],
     )
 )
@@ -176,7 +166,7 @@ cramped_room_sp_0 = (
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid_overcooked/pyodide_overcooked/env_initialization/cramped_room_environment_initialization.py",
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_environment_initialization.py",
         packages_to_install=["numpy", "cogrid==0.0.8", "opencv-python"],
     )
 )
@@ -231,7 +221,7 @@ counter_circuit_sp_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="counter_circuit_sp_0", experiment_config={})
     .pyodide(
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid_overcooked/pyodide_overcooked/env_initialization/counter_circuit_environment_initialization.py"
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/counter_circuit_environment_initialization.py"
     )
     .user_experience(
         scene_header="Overcooked",
@@ -290,7 +280,7 @@ forced_coordination_sp_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="forced_coordination_sp_0", experiment_config={})
     .pyodide(
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid_overcooked/pyodide_overcooked/env_initialization/forced_coordination_environment_initialization.py"
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/forced_coordination_environment_initialization.py"
     )
     .user_experience(
         scene_header="Overcooked",
@@ -347,7 +337,7 @@ asymmetric_advantages_sp_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="asymmetric_advantages_sp_0", experiment_config={})
     .pyodide(
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid_overcooked/pyodide_overcooked/env_initialization/asymmetric_advantages_environment_initialization.py"
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/asymmetric_advantages_environment_initialization.py"
     )
     .user_experience(
         scene_header="Overcooked",
@@ -404,7 +394,7 @@ coordination_ring_sp_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="coordination_ring_sp_0", experiment_config={})
     .pyodide(
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid_overcooked/pyodide_overcooked/env_initialization/coordination_ring_environment_initialization.py"
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/coordination_ring_environment_initialization.py"
     )
     .user_experience(
         scene_header="Overcooked",
@@ -524,7 +514,7 @@ coordination_ring_1 = scene.SceneWrapper(
 )
 
 
-feedback_scene = static_scene.TextBoxOnly(
+feedback_scene = static_scene.TextBox(
     text_box_header="If desired, please provide any additional feedback on your experience with this game. You will receive a completion code on the next page.",
     required=False,
 ).scene(

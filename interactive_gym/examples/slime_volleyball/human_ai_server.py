@@ -1,3 +1,7 @@
+"""
+TODO(chase): This example needs to be re-written with the Stager setup.
+"""
+
 from __future__ import annotations
 
 import eventlet
@@ -18,6 +22,7 @@ from interactive_gym.examples.slime_volleyball import (
     slime_volleyball_utils,
 )
 from interactive_gym.server import server_app
+from interactive_gym.utils import onnx_inference_utils
 
 """
 This is an example script for running MountainCar-v0 in
@@ -40,7 +45,7 @@ RIGHT = 5
 
 POLICY_MAPPING = {
     "agent_left": configuration_constants.PolicyTypes.Human,
-    "agent_right": configuration_constants.PolicyTypes.Human,
+    "agent_right": "interactive_gym/examples/slime_volleyball/policies/model.onnx",
 }
 
 
@@ -65,7 +70,12 @@ action_mapping = {
 
 config = (
     remote_config.RemoteConfig()
-    .policies(policy_mapping=POLICY_MAPPING)
+    .policies(
+        policy_mapping=POLICY_MAPPING,
+        policy_inference_fn=onnx_inference_utils.onnx_model_inference_fn,
+        load_policy_fn=onnx_inference_utils.load_onnx_policy_fn,
+        frame_skip=1,
+    )
     .environment(env_creator=env_creator, env_name="slime_volleyball")
     .rendering(
         fps=35,
@@ -78,22 +88,19 @@ config = (
     )
     .gameplay(
         default_action=NOOP,
+        action_population_method=configuration_constants.ActionSettings.PreviousSubmittedAction,
         action_mapping=action_mapping,
         num_episodes=30,
         callback=slime_volleyball_callback.SlimeVolleyballCallback(),
         reset_freeze_s=1,
     )
-    .hosting(port=5704, host="0.0.0.0", max_concurrent_games=100, max_ping=60)
+    .hosting(port=5701, host="0.0.0.0", max_concurrent_games=100, max_ping=85)
     .user_experience(
         page_title="Slime Volleyball",
         welcome_header_text="Slime Volleyball",
         instructions_html_file="interactive_gym/server/static/templates/slime_volleyball_instructions.html",
         game_header_text="Slime Volleyball",
         game_page_html_fn=slime_volleyball_utils.slime_volleyball_game_page_header_fn,
-        waitroom_time_randomization_interval_s=(
-            5,
-            25,
-        ),  # fake waitroom of 5 to 25 seconds
         final_page_header_text="Slime Volleyball",
         final_page_text="Thanks for playing, you will be redirected shortly...",
         experiment_end_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_b7yGut4znAui0hE",
@@ -101,6 +108,7 @@ config = (
         waitroom_timeout_redirect_url="https://cmu.ca1.qualtrics.com/jfe/form/SV_bIskl3fFOPC6ayy",
     )
 )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -110,7 +118,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config.hosting(port=args.port).logging(
-        logfile=f'./{datetime.now().strftime("%y_%m_%d")}_slimevb_human_human_port_{args.port}.log'
+        logfile=f'./{datetime.now().strftime("%y_%m_%d")}_slimevb_human_ai_port_{args.port}.log'
     )
 
     server_app.run(config)

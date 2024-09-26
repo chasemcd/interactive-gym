@@ -1,32 +1,17 @@
 from __future__ import annotations
 
 import eventlet
-import copy
 
 eventlet.monkey_patch()
 
 import argparse
-from datetime import datetime
 
-from cogrid.envs import registry
-
-from interactive_gym.configurations import (
-    configuration_constants,
-    remote_config,
-)
-from interactive_gym.examples.cogrid_overcooked import (
-    overcooked_callback,
-    overcooked_utils,
-)
 from interactive_gym.server import app
-from interactive_gym.scenes import gym_scene
-from interactive_gym.scenes import static_scene
 from interactive_gym.scenes import scene
 from interactive_gym.scenes import stager
-from interactive_gym.examples.cogrid_overcooked.pyodide_overcooked import (
+from interactive_gym.examples.cogrid.pyodide_overcooked import (
     scenes as oc_scenes,
 )
-
 
 from interactive_gym.configurations import experiment_config
 

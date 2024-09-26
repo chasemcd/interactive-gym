@@ -28,7 +28,7 @@ class OptionBoxes(constructor.Constructor):
             "#955251",
             "#B565A7",
             "#009B77",
-        ]  # Example colors
+        ]
         html = f'<div id="{self.object_name_prefix}-option-boxes-container" style="display: flex; justify-content: space-around; gap: 10px;">\n'
 
         for i, option in enumerate(self.options):
@@ -50,6 +50,7 @@ class OptionBoxes(constructor.Constructor):
             """
 
         html += "</div>\n"
+
         html += f"""
         <script>
         $("#advanceButton").attr("disabled", true);
