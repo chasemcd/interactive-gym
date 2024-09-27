@@ -12,6 +12,8 @@
    :caption: Contents:
 
    content/quick_start
+   content/client_side
+   content/server_side
    content/examples
 
 

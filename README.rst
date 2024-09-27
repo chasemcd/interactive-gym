@@ -1,7 +1,7 @@
 Interactive Gym
 ================
 
-.. image:: docs/interactive_gym_logo.png
+.. image:: interactive_gym_logo.png
     :alt: Interactive Gym Logo
     :align: center
 
@@ -10,6 +10,7 @@ Interactive Gym is a library that provides a simple interface for creating inter
 There are two ways to run Interactive Gym, depending on your use cases and requirements:
 
 1. Server based. 
+
 This runs the environment on a server, allows for any number of human and AI players. 
 At every step, the server will send the required information to all connected clients 
 to update the environment client-side (e.g., the locations and any relevant data of updated objects).
