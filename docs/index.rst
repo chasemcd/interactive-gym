@@ -3,6 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root ``toctree`` directive.
 
+.. image:: https://img.shields.io/github/stars/chasemcd/interactive-gym
+   :target: https://github.com/chasemcd/interactive-gym
+   :alt: GitHub Repo stars
 
 .. include:: ../README.rst
 
@@ -12,6 +15,7 @@
    :caption: Contents:
 
    content/quick_start
+   content/environment_graphics
    content/client_side
    content/server_side
    content/examples
