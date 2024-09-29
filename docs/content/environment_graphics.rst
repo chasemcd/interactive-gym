@@ -10,6 +10,4 @@ about what has changed in the environment.
 
 .. automodule:: interactive_gym.configurations.object_contexts
     :members:
-    :undoc-members:
-    :show-inheritance:
     :noindex:

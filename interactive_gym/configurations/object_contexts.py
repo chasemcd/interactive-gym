@@ -41,6 +41,26 @@ class Sprite:
     :type tween_duration: int
     :param permanent: Whether the sprite should persist across steps.
     :type permanent: bool
+
+    .. testcode::
+
+        sprite = Sprite(
+            uuid="player1",
+            x=100,
+            y=200,
+            height=64,
+            width=64,
+            image_name="player_texture",
+            frame=0,
+            object_size=64,
+            angle=45,
+            depth=2,
+            animation="walk",
+            tween=True,
+            tween_duration=100,
+            permanent=True
+        )
+
     """
 
     uuid: str
@@ -76,7 +96,18 @@ class Line:
     :type width: int
     :param points: List of points defining the line
     :type points: list[tuple[float, float]]
-    :rtype: _type_
+
+    .. testcode::
+
+        line = Line(
+            uuid="line1",
+            color="#FF0000",
+            width=2,
+            points=[(0, 0), (100, 100), (200, 0)],
+            fill_below=True,
+            depth=1
+        )
+
     """
 
     uuid: str
@@ -115,7 +146,19 @@ class Circle:
     :param depth: Rendering depth of the circle. Higher values are rendered on top
     :type depth: int
     :param permanent: Whether the circle should persist across steps.
-    :rtype: _type_
+
+    .. testcode::
+
+        circle = Circle(
+            uuid="circle1",
+            color="#00FF00",
+            x=150.0,
+            y=150.0,
+            radius=50,
+            alpha=0.8,
+            depth=2,
+            permanent=True
+        )
     """
 
     uuid: str
@@ -151,6 +194,18 @@ class Polygon:
     :type depth: int
     :param permanent: Whether the polygon should persist across steps.
     :type permanent: bool
+
+    .. testcode::
+
+        polygon = Polygon(
+            uuid="polygon1",
+            color="#0000FF",
+            points=[(0, 0), (100, 0), (100, 100), (0, 100)],
+            alpha=0.5,
+            depth=3,
+            permanent=False
+        )
+
     """
 
     uuid: str
@@ -174,7 +229,21 @@ class Text:
     :type uuid: str
     :param text: Text to display
     :type text: str
-    :rtype: _type_
+
+    .. testcode::
+
+        text = Text(
+            uuid="text1",
+            text="Hello, World!",
+            x=50,
+            y=50,
+            size=24,
+            color="#000000",
+            font="Arial",
+            depth=4,
+            permanent=True
+        )
+
     """
 
     uuid: str
@@ -203,7 +272,15 @@ class AtlasSpec:
     :type img_path: str
     :param atlas_path: Path to the atlas file
     :type atlas_path: str
-    :rtype: _type_
+
+    .. testcode::
+
+        atlas_spec = AtlasSpec(
+            name="player_atlas",
+            img_path="assets/player_spritesheet.png",
+            atlas_path="assets/player_atlas.json"
+        )
+
     """
 
     name: str
@@ -226,13 +303,51 @@ class MultiAtlasSpec:
     :type img_path: str
     :param atlas_path: Path to the atlas file
     :type atlas_path: str
-    :rtype: _type_
+
+    .. testcode::
+
+        multi_atlas_spec = MultiAtlasSpec(
+            name="game_assets",
+            img_path="assets/game_spritesheet.png",
+            atlas_path="assets/game_multi_atlas.json"
+        )
+
     """
 
     name: str
     img_path: str
     atlas_path: str
     object_type: str = "multi_atlas_spec"
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
+
+
+@dataclasses.dataclass
+class ImgSpec:
+    """
+    Context for an img spec object to render it.
+
+    :param name: Name of the image.
+    :type name: str
+    :param img_path: Path to the image file
+    :type img_path: str
+
+    .. testcode::
+
+        img_spec = ImgSpec(
+            name="background",
+            img_path="assets/background.png"
+        )
+
+    """
+
+    name: str
+    img_path: str
+    object_type: str = "img_spec"
+
+    def as_dict(self) -> dict[str, typing.Any]:
+        return dataclasses.asdict(self)
 
     def as_dict(self) -> dict[str, typing.Any]:
         return dataclasses.asdict(self)
