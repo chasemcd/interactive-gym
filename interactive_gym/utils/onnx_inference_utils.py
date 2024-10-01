@@ -46,7 +46,7 @@ def onnx_model_inference_fn(
         {
             "obs": observation.astype(np.float32),
             "state_ins": [
-                np.zeros((1, 128), dtype=np.float32) for _ in range(2)
+                np.zeros((1, 256), dtype=np.float32) for _ in range(2)
             ],
             "seq_lens": np.array([1], dtype=np.int32),
         },

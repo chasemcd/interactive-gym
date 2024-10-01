@@ -91,8 +91,8 @@ async function inferenceONNXPolicy(policyID, observation) {
             if (name.startsWith('state_in_')) {
                 if (!hiddenStates[policyID][name]) {
 
-                    // TODO(chase): retrieve the shape; this hardcodes hidden states to [1, 128]
-                    const expectedShape = [1, 128] // inputMetadata[name].dimensions;
+                    // TODO(chase): retrieve the shape; this hardcodes hidden states to [1, 256]
+                    const expectedShape = [1, 256] // inputMetadata[name].dimensions;
 
                     // Initialize the hidden state tensor with zeros
                     hiddenStates[policyID][name] = new window.ort.Tensor('float32', new Float32Array(expectedShape.reduce((a, b) => a * b)), expectedShape);
