@@ -27,14 +27,54 @@ Toggle = 5
 Noop = 6
 
 
-SP_POLICY_MAPPING = {
+SP_POLICY_MAPPING_CRAMPED_ROOM = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "static/assets/overcooked/models/sp_encoding_00.onnx",
+    1: "static/assets/overcooked/models/sp_cramped_room_00.onnx",
 }
 
-IBC_POLICY_MAPPING = {
+IBC_POLICY_MAPPING_CRAMPED_ROOM = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "static/assets/overcooked/models/ibc_encoding_01.onnx",
+    1: "static/assets/overcooked/models/ibc_cramped_room_00.onnx",
+}
+
+SP_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES = {
+    0: configuration_constants.PolicyTypes.Human,
+    1: "static/assets/overcooked/models/sp_asymmetric_advantages_00.onnx",
+}
+
+IBC_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES = {
+    0: configuration_constants.PolicyTypes.Human,
+    1: "static/assets/overcooked/models/ibc_asymmetric_advantages_00.onnx",
+}
+
+SP_POLICY_MAPPING_COUNTER_CIRCUIT = {
+    0: configuration_constants.PolicyTypes.Human,
+    1: "static/assets/overcooked/models/sp_counter_circuit_00.onnx",
+}
+
+IBC_POLICY_MAPPING_COUNTER_CIRCUIT = {
+    0: configuration_constants.PolicyTypes.Human,
+    1: "static/assets/overcooked/models/ibc_counter_circuit_00.onnx",
+}
+
+SP_POLICY_MAPPING_FORCED_COORDINATION = {
+    0: configuration_constants.PolicyTypes.Human,
+    1: "static/assets/overcooked/models/sp_forced_coordination_00.onnx",
+}
+
+IBC_POLICY_MAPPING_FORCED_COORDINATION = {
+    0: configuration_constants.PolicyTypes.Human,
+    1: "static/assets/overcooked/models/ibc_forced_coordination_00.onnx",
+}
+
+SP_POLICY_MAPPING_COORDINATION_RING = {
+    0: configuration_constants.PolicyTypes.Human,
+    1: "static/assets/overcooked/models/sp_coordination_ring_00.onnx",
+}
+
+IBC_POLICY_MAPPING_COORDINATION_RING = {
+    0: configuration_constants.PolicyTypes.Human,
+    1: "static/assets/overcooked/models/ibc_coordination_ring_00.onnx",
 }
 
 
@@ -122,7 +162,7 @@ tutorial_gym_scene = (
 cramped_room_sp_0 = (
     gym_scene.GymScene()
     .scene(scene_id="cramped_room_sp_0", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING, frame_skip=5)
+    .policies(policy_mapping=SP_POLICY_MAPPING_CRAMPED_ROOM, frame_skip=5)
     .rendering(
         fps=30,
         env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
@@ -173,13 +213,13 @@ cramped_room_sp_0 = (
 cramped_room_ibc_1 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="cramped_room_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_CRAMPED_ROOM)
 )
 
 cramped_room_ibc_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="cramped_room_ibc_0", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_CRAMPED_ROOM)
     .user_experience(
         scene_header="Overcooked",
         scene_body="<center><p>"
@@ -193,7 +233,7 @@ cramped_room_ibc_0 = (
 cramped_room_sp_1 = (
     copy.deepcopy(cramped_room_ibc_0)
     .scene(scene_id="cramped_room_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING)
+    .policies(policy_mapping=SP_POLICY_MAPPING_CRAMPED_ROOM)
 )
 
 cramped_room_options_scene_0 = (
@@ -239,18 +279,19 @@ counter_circuit_sp_0 = (
         game_width=overcooked_utils.TILE_SIZE * 9,
         game_height=overcooked_utils.TILE_SIZE * 7,
     )
+    .policies(policy_mapping=SP_POLICY_MAPPING_COUNTER_CIRCUIT)
 )
 counter_circuit_ibc_1 = (
     copy.deepcopy(counter_circuit_sp_0)
     .scene(scene_id="counter_circuit_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_COUNTER_CIRCUIT)
 )
 
 
 counter_circuit_ibc_0 = (
     copy.deepcopy(counter_circuit_sp_0)
     .scene(scene_id="counter_circuit_ibc_0", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_COUNTER_CIRCUIT)
     .user_experience(
         scene_header="Overcooked",
         scene_body="<center><p>"
@@ -264,7 +305,7 @@ counter_circuit_ibc_0 = (
 counter_circuit_sp_1 = (
     copy.deepcopy(counter_circuit_ibc_0)
     .scene(scene_id="counter_circuit_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING)
+    .policies(policy_mapping=SP_POLICY_MAPPING_COUNTER_CIRCUIT)
 )
 
 
@@ -298,18 +339,19 @@ forced_coordination_sp_0 = (
         game_width=overcooked_utils.TILE_SIZE * 7,
         game_height=overcooked_utils.TILE_SIZE * 7,
     )
+    .policies(policy_mapping=SP_POLICY_MAPPING_FORCED_COORDINATION)
 )
 forced_coordination_ibc_1 = (
     copy.deepcopy(forced_coordination_sp_0)
     .scene(scene_id="forced_coordination_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_FORCED_COORDINATION)
 )
 
 
 forced_coordination_ibc_0 = (
     copy.deepcopy(forced_coordination_sp_0)
     .scene(scene_id="forced_coordination_ibc_0", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_FORCED_COORDINATION)
     .user_experience(
         scene_header="Overcooked",
         scene_body="<center><p>"
@@ -323,7 +365,7 @@ forced_coordination_ibc_0 = (
 forced_coordination_sp_1 = (
     copy.deepcopy(forced_coordination_ibc_0)
     .scene(scene_id="forced_coordination_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING)
+    .policies(policy_mapping=SP_POLICY_MAPPING_FORCED_COORDINATION)
 )
 
 forced_coordination_options_scene_0 = copy.deepcopy(
@@ -355,17 +397,18 @@ asymmetric_advantages_sp_0 = (
         game_width=overcooked_utils.TILE_SIZE * 11,
         game_height=overcooked_utils.TILE_SIZE * 7,
     )
+    .policies(policy_mapping=SP_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES)
 )
 asymmetric_advantages_ibc_1 = (
     copy.deepcopy(asymmetric_advantages_sp_0)
     .scene(scene_id="asymmetric_advantages_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES)
 )
 
 asymmetric_advantages_ibc_0 = (
     copy.deepcopy(asymmetric_advantages_sp_0)
     .scene(scene_id="asymmetric_advantages_ibc_0", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES)
     .user_experience(
         scene_header="Overcooked",
         scene_body="<center><p>"
@@ -379,7 +422,7 @@ asymmetric_advantages_ibc_0 = (
 asymmetric_advantages_sp_1 = (
     copy.deepcopy(asymmetric_advantages_ibc_0)
     .scene(scene_id="asymmetric_advantages_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING)
+    .policies(policy_mapping=SP_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES)
 )
 
 asymmetric_advantages_options_scene_0 = copy.deepcopy(
@@ -412,17 +455,18 @@ coordination_ring_sp_0 = (
         game_width=overcooked_utils.TILE_SIZE * 7,
         game_height=overcooked_utils.TILE_SIZE * 7,
     )
+    .policies(policy_mapping=SP_POLICY_MAPPING_COORDINATION_RING)
 )
 
 coordination_ring_ibc_1 = (
     copy.deepcopy(coordination_ring_sp_0)
     .scene(scene_id="coordination_ring_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_COORDINATION_RING)
 )
 
 coordination_ring_ibc_0 = (
     copy.deepcopy(coordination_ring_sp_0)
-    .policies(policy_mapping=IBC_POLICY_MAPPING)
+    .policies(policy_mapping=IBC_POLICY_MAPPING_COORDINATION_RING)
     .scene(scene_id="coordination_ring_ibc_0", experiment_config={})
     .user_experience(
         scene_header="Overcooked",
@@ -438,7 +482,7 @@ coordination_ring_ibc_0 = (
 coordination_ring_sp_1 = (
     copy.deepcopy(coordination_ring_ibc_0)
     .scene(scene_id="coordination_ring_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING)
+    .policies(policy_mapping=SP_POLICY_MAPPING_COORDINATION_RING)
 )
 coordination_ring_options_scene_0 = copy.deepcopy(
     cramped_room_options_scene_0
