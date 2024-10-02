@@ -5,10 +5,22 @@ Interactive Gym
     :alt: Interactive Gym Logo
     :align: center
 
-.. warning ::
+.. raw:: html
+
+   <div style="background-color: #f0f0f0; border: 2px solid #ff0000; padding: 10px; margin: 10px 0;">
+   <h3 style="color: #ff0000;">⚠️ Warning</h3>
+
+.. warning::
     Interactive Gym is currently under heavy development and not all functionality is available, as we are currently refactoring to allow for increased flexibility
     and functionality. The documentation is also currently being rewritten to reflect the current state of the library.
-    To view the version associated with the McDonald & Gonzalez (2024) paper, please see the `v0.0.1 release <https://github.com/chasemcd/interactive-gym/releases/tag/v0.0.1>`_. 
+    To view the version associated with the McDonald & Gonzalez (2024) paper, please see the `v0.0.1 release <https://github.com/chasemcd/interactive-gym/releases/tag/v0.0.1>`_.
+
+.. raw:: html
+
+   </div>
+
+----
+
 
 Interactive Gym is a library that provides a simple interface for creating interactive, browser-based experiments from simulation environments.
 
