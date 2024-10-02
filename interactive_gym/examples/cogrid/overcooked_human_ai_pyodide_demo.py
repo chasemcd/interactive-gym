@@ -46,7 +46,7 @@ stager = stager.Stager(
     scenes=[
         start_scene,
         oc_scenes.tutorial_gym_scene,
-        oc_scenes.cramped_room_sp_0,
+        oc_scenes.cramped_room_0,
         end_scene,
     ]
 )
