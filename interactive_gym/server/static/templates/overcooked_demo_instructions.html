@@ -1,0 +1,39 @@
+<center>
+    <img src="static/assets/AI-SDM-text.png" alt="AI-SDM Logo" style="max-width: 70%; height: auto; margin-bottom: 20px;">
+</center>
+
+
+<p>
+    This is a reproduction of the Overcooked-AI environment (<a href="https://arxiv.org/abs/1910.05789">Carroll et al., 2019</a>) that uses <a href="https://cogrid.readthedocs.io/en/latest/">CoGrid</a> and <a href="https://interactive-gym.readthedocs.io/en/latest/">Interactive Gym</a>. 
+</p>
+<p>
+    CoGrid and Interactive Gym were developed in the <a href="https://www.cmu.edu/dietrich/sds/ddmlab/">Dynamic Decision Making Lab</a> at Carnegie Mellon University. They comprise a framework for developing Human-AI interaction experiments, 
+    where CoGrid is an easy-to-use library for building grid-based environments (in the <a href="https://gymnasium.farama.org/index.html">Gymnasium</a> or <a href="https://pettingzoo.farama.org/index.html">PettingZoo</a> formats) for multi-agent simulation and AI training. 
+    Interactive Gym is a library for developing and running these experiments in a web browser, it provides the novel functionality to run these Python-based environments directly in the browser (alongside AI model inference using ONNX).
+</p>
+ 
+<p>  
+    In this demo, you'll be playing a simplified version of the Overcooked video game. Your goal is to collaborate with your AI partner to cook and deliver as many dishes as possible before time runs out.
+</p>
+
+<p>
+    Here's how the demo will work:
+    <ol>
+        <li>You'll complete a tutorial to learn the basics of the game.</li>
+        <li>You'll play one 45-second round with an AI partner.</li>
+        <li>Then, you'll play another 45-second round with a different AI partner.</li>
+        <li>After these two rounds, you'll indicate which partner you preferred and provide an evaluation of the partners.</li>
+    </ol>
+    
+    One of these AI partners is trained in standard self-play using deep reinforcement learning. This means that the AI partner has learned to play the game by playing against itself.
+    The other is trained via a novel method called Interpretable Behavior Conditioning (IBC), which allows us to condition an agent's behavior on a human-interpretable latent variable that 
+    is randomized throughout the training process. While still in self-play, this allows the agent to gain experience playing against many different versions of itself, each with a different 
+    style of play. This has the benefit of making the agent more robust to different kinds of partners, while also making it controllable at inference time. More details and a
+    paper on IBC are forthcoming.
+</p>
+
+
+<p>
+    <b>Click "Continue" to start the tutorial.</b>
+</p>
+
