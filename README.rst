@@ -157,6 +157,3 @@ The Phaser integration and server implementation are inspired by and derived fro
 Overcooked AI demo by Carroll et al. (https://github.com/HumanCompatibleAI/overcooked-demo/tree/master).
 
 
-Installation
-------------
-To use Interactive Gym, clone this repository. PyPi coming soon!
