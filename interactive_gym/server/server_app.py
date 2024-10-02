@@ -24,11 +24,13 @@ except ImportError:
     print(
         "cv2 not installed. This is required if you're not "
         "defining a rendering function and want to (inefficiently) "
-        "have the canvas display whatever is returned from `env.render()`."
+        "have the canvas display whatever is returned from `env.render('rgb_array')`."
     )
 
-from interactive_gym.configurations import (configuration_constants,
-                                            remote_config)
+from interactive_gym.configurations import (
+    configuration_constants,
+    remote_config,
+)
 from interactive_gym.server import remote_game, utils
 
 CONFIG = remote_config.RemoteConfig()
@@ -43,7 +45,9 @@ def setup_logger(name, log_file, level=logging.INFO):
 
     # Create console handler with a higher log level
     ch = logging.StreamHandler()
-    ch.setFormatter(formatter)  # Setting the formatter for the console handler as well
+    ch.setFormatter(
+        formatter
+    )  # Setting the formatter for the console handler as well
 
     logger = logging.getLogger(name)
     logger.setLevel(level)
@@ -170,7 +174,9 @@ def _create_game() -> None:
             f"Create game failed for subject ID {flask.request.sid} with error {err.__repr__()}"
         )
         socketio.emit(
-            "create_game_failed", {"error": err.__repr__()}, room=flask.request.sid
+            "create_game_failed",
+            {"error": err.__repr__()},
+            room=flask.request.sid,
         )
         return
 
@@ -180,7 +186,7 @@ def _create_game() -> None:
     )  # convert waitroom timeout to seconds
 
 
-@socketio.on("join")
+@socketio.on("join_game")
 def join_or_create_game(data):
     subject_id = flask.request.sid
     client_session_id = data.get("session_id")
@@ -223,12 +229,18 @@ def join_or_create_game(data):
 
             # will be the name entered in the url, e.g., MTurk ID or uuid
             player_name = SUBJECT_ID_MAP[subject_id]
-            game.add_player(random.choice(available_human_player_ids), player_name)
+            game.add_player(
+                random.choice(available_human_player_ids), player_name
+            )
 
             if CONFIG.game_page_html_fn is not None:
                 socketio.emit(
                     "update_game_page_text",
-                    {"game_page_text": CONFIG.game_page_html_fn(game, player_name)},
+                    {
+                        "game_page_text": CONFIG.game_page_html_fn(
+                            game, player_name
+                        )
+                    },
                     room=subject_id,
                 )
 
@@ -284,7 +296,9 @@ def join_or_create_game(data):
 
             # If there is a real waiting room
             else:
-                send_participant_to_waiting_room(game=game, subject_id=subject_id)
+                send_participant_to_waiting_room(
+                    game=game, subject_id=subject_id
+                )
 
 
 @socketio.on("single_player_waiting_room_end")
@@ -341,11 +355,21 @@ def start_game(game: remote_game.RemoteGame) -> None:
         f"Game {game.game_id} is starting with subjects: {[sid for sid in game.human_players.values()]}"
     )
     ACTIVE_GAMES.add(game.game_id)
+
+    if CONFIG.run_through_pyodide:
+        socketio.emit(
+            "start_game_pyodide",
+            {"config": CONFIG.to_dict(serializable=True)},
+            room=game.game_id,
+        )
+        return
+
     socketio.emit(
         "start_game",
         {"config": CONFIG.to_dict(serializable=True)},
         room=game.game_id,
     )
+
     socketio.start_background_task(run_game, game)
 
 
@@ -434,7 +458,9 @@ def _cleanup_game(game: remote_game.RemoteGame):
     # Add a new game_id to FREE_IDS
     new_game_id = add_new_game_id()
 
-    logger.info(f"Successfully added a new game_id to available games: {new_game_id}.")
+    logger.info(
+        f"Successfully added a new game_id to available games: {new_game_id}."
+    )
 
 
 def remove_participant_from_game(
@@ -543,17 +569,17 @@ def _leave_game(subject_id) -> bool:
 @app.route("/")
 def index(*args):
     """If no subject ID provided, generate a UUID and re-route them."""
-    subject_name = str(uuid.uuid4())
-    return flask.redirect(flask.url_for("user_index", subject_name=subject_name))
+    subject_id = str(uuid.uuid4())
+    return flask.redirect(flask.url_for("user_index", subject_id=subject_id))
 
 
-@app.route("/<subject_name>")
-def user_index(subject_name):
+@app.route("/<subject_id>")
+def user_index(subject_id):
 
-    if subject_name in PROCESSED_SUBJECT_NAMES:
+    if subject_id in PROCESSED_SUBJECT_NAMES:
         return "Error: You have already played with under this subject ID!", 404
 
-    flask.session["subject_name"] = subject_name
+    flask.session["subject_id"] = subject_id
 
     instructions_html = ""
     if CONFIG.instructions_html_file is not None:
@@ -573,17 +599,28 @@ def user_index(subject_name):
         game_page_text=CONFIG.game_page_text,
         final_page_header_text=CONFIG.final_page_header_text,
         final_page_text=CONFIG.final_page_text,
-        subject_name=subject_name,
+        subject_id=subject_id,
     )
 
 
-@socketio.on("register_subject_name")
-def register_subject_name(data):
+@socketio.on("register_subject_id")
+def register_subject_id(data):
     """Ties the subject name in the URL to the flask request sid"""
-    subject_name = data["subject_name"]
+    subject_id = data["subject_id"]
     sid = flask.request.sid
-    SUBJECT_ID_MAP[sid] = subject_name
-    logger.info(f"Registered subject ID {sid} with name {subject_name}")
+    SUBJECT_ID_MAP[sid] = subject_id
+    logger.info(f"Registered subject ID {sid} with name {subject_id}")
+
+
+@socketio.on("request_pyodide_initialization")
+def check_pyodide_usage(data):
+    """If we're using Pyodide, emit the initialization event."""
+    if CONFIG.run_through_pyodide:
+        socketio.emit(
+            "initialize_pyodide_remote_game",
+            {"config": CONFIG.to_dict(serializable=True)},
+        )
+        return
 
 
 def is_valid_session(client_session_id):
@@ -747,12 +784,15 @@ def generate_composite_action(pressed_keys) -> list[tuple[str]]:
 
     # TODO(chase): set this in the config so we don't recalculate every time
     max_composite_action_size = max(
-        [len(k) for k in CONFIG.action_mapping.keys() if isinstance(k, tuple)] + [0]
+        [len(k) for k in CONFIG.action_mapping.keys() if isinstance(k, tuple)]
+        + [0]
     )
 
     if max_composite_action_size > 1:
         composite_actions = [
-            action for action in CONFIG.action_mapping if isinstance(action, tuple)
+            action
+            for action in CONFIG.action_mapping
+            if isinstance(action, tuple)
         ]
 
         composites = [
@@ -823,7 +863,9 @@ def pong(data):
     ping_ms = data["ping_ms"]
     player_name = SUBJECT_ID_MAP[sid]
     game.update_document_focus_status_and_ping(
-        player_identifier=player_name, hidden_status=document_in_focus, ping=ping_ms
+        player_identifier=player_name,
+        hidden_status=document_in_focus,
+        ping=ping_ms,
     )
 
 
@@ -896,7 +938,9 @@ def run_game(game: remote_game.RemoteGame):
             socketio.sleep(1 / game.config.fps)
 
     with game.lock:
-        logger.info(f"Game loop ended for {game.game_id}, ending and cleaning up.")
+        logger.info(
+            f"Game loop ended for {game.game_id}, ending and cleaning up."
+        )
         if game.status != remote_game.GameStatus.Inactive:
             game.tear_down()
 
@@ -917,20 +961,23 @@ def run_game(game: remote_game.RemoteGame):
 def on_request_redirect(data):
     subject_id = flask.request.sid
 
-    waitroom_timeout = data.get("waitroom_timeout")
+    waitroom_timeout = data.get("waitroom_timeout", False)
     if waitroom_timeout:
         redirect_url = CONFIG.waitroom_timeout_redirect_url
     else:
-        redirect_url = CONFIG.end_game_redirect_url
+        redirect_url = CONFIG.experiment_end_redirect_url
 
-    if CONFIG.append_subject_name_to_redirect:
+    if CONFIG.append_subject_id_to_redirect:
         redirect_url += SUBJECT_ID_MAP[subject_id]
 
     # del SUBJECT_ID_MAP[subject_id]
 
     socketio.emit(
         "end_game_redirect",
-        {"redirect_url": redirect_url, "redirect_timeout": CONFIG.redirect_timeout},
+        {
+            "redirect_url": redirect_url,
+            "redirect_timeout": CONFIG.redirect_timeout,
+        },
         room=subject_id,
     )
 
@@ -943,15 +990,19 @@ def render_game(game: remote_game.RemoteGame):
         state = CONFIG.env_to_state_fn(game.env, CONFIG)
     else:
         # Generate a base64 image of the game and send it to display
-        assert cv2 is not None, "Must install cv2 to use default image rendering!"
+        assert (
+            cv2 is not None
+        ), "Must install cv2 to use default image rendering!"
         assert (
             game.env.render_mode == "rgb_array"
-        ), "Env must be using render more rgb_array!"
+        ), "Env must be using render mode `rgb_array`!"
         game_image = game.env.render()
         _, encoded_image = cv2.imencode(".png", game_image)
         encoded_image = base64.b64encode(encoded_image).decode()
 
-    hud_text = CONFIG.hud_text_fn(game) if CONFIG.hud_text_fn is not None else None
+    hud_text = (
+        CONFIG.hud_text_fn(game) if CONFIG.hud_text_fn is not None else None
+    )
 
     # TODO(chase): this emits the same state to every player in a room, but we may want
     #   to have different observations for each player. Figure that out (maybe state is a dict
@@ -959,7 +1010,7 @@ def render_game(game: remote_game.RemoteGame):
     socketio.emit(
         "environment_state",
         {
-            "state": state,
+            "game_state_objects": state,
             "game_image_base64": encoded_image,
             "step": game.tick_num,
             "hud_text": hud_text,

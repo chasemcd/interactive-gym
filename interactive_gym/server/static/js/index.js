@@ -1,3 +1,7 @@
+import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData} from './phaser_gym_graphics.js';
+import {RemoteGame} from './pyodide_remote_game.js';
+import * as ui_utils from './ui_utils.js';
+
 var socket = io();
 var start_pressed = false;
 
@@ -6,6 +10,9 @@ var start_pressed = false;
 var latencyMeasurements = [];
 var curLatency;
 var maxLatency;
+
+
+var pyodideRemoteGame = null;
 
 var documentInFocus = false;
 document.addEventListener("visibilitychange", function() {
@@ -71,25 +78,15 @@ function sendPing() {
 // Send a ping every second
 setInterval(sendPing, 1000);
 
-// Check if we're enabling the start button
-var refreshStartButton = setInterval(() => {
-    if (maxLatency != null && latencyMeasurements.length > 5 && curLatency > maxLatency) {
-        $("#instructions").hide();
-        $("#startButton").hide();
-        $("#startButton").attr("disabled", true);
-        $('#errorText').show()
-        $('#errorText').text("Sorry, your connection is too slow for this application. Please make sure you have a strong internet connection to ensure a good experience for all players in the game.");
-        clearInterval(refreshStartButton);
-    } else if (maxLatency != null && latencyMeasurements.length <= 5) {
-        $("#startButton").show();
-        $("#startButton").attr("disabled", true);
-    } else {
-        $('#errorText').hide()
-        $("#startButton").show();
-        $("#startButton").attr("disabled", false);
-        clearInterval(refreshStartButton);
+function pyodideReadyIfUsing() {
+    if (pyodideRemoteGame == null) {
+        console.log("pyodideRemoteGame is null")
+        return true;
     }
-}, 1000)
+
+    console.log(pyodideRemoteGame.pyodideReady)
+    return pyodideRemoteGame.pyodideReady;
+}
 
 
 $(function() {
@@ -97,7 +94,8 @@ $(function() {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
         start_pressed = true;
-        socket.emit("join", {session_id: window.sessionId});
+        console.log("joining game in session", window.sessionId)
+        socket.emit("join_game", {session_id: window.sessionId});
 
     })
 })
@@ -107,58 +105,70 @@ socket.on('server_session_id', function(data) {
 });
 
 socket.on('connect', function() {
-    // Emit an event to the server with the subject_name
-    socket.emit('register_subject_name', { subject_name: subjectName });
+    console.log("connecting")
+    // Emit an event to the server with the subject_id
+    socket.emit('register_subject', { subject_id: subjectName });
+    $("#invalidSession").hide();
+    $('#hudText').hide()
+
+
 });
 
 
 socket.on('invalid_session', function(data) {
     alert(data.message);
-    $('#finalPageHeaderText').hide()
-    $('#finalPageText').hide()
-    $("#gameHeaderText").hide();
-    $("#gamePageText").hide();
+    // $('#finalPageHeaderText').hide()
+    // $('#finalPageText').hide()
+    // $("#gameHeaderText").hide();
+    // $("#gamePageText").hide();
     $("#gameContainer").hide();
     $("#invalidSession").show();
 });
 
-
-socket.on("start_game", function(data) {
+socket.on('start_game', function(data) {
     // Clear the waitroomInterval to stop the waiting room timer
     if (waitroomInterval) {
         clearInterval(waitroomInterval);
     }
 
-    $("#welcomeHeader").hide();
-    $("#welcomeText").hide();
-    $("#instructions").hide();
+    let scene_metadata = data.scene_metadata
+    // let experiment_config = data.experiment_config
+
+    // Hide the sceneBody and any waiting room messages or errors
+    if (scene_metadata.in_game_scene_body != undefined) {
+        $("#sceneBody").html(scene_metadata.in_game_scene_body);
+        $("#sceneBody").show();
+    } else {
+        $("#sceneBody").hide(); 
+    }
     $("#waitroomText").hide();
     $('#errorText').hide()
-    $("#gameHeaderText").show();
-    $("#gamePageText").show();
-    $("#gameContainer").show();
 
-    let config = data.config;
+    // Show the game container 
+    $("#gameContainer").show();
 
     // Initialize game
     let graphics_config = {
         'parent': 'gameContainer',
         'fps': {
-            'target': config.fps,
+            'target': scene_metadata.fps,
             'forceSetTimeOut': true
         },
-        'height': config.game_height,
-        'width': config.game_width,
-        'background': config.background,
-        'state_init': config.state_init,
-        'assets_dir': config.assets_dir,
-        'assets_to_preload': config.assets_to_preload,
-        'animation_configs': config.animation_configs,
+        'height': scene_metadata.game_height,
+        'width': scene_metadata.game_width,
+        'background': scene_metadata.background,
+        'state_init': scene_metadata.state_init,
+        'assets_dir': scene_metadata.assets_dir,
+        'assets_to_preload': scene_metadata.assets_to_preload,
+        'animation_configs': scene_metadata.animation_configs,
+        'pyodide_remote_game': pyodideRemoteGame,
+        'scene_metadata': scene_metadata,
     };
 
-    enable_key_listener(config.input_mode)
+    ui_utils.enableKeyListener(scene_metadata.input_mode)
     graphics_start(graphics_config);
-})
+});
+
 
 var waitroomInterval;
 socket.on("waiting_room", function(data) {
@@ -258,31 +268,33 @@ function updateWaitroomText(data, timer) {
 socket.on("game_reset", function(data) {
     graphics_end()
     $('#hudText').hide()
-    disable_key_listener();
+    ui_utils.disableKeyListener();
+
+    let scene_metadata = data.scene_metadata
 
 
     // Initialize game
-    let config = data.config;
     let graphics_config = {
         'parent': 'gameContainer',
         'fps': {
-            'target': config.fps,
+            'target': scene_metadata.fps,
             'forceSetTimeOut': true
         },
-        'height': config.game_height,
-        'width': config.game_width,
-        'background': config.background,
-        'state_init': config.state_init,
-        'assets_dir': config.assets_dir,
-        'assets_to_preload': config.assets_to_preload,
-        'animation_configs': config.animation_configs,
+        'height': scene_metadata.game_height,
+        'width': scene_metadata.game_width,
+        'background': scene_metadata.background,
+        'state_init': scene_metadata.state_init,
+        'assets_dir': scene_metadata.assets_dir,
+        'assets_to_preload': scene_metadata.assets_to_preload,
+        'animation_configs': scene_metadata.animation_configs,
+        'scene_metadata': scene_metadata,
     };
 
-    input_mode = config.input_mode;
+    input_mode = scene_metadata.input_mode;
 
     startResetCountdown(data.timeout, function() {
         // This function will be called after the countdown
-        enable_key_listener(input_mode);
+        ui_utils.enableKeyListener(input_mode);
         graphics_start(graphics_config);
 
         socket.emit("reset_complete", {room: data.room, session_id: window.sessionId});
@@ -296,19 +308,19 @@ function startResetCountdown(timeout, callback) {
     var timer = Math.floor(timeout / 1000); // Convert milliseconds to seconds
 
 
-    $("#reset-game").show();
+    $("#resetGame").show();
     var minutes = parseInt(timer / 60, 10);
     var seconds = parseInt(timer % 60, 10);
     minutes = minutes < 10 ? "0" + minutes : minutes;
     seconds = seconds < 10 ? "0" + seconds : seconds;
-    $("#reset-game").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
+    $("#resetGame").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
 
 
     var interval = setInterval(function () {
         timer--;
         if (timer <= 0) {
             clearInterval(interval);
-            $("#reset-game").hide();
+            $("#resetGame").hide();
             if (callback) callback(); // Call the callback function
         } else {
             minutes = parseInt(timer / 60, 10);
@@ -316,7 +328,7 @@ function startResetCountdown(timeout, callback) {
 
             minutes = minutes < 10 ? "0" + minutes : minutes;
             seconds = seconds < 10 ? "0" + seconds : seconds;
-            $("#reset-game").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
+            $("#resetGame").text("Waiting for the next round to start in " + minutes + ":" + seconds + "...");
         }
     }, 1000);
 }
@@ -340,9 +352,10 @@ socket.on("create_game_failed", function(data) {
 socket.on('environment_state', function(data) {
     $('#hudText').show()
     $('#hudText').text(data.hud_text)
-
     addStateToBuffer(data);
 });
+
+
 
 
 
@@ -351,13 +364,8 @@ socket.on('end_game', function(data) {
     // Hide game data and display game-over html
     graphics_end();
     $('#hudText').hide();
-    disable_key_listener();
+    ui_utils.disableKeyListener();
     socket.emit("leave_game", {session_id: window.sessionId});
-
-    $('#finalPageHeaderText').show()
-    $('#finalPageText').show()
-    $("#gameHeaderText").hide();
-    $("#gamePageText").hide();
     $("#gameContainer").hide();
 
     if (data.message != undefined) {
@@ -381,55 +389,352 @@ socket.on('end_game_redirect', function(data) {
 
 
 socket.on('update_game_page_text', function(data) {
-    // $("#gamePageText").text(data.game_page_text);
-    document.getElementById('gamePageText').innerHTML = data.game_page_text;
+    $("#sceneBody").html(data.game_page_text);
+    $("#sceneBody").show();
 })
 
 
-var pressedKeys = {};
+// var pressedKeys = {};
 
 socket.on('request_pressed_keys', function(data) {
-    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(pressedKeys), session_id: window.sessionId});
+    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(ui_utils.pressedKeys), session_id: window.sessionId});
 });
 
-function enable_key_listener(input_mode) {
-    pressedKeys = {};
-    $(document).on('keydown', function(event) {
-        // List of keys to prevent default behavior for (scroll the window)
-        var keysToPreventDefault = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ']; // Includes space (' ')
 
-        if (keysToPreventDefault.includes(event.key)) {
-            event.preventDefault(); // Prevent default behavior for specified keys
+
+
+
+//  UPDATED
+
+// var canAdvance = true;
+// refreshCanAdvance = setInterval(() => {
+//     canAdvance = document.getElemendById("canContinue");
+//     // if (canContinue == true) {
+//     //          $("#advanceButton").attr("disabled", false);
+//     //     } else {
+//     //         canContinue.onchange = function() {
+//     //             if (canContinue.value == "true") {
+//     //                 $("#continueButton").attr("disabled", false);
+//     //             } else {
+//     //                 $("#continueButton").attr("disabled", true);
+//     //             }
+//     //         }
+//     //     }
+// } , 100);
+
+
+
+var currentSceneMetadata = {};
+
+
+socket.on("activate_scene", function(data) {
+    console.log("Activating scene", data.scene_id)
+    activateScene(data);
+});
+
+
+socket.on("terminate_scene", function(data) {
+    if (data.element_ids && data.element_ids.length > 0) {
+        let retrievedData = getData(data.element_ids);
+        socket.emit("static_scene_data_emission", {data: retrievedData, scene_id: data.scene_id, session_id: window.sessionId});
+    }
+    
+    terminateScene(data);
+    console.log("Terminating scene", data.scene_id);
+    // Add any cleanup logic here if needed
+});
+
+
+function getData(elementIds) {
+    let retrievedData = {};
+    elementIds.forEach(id => {
+        let element = document.getElementById(id);
+        if (element) {
+            switch(element.tagName.toLowerCase()) {
+                case 'input':
+                    switch(element.type.toLowerCase()) {
+                        case 'checkbox':
+                            retrievedData[id] = element.checked;
+                            break;
+                        case 'radio':
+                            let checkedRadio = document.querySelector(`input[name="${element.name}"]:checked`);
+                            retrievedData[id] = checkedRadio ? checkedRadio.value : null;
+                            break;
+                        case 'range':
+                            retrievedData[id] = parseFloat(element.value);
+                            break;
+                        default:
+                            retrievedData[id] = element.value;
+                    }
+                    break;
+                case 'select':
+                    retrievedData[id] = Array.from(element.selectedOptions).map(option => option.value);
+                    break;
+                case 'textarea':
+                    retrievedData[id] = element.value;
+                    break;
+                case 'button':
+                    retrievedData[id] = element.textContent;
+                    break;
+                default:
+                    retrievedData[id] = element.textContent;
+            }
+        } else {
+            console.warn(`Element with id '${id}' not found`);
+            retrievedData[id] = null;
         }
-
-        // If we're using the single keystroke input method, we just send the key when it's pressed.
-        // This means no composite actions.
-        if (input_mode == "single_keystroke") {
-            socket.emit('send_pressed_keys', {'pressed_keys': Array(event.key), session_id: window.sessionId});
-            return;
-        }
-
-        // Otherwise, we keep track of the keys that are pressed and send them on request
-        if (pressedKeys[event.key]) {
-            return; // Key is already pressed, so exit the function
-        }
-
-        pressedKeys[event.key] = true; // Add key to pressedKeys when it is pressed
     });
+    return retrievedData;
+};
 
-    $(document).on('keyup', function(event) {
-        if (input_mode == "single_keystroke") {
-            return;
+
+function activateScene(data) {
+    console.log(data);
+    currentSceneMetadata = data;
+    if (data.scene_type == "EndScene" || data.scene_type == "CompletionCodeScene") {
+        startEndScene(data);
+    } else if (data.scene_type == "GymScene") {
+        startGymScene(data);
+    } else {
+        // Treat all other scenes as static scenes
+        startStaticScene(data);
+    }
+};
+
+
+function startStaticScene(data) {
+    // In the Static and Start scenes, we only show
+    // the advanceButton, sceneHeader, and sceneBody
+    $("#sceneHeader").show();
+    $("#sceneSubHeader").show();
+
+    $("#sceneBody").show();
+
+    $("#advanceButton").attr("disabled", false);
+    $("#advanceButton").show();
+
+    $("#sceneHeader").html(data.scene_header);
+    $("#sceneSubHeader").html(data.scene_subheader);
+    $("#sceneBody").html(data.scene_body);
+
+
+
+};
+
+function startEndScene(data) {
+
+    $("#sceneHeader").show();
+    $("#sceneSubHeader").show();
+    $("#sceneBody").show();
+
+    $("#sceneHeader").html(data.scene_header);
+    $("#sceneSubHeader").html(data.scene_subheader);
+
+    $("#sceneBody").html(data.scene_body);
+    $("#redirectButton").hide();
+    $("#advanceButton").hide();
+
+    if (data.url !== undefined && data.url !== null) {
+        $("#redirectButton").show();
+
+        let url = data.url;
+
+        if (data.append_subject_id) {
+            url = url + subjectName;
         }
 
-        // If we're tracking pressed keys, remove it
-        delete pressedKeys[event.key]; // Remove key from pressedKeys when it is released
-    });
+        $("#redirectButton").show();
+
+        $("#redirectButton").on("click", function() {
+            // Replace this with the URL you want to redirect to
+            redirect_subject(url);
+        });
+    };
+
+};
+
+function startGymScene(data) {
+    enableStartRefreshInterval();
+
+    // First, check if we need to initialize Pyodide
+    if (data.run_through_pyodide) {
+        initializePyodideRemoteGame(data);
+        enableCheckPyodideDone();
+    };
+
+
+    // Set the text that we'll display:
+    $("#sceneHeader").html(data.scene_header);
+    $("#sceneSubHeader").html(data.scene_subheader);
+    $("#sceneBody").html(data.scene_body);
+
+
+    // Next, we display the startButton, header, and body
+    $("#sceneHeader").show();
+    $("#sceneSubHeader").show();
+    $("#sceneBody").show();
+    $("#startButton").show();
+
+};
+
+
+function terminateScene(data) {
+    if (data.scene_type == "EndScene") {
+        terminateEndScene(data);
+    } else if (data.scene_type == "GymScene") {
+        terminateGymScene(data);
+    } else {
+        // (data.scene_type == "StaticScene" || data.scene_type == "StartScene" || data.scene_type == "EndScene")
+        // Treat all other scenes as static scenes
+        terminateStaticScene(data);
+    }
+}
+
+function terminateStaticScene(data) {
+    $("#sceneHeader").hide();
+    $("#sceneSubHeader").hide();
+    $("#sceneBody").hide();
+
+    $("#sceneHeader").html("");
+    $("#sceneSubHeader").html("");
+    $("#sceneBody").html("");
+
+
+    $("#advanceButton").hide();
+    $("#advanceButton").attr("disabled", true);
+}
+
+function terminateGymScene(data) {
+    ui_utils.disableKeyListener();
+    graphics_end();
+
+    let remoteGameData = getRemoteGameData();
+    console.log("emitting data", remoteGameData)
+    const binaryData = msgpack.encode(remoteGameData);
+    socket.emit("emit_remote_game_data", {data: binaryData, scene_id: data.scene_id, session_id: window.sessionId});
+
+    $("#sceneHeader").show();
+    $("#sceneHeader").html("");
+    
+    $("#sceneSubHeader").show();
+    $("#sceneSubHeader").html("");
+    
+    $("#sceneBody").show();
+    $("#sceneBody").html("");
+    
+    $("#startButton").hide();
+    $("#gameContainer").hide();
+
+    $('#hudText').hide()
+    $('#hudText').text("")
+    $('#hudText').html("")
+
+
+};
+
+
+// Button Logic
+
+$(function() {
+    $('#advanceButton').click( () => {
+        $("#advanceButton").hide();
+        $("#advanceButton").attr("disabled", true);
+        console.log("Emitting advance_scene")
+        socket.emit("advance_scene", {session_id: window.sessionId});
+    })
+})
+
+// GymScene
+
+async function initializePyodideRemoteGame(data) {
+    // Only initialize a new RemoteGame if we don't already have one
+    // if (pyodideRemoteGame === null) {
+    //     pyodideRemoteGame = new RemoteGame(data);
+    // } else {
+    //     console.log("Not initializing a new RemoteGame because one already exists");
+    //     pyodideRemoteGame.reinitialize_environment(data);
+    // }
+    pyodideRemoteGame = new RemoteGame(data);
+};
+
+var checkPyodideDone;
+function enableCheckPyodideDone() {
+    checkPyodideDone = setInterval(() => {
+        if (pyodideRemoteGame !== undefined && pyodideRemoteGame.isDone()) {
+            clearInterval(checkPyodideDone);
+            clearInterval(refreshStartButton);
+            // pyodideRemoteGame = undefined;
+            
+            // Create and show the countdown popup
+            const popup = document.createElement('div');
+            popup.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 20px 40px;
+                border-radius: 10px;
+                font-family: Arial, sans-serif;
+                font-size: 18px;
+                text-align: center;
+                z-index: 1000;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            `;
+            const gameContainer = document.getElementById('gameContainer');
+            gameContainer.style.position = 'relative';
+            gameContainer.appendChild(popup);
+            
+            let countdown = 3;
+            const updatePopup = () => {
+                popup.innerHTML = `
+                    <h2 style="margin-bottom: 10px; color: white;">Done!</h2>
+                    <p>Continuing in <span style="font-weight: bold; font-size: 24px;">${countdown}</span> seconds...</p>
+                `;
+                if (countdown === 0) {
+                    gameContainer.removeChild(popup);
+                    socket.emit("advance_scene", {session_id: window.sessionId});
+                } else {
+                    countdown--;
+                    setTimeout(updatePopup, 1000);
+                }
+            };
+            updatePopup();
+        } 
+    }, 100);
 }
 
 
-function disable_key_listener() {
-        $(document).off('keydown');
-        $(document).off('keyup');
-        pressedKeys = {};
+
+// Check if we're enabling the start button
+var refreshStartButton;
+function enableStartRefreshInterval() {
+    refreshStartButton = setInterval(() => {
+        if (currentSceneMetadata.scene_type !== "GymScene") {
+            $("#startButton").hide();
+            $("#startButton").attr("disabled", true);
+        } else if (maxLatency != null && latencyMeasurements.length > 5 && curLatency > maxLatency) {
+            $("#instructions").hide();
+            $("#startButton").hide();
+            $("#startButton").attr("disabled", true);
+            $('#errorText').show()
+            $('#errorText').text("Sorry, your connection is too slow for this application. Please make sure you have a strong internet connection to ensure a good experience for all players in the game.");
+            clearInterval(refreshStartButton);
+        } else if (maxLatency != null && latencyMeasurements.length <= 5) {
+            $("#startButton").show();
+            $("#startButton").attr("disabled", true);
+        } 
+        else if (pyodideReadyIfUsing()){
+            $('#errorText').hide()
+            $("#startButton").show();
+            $("#startButton").attr("disabled", false);
+            clearInterval(refreshStartButton);
+        }
+    }, 500);
 }
+
+
+function redirect_subject(url) {
+    window.location.href = url;
+};

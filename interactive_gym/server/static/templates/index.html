@@ -1,181 +1,193 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ page_title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css?family=Press Start 2P');
-
-
-        /* Apply 'Press Start 2P' only to specific headers */
-        #gameHeaderText, #finalPageHeaderText, #welcomeHeader {
-            font-family: 'Press Start 2P', cursive;
-        }
-
         /* General page styling */
         body, html {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             font-size: 20px;
-            background-color: #fff; /* white background */
-            color: #000; /* black text */
-            text-align: center; /* Center aligning everything */
-            padding-top: 50px; /* Spacing from the top */
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden; /* Prevents the whole page from scrolling */
+        }
+
+        .text-container {
+            max-width: 800px;
+            max-height: 90vh; /* Ensure the container doesn't exceed the viewport height */
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevents overflow from showing */
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        #sceneBody {
+            font-size: 18px;
+            color: #555;
+            text-align: left;
+            line-height: 1.6;
+            overflow-y: auto; /* Adds a scrollbar when content overflows */
+            flex-grow: 1; /* Allow this to grow and take available space */
+            padding: 15px 25px 15px 15px; /* Extra padding on the right for the scrollbar */
+            box-sizing: border-box; /* Include padding in the element's total width and height */
+            margin-bottom: 20px; /* Add some space between sceneBody and buttons */
+        }
+
+        #startButton, #advanceButton, #redirectButton {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            background-color: #3498db;
+            color: #ffffff;
+            border: none;
+            padding: 12px 24px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            margin: 15px 10px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        #startButton:hover, #advanceButton:hover, #redirectButton:hover {
+            background-color: #2980b9;
+        }
+
+        #startButton:disabled, #advanceButton:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        #resetGame, #waitroomText, #hudText, #errorText {
+            background-color: #ecf0f1;
+            border: 2px solid #34495e;
+            padding: 15px;
+            border-radius: 12px;
+            color: #2c3e50;
+            font-size: 18px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: none; /* Initially hidden */
+        }
+
+        #hudText {
+            display: inline-block;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+        }
+
+        #latencyContainer {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: rgba(182, 179, 179, 0.7); /* Light, faint text color */
+            font-size: 16px;
+            font-family: 'Roboto', sans-serif;
+            box-shadow: none; /* Remove or reduce the shadow to make it less prominent */
+            opacity: 0.7; /* Lower opacity to make the container itself faint */
+            transition: opacity 0.3s ease; /* Optional: Add a transition for a smoother appearance */
+        }
+
+        #gameContainer {
+            display: none; /* Initially hidden */
+            max-width: 1000px;
+            margin: auto;
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            padding: 20px;
+            background-color: #ecf0f1;
+        }
+
+        #startButton {
+            display: none; /* Initially hidden */
+        }
+
+        #redirectButton {
+            display: none; /* Initially hidden */
+        }
+
+        .centered-container {
             display: flex;
             justify-content: center;
             align-items: center;
         }
-
-        .text-container {
-            max-width: 800px; /* Maximum width */
-            font-family: Arial, sans-serif;
-            font-size: 20px;
-            text-align: center; /* Center aligning everything */
-        }
-
-        /* Style for the start button */
-        #startButton {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 20px;
-            background-color: #008000; /* Green color for start */
-            color: white;
-            border: none;
-            padding: 15px 32px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        /* Style for the start button when it's disabled */
-        #startButton:disabled {
-            background-color: #A9A9A9; /* Grey color to indicate disabled */
-            color: #7F7F7F; /* Optional: Darker text color for better contrast */
-            cursor: not-allowed; /* Change cursor to indicate the button is disabled */
-        }
-
-        #gamePageText, #startPageText {
-            font-size: 20px;
-        }
-
-        #reset-game, #waitroomText, #hudText {
-            background-color: white; /* White background color */
-            border: 2px solid black; /* Black border */
-            padding: 10px; /* Space around the text */
-            border-radius: 10px; /* Rounded corners for the box */
-            color: black; /* Text color */
-            font-size: 20px; /* Adjust as per your preference */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: Adds a shadow for a 3D effect */
-        }
-
-        #hudText {
-            display: inline-block; /* Makes the element's width fit its content */
-            font-family: 'Press Start 2P', cursive;
-            background-color: white; /* White background color */
-            border: 2px solid black; /* Black border */
-            padding: 8px; /* Space around the text */
-            border-radius: 10px; /* Rounded corners for the box */
-            color: black; /* Text color */
-            font-size: 14px; /* Adjust as per your preference */
-        }
-
-        #errorText {
-            background-color: white; /* White background color */
-            border: 2px solid red; /* red border */
-            padding: 10px; /* Space around the text */
-            border-radius: 10px; /* Rounded corners for the box */
-            color: black; /* Text color */
-            font-size: 20px; /* Adjust as per your preference */
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* Optional: Adds a shadow for a 3D effect */
-        }
-
-        #latencyContainer {
-            position: fixed; /* Fixed position */
-            top: 10px; /* 10px from the top */
-            right: 10px; /* 10px from the right */
-            background-color: rgba(255, 255, 255, 0.5); /* Semi-transparent background */
-            padding: 5px 10px; /* Padding around the text */
-            border-radius: 5px; /* Rounded corners */
-            color: lightgrey; /* Light grey text color */
-            font-size: 16px; /* Font size */
-        }
-
-        /* Style for the game container */
-        #gameContainer {
-            display: none; /* Initially hide the game container */
-            max-width: 1000px; /* Maximum width */
-            margin: auto; /* Centering */
-            border: 2px solid #fff; /* White border */
-        }
     </style>
 </head>
 <body>
-
     <div class="text-container">
-        <!-- Texts for start -->
-        <h1 id="welcomeHeader">{{ welcome_header_text }}</h1>
-        <p id="welcomeText">{{ welcome_text }}</p>
-
-        <p id="waitroomText" style="display: none;"> {{ waitroomText }}</p>
-
-        <!-- Texts for game, initially hidden -->
-        <h1 id="gameHeaderText" style="display: none;">{{ game_header_text }}</h1>
-        <p id="gamePageText" style="display: none;">{{ game_page_text | safe }}</p>
-
-        <!-- Texts for final page, initially hidden -->
-        <h1 id="finalPageHeaderText" style="display: none;">{{ final_page_header_text }}</h1>
-        <p id="finalPageText" style="display: none;">{{ final_page_text }}</p>
-
-        <div id="reset-game", class="text-center" style="display:none"></div>
-        <div id="invalidSession", class="text-center" style="display:none"> "Invalid Session. Please refresh the page!</div>
-
-        <div id="errorText" style="display: none;"></div>
-        <div id="hudText" style="display: none;"></div>
-
-        <!-- Game container -->
-        <div id="gameContainer"></div>
-
-        <div id="instructions" style="text-align: left;">
-            {{ instructions_html|safe }}
+        <h1 id="sceneHeader">{{ scene_header | safe }}</h1>
+        <h2 id="sceneSubHeader">{{ scene_subheader | safe }}</h2>
+        <div id="sceneBody">
+            {{ scene_body | safe }}
         </div>
 
-        <!-- Start button -->
-        <button id="startButton" disabled>Start</button>
+        <p id="waitroomText">{{ waitroomText }}</p>
 
+        <div id="resetGame"></div>
+        <div id="invalidSession">"Invalid Session. Please refresh the page!"</div>
+        <div id="errorText"></div>
+        <div id="hudText"></div>
 
+        <div id="gameContainer"></div>
 
+        <!-- Centered container for the start button -->
+        <div class="centered-container">
+            <button id="startButton" disabled>Start</button>
+            <button id="advanceButton">Continue</button>
+            <button id="redirectButton">Finish</button>
+        </div>
 
     </div>
 
-    <!-- Latency (Ping) Display Container -->
-    <div id="latencyContainer" style="display: none;">
+    <div id="latencyContainer">
         ping: <span id="latencyValue">00</span> ms
     </div>
 
-
-
-    <!-- <script src="static/lib/jquery-min.js" type="text/javascript"> </script> -->
+    <!-- Scripts -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js"></script>
-    <!-- <script src="static/lib/d3.v3.min.js" type="text/javascript"> </script> -->
-    <!-- <script src="static/lib/babel.min.js" type="text/javascript"> </script> -->
-    <!-- <script src="static/lib/phaser.min.js"></script> -->
-
-    <!-- <script src="//cdn.jsdelivr.net/npm/phaser@3.23.0/dist/phaser.min.js"></script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script> -->
-    <!-- <script src="//cdn.jsdelivr.net/npm/phaser@3.80.0/dist/phaser.min.js"></script> -->
-
-
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script> -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js" integrity="sha512-zoJXRvW2gC8Z0Xo3lBbao5+AS3g6YWr5ztKqaicua11xHo+AvE1b0lT9ODgrHTmNUxeCw0Ry4BGRYZfXu70weg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><script src="static/js/index.js", type="text/javascript"></script>
-
-    <script src="static/js/phaser_gym_graphics.js", type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.10.0/ort.min.js"></script>
+    
+    <script src="static/js/index.js" type="module"></script>
+    <script src="static/js/onnx_inference.js" type="module"></script>
+    <script src="static/js/phaser_gym_graphics.js" type="module"></script>
+    <script src="static/js/pyodide_remote_game.js" type="module"></script>
+    <script src="static/js/msgpack.min.js" type="module"></script>
 
     <script type="text/javascript">
-        var subjectName = "{{ subject_name }}";
+        var subjectName = "{{ subject_id }}";
     </script>
-
-
 </body>
 </html>

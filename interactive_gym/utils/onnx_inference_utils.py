@@ -13,7 +13,9 @@ from interactive_gym.utils import inference_utils
 try:
     import onnxruntime as ort
 except ImportError:
-    raise ImportError("Must `pip install onnxruntime` to use the ONNX inference utils!")
+    raise ImportError(
+        "Must `pip install onnxruntime` to use the ONNX inference utils!"
+    )
 
 
 ORT_SESSIONS: dict[str, ort.InferenceSession] = {}
@@ -24,6 +26,10 @@ def inference_onnx_model(
     model_path: str,
 ) -> np.ndarray:
     """Given an input dict and path to an ONNX model, return the model outputs"""
+    input_dict["seq_lens"] = [
+        1,
+    ]
+    print(list(input_dict.keys()))
     outputs = ORT_SESSIONS[model_path].run(["output"], input_dict)
     return outputs
 
@@ -39,7 +45,10 @@ def onnx_model_inference_fn(
     model_outputs = inference_onnx_model(
         {
             "obs": observation.astype(np.float32),
-            "state_ins": np.array([0.0], dtype=np.float32),  # rllib artifact
+            "state_ins": [
+                np.zeros((1, 256), dtype=np.float32) for _ in range(2)
+            ],
+            "seq_lens": np.array([1], dtype=np.int32),
         },
         model_path=onnx_model_path,
     )[0].reshape(
@@ -54,6 +63,8 @@ def onnx_model_inference_fn(
 def load_onnx_policy_fn(onnx_model_path: str) -> str:
     """Initialize the ORT session and return the string to access it"""
     if ORT_SESSIONS.get(onnx_model_path) is None:
-        ORT_SESSIONS[onnx_model_path] = ort.InferenceSession(onnx_model_path, None)
+        ORT_SESSIONS[onnx_model_path] = ort.InferenceSession(
+            onnx_model_path, None
+        )
 
     return onnx_model_path

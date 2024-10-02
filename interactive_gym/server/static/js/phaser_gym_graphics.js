@@ -1,3 +1,6 @@
+import {actionFromONNX} from './onnx_inference.js';
+
+
 var game_config = {
     type: Phaser.AUTO,
     pixelArt: true,
@@ -5,27 +8,139 @@ var game_config = {
         noAudio: true
     },
     resolution: window.devicePixelRatio,
-    // pauseOnBlur: false,
 };
 
 var game_graphics;
 let stateBuffer = []
 const MAX_BUFFER_SIZE = 1;
-
-function addStateToBuffer(state_data) {
+export function addStateToBuffer(state_data) {
     if (stateBuffer >= MAX_BUFFER_SIZE) {
         stateBuffer.shift(); // remove the oldest state
     }
     stateBuffer.push(state_data);
 }
 
+// Contains an array for each bot that we'll shift to get the most recent action
+// Bots are queried asynchronously!
+let botActionBuffers = {};
 
-function graphics_start(graphics_config) {
+let humanKeyPressBuffer = [];
+const MAX_KEY_PRESS_BUFFER_SIZE = 1;
+export function addHumanKeyPressToBuffer(action) {
+    // TODO(chase): this should filter out actions that aren't allowed, 
+    // otherwise hitting an unrelated key could cancel out previous actions.
+    if (humanKeyPressBuffer >= MAX_KEY_PRESS_BUFFER_SIZE) {
+        humanKeyPressBuffer.shift(); // remove the oldest state
+    }
+    humanKeyPressBuffer.push(action);
+}
+
+var pressedKeys = {};
+export function updatePressedKeys(updatedPressedKeys) {
+    pressedKeys = updatedPressedKeys;
+}
+
+// Contains the last action submitted at each step
+var previousSubmittedActions = {};
+
+
+let currentObservations = {};
+
+class RemoteGameDataLogger {
+    constructor() {
+        this.data = {
+            observations: {},
+            actions: {},
+            rewards: {},
+            terminateds: {},
+            truncateds: {},
+            infos: {},
+            episode_num: [],
+            t: [],
+            timestamp: []
+        };
+    }
+
+    logData(gameData) {
+        const logDataForField = (field) => {
+            if (gameData[field] !== undefined ) {
+                const data = gameData[field] instanceof Map ? Object.fromEntries(gameData[field]) : gameData[field];
+                for (let agentId in data) {
+                    if (!this.data[field][agentId]) {
+                        this.data[field][agentId] = [];
+
+                    }
+
+                    if (field !== 'observations') {
+                        this.data[field][agentId].push(data[agentId]);
+                    }
+                   
+                }
+            }
+        };
+
+        ['observations', 'actions', 'rewards', 'terminateds', 'truncateds'].forEach(logDataForField);
+        
+        if (gameData.infos !== undefined) {
+            const infos = gameData.infos instanceof Map ? Object.fromEntries(gameData.infos) : gameData.infos;
+            for (let agentId in infos) {
+                if (!this.data.infos[agentId]) {
+                    this.data.infos[agentId] = {};
+                }
+                for (let key in infos[agentId]) {
+                    if (!this.data.infos[agentId][key]) {
+                        this.data.infos[agentId][key] = [];
+                    }
+                    this.data.infos[agentId][key].push(infos[agentId][key]);
+                }
+            }
+        }
+
+        if (gameData.episode_num !== undefined) {
+            this.data.episode_num.push(gameData.episode_num);
+        } 
+        if (gameData.t !== undefined) {
+            this.data.t.push(gameData.t);
+        }
+
+        
+        // Always add the current timestamp
+        this.data.timestamp.push(Date.now());
+    }
+
+    getData() {
+        return JSON.parse(JSON.stringify(this.data));
+    }
+
+    reset() {
+        this.data = {
+            observations: {},
+            actions: {},
+            rewards: {},
+            terminateds: {},
+            truncateds: {},
+            infos: {},
+            episode_num: [],
+            t: [],
+            timestamp: []
+        };
+    }
+}
+
+let remoteGameLogger = new RemoteGameDataLogger();
+
+export function getRemoteGameData() {
+    let data = remoteGameLogger.getData();
+    remoteGameLogger.reset();
+    return data;
+}
+
+export function graphics_start(graphics_config) {
     game_graphics = new GraphicsManager(game_config, graphics_config);
 }
 
 
-function graphics_end() {
+export function graphics_end() {
     $("#gameContainer").empty();
     game_graphics.game.destroy(true);
     stateBuffer = [];
@@ -44,6 +159,7 @@ class GraphicsManager {
         game_config.animation_configs = graphics_config.animation_configs;
         game_config.parent = graphics_config.parent;
         game_config.fps = graphics_config.fps;
+        game_config.scene_metadata = graphics_config.scene_metadata;
         this.game = new Phaser.Game(game_config);
         // TODO(chase): Figure out proper resizing. Sprites must be resized as well but they aren't if we do this.
         // this.resizeGame();
@@ -83,6 +199,9 @@ class GymScene extends Phaser.Scene {
         this.animation_configs = config.animation_configs;
         this.background = config.background;
         this.last_rendered_step = -1;
+        this.scene_metadata = config.scene_metadata;
+        this.pyodide_remote_game = config.pyodide_remote_game;
+        this.isProcessingPyodide = false;
     }
     preload () {
 
@@ -125,7 +244,7 @@ class GymScene extends Phaser.Scene {
         // Check if the background is just a color, if so fill
         if (this._checkIfHex(this.background)) {
             this.cameras.main.setBackgroundColor(this._strToHex(this.background));
-        } else {
+        } else { 
             // If the background isn't a color, load the specified image
             this._addTexture(this.background);
             this.add.image(this.height / 2, this.width / 2, this.background);
@@ -139,13 +258,194 @@ class GymScene extends Phaser.Scene {
     };
 
     update() {
-        if (stateBuffer.length > 0) {
-            this.state = stateBuffer.shift(); // get the oldest state from the buffer
-            this.drawState()
+
+        if (this.pyodide_remote_game !== undefined && this.pyodide_remote_game.state === "done") {
+            this.removeAllObjects();
+            return;
+        };
+
+        if (this.pyodide_remote_game !== undefined && !this.isProcessingPyodide) {
+            this.processPyodideGame();
         }
+        
+        this.processRendering();
     };
 
-     drawState() {
+    async processPyodideGame() {
+        this.isProcessingPyodide = true;
+        if (this.pyodide_remote_game !== undefined) {
+            let rewards, terminateds, truncateds, infos, render_state;
+            if (this.pyodide_remote_game.shouldReset) {
+                this.removeAllObjects();
+                [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
+                remoteGameLogger.logData(
+                    {
+                        observations: currentObservations, 
+                        infos: infos, 
+                        episode_num: this.pyodide_remote_game.num_episodes, 
+                        t: this.pyodide_remote_game.step_num
+                    });
+            } else {
+                const actions = await this.buildPyodideActionDict();
+                previousSubmittedActions = actions;
+                [currentObservations, rewards, terminateds, truncateds, infos, render_state] = await this.pyodide_remote_game.step(actions);
+                remoteGameLogger.logData(
+                    {
+                        observations: currentObservations, 
+                        actions: actions, 
+                        rewards: rewards, 
+                        terminateds: terminateds, 
+                        truncateds: truncateds, 
+                        infos: infos, 
+                        episode_num: this.pyodide_remote_game.num_episodes, 
+                        t: this.pyodide_remote_game.step_num
+                    });
+            }             
+            addStateToBuffer(render_state);
+        }
+        this.isProcessingPyodide = false;
+    };
+
+    async buildPyodideActionDict() {
+        let actions = {};
+
+        // Identify which policy corresponds to the human by checking for the human value in policy_mapping
+        let human_policy_agent_id = Object.keys(
+            this.scene_metadata.policy_mapping
+        ).find(
+                key => this.scene_metadata.policy_mapping[key] == "human"
+        );
+
+        // Get the human action and populate the actions dictionary with corresponding agent id key
+        actions[human_policy_agent_id] = this.getHumanAction();
+        
+        // Loop over the policy mapping and populate the actions dictionary with bot actions
+        for (let agentID in Object.keys(this.scene_metadata.policy_mapping)) {
+            // Skip if the agent is the human
+            if (agentID == human_policy_agent_id) {
+                continue;
+            }
+            actions[agentID] = this.getBotAction(agentID);
+        }
+
+        return actions;
+    }
+
+    getBotAction(agentID) {
+        let policy_mapping = this.scene_metadata.policy_mapping;
+        
+        // If the bot is action on this step (according to frame skip), calculate an action.
+        if (this.pyodide_remote_game.step_num % this.scene_metadata.frame_skip == 0) {
+            let policyID = policy_mapping[agentID];
+            // Check if the policy mapping ends with .onnx to indicate an ONNX model
+            if (policyID.endsWith(".onnx")) {
+                // Cast the agent ID to an integer
+                let observation = currentObservations.get(parseInt(agentID));
+                this.queryBotPolicy(agentID, policyID, observation);
+            } else if (policyID === "random") {
+                // If the policy is random, return a random action
+                return Math.floor(Math.random() * Object.keys(this.scene_metadata.action_mapping).length + 1) - 1;
+            }
+        } 
+
+        // If the bot was queried asynchronously, we may now have an action to execute
+        if (botActionBuffers[agentID] !== undefined && botActionBuffers[agentID].length > 0) {
+            return botActionBuffers[agentID].shift();
+        } else {
+            // Otherwise, just return the default as specified by the settings
+
+            // If we're using previous_action as population method, return the previous action
+            if (
+                this.scene_metadata.action_population_method === "previous_submitted_action" && 
+                previousSubmittedActions[agentID] !== undefined
+            ) {
+                return previousSubmittedActions[agentID];
+            } else {
+                // If we're using default_action as population method, return the default action
+                return this.scene_metadata.default_action;
+            }
+        } 
+    }
+
+    async queryBotPolicy(agentID, policyID, observation) {
+
+        if (botActionBuffers[agentID] === undefined) {
+            botActionBuffers[agentID] = [];
+        }
+
+        // Calculate the action and add it to the buffer
+        let action = await actionFromONNX(policyID, observation);
+        botActionBuffers[agentID].push(action);
+    }
+
+    getHumanAction() {
+        let human_action;
+
+        // If single_keystroke, we'll get the action that was added to the buffer when the key was pressed
+        if (this.scene_metadata.input_mode === "single_keystroke") {
+            if (humanKeyPressBuffer.length > 0) {
+                human_action = this.scene_metadata.action_mapping[humanKeyPressBuffer.shift()];
+                if (human_action == undefined) {
+                    human_action = this.scene_metadata.default_action;
+                }
+            } else {
+                human_action = this.scene_metadata.default_action;
+            }
+        } else if (this.scene_metadata.input_mode === "pressed_keys") {
+            // If pressed_keys, we get the (potentially composite) action from the currently pressed keys
+            if (pressedKeys.length == 0) {
+                // if no keys are pressed, we'll use the default action
+                human_action = this.scene_metadata.default_action;
+            } else if (pressedKeys.length == 1) {
+                human_action = this.scene_metadata.action_mapping[Object.keys(pressedKeys)[0]];
+                if (human_action == undefined) {
+                    human_action = this.scene_metadata.default_action;
+                }
+            } else {
+                // multiple keys are pressed so check for a composite action
+                human_action = this.scene_metadata.action_mapping[this.generateCompositeAction()[0]];
+            }
+        }
+
+        return human_action;
+    }
+
+    generateCompositeAction() {
+        // TODO: Set this in the config so we don't recalculate every time
+        const maxCompositeActionSize = Math.max(
+            ...Object.keys(this.scene_metadata.action_mapping)
+                .filter(key => Array.isArray(key))
+                .map(key => key.length),
+            0
+        );
+    
+        if (maxCompositeActionSize > 1) {
+            const compositeActions = Object.keys(this.scene_metadata)
+                .filter(key => Array.isArray(key))
+                .map(key => key.sort());
+    
+            const combinations = combinationsOf(pressedKeys, maxCompositeActionSize);
+    
+            for (const combination of combinations) {
+                const sortedCombination = combination.sort();
+                if (compositeActions.some(action => arraysEqual(action, sortedCombination))) {
+                    pressedKeys = [sortedCombination];
+                    break;
+                }
+            }
+        }
+    
+        return pressedKeys;
+    }
+
+    processRendering() {
+        if (stateBuffer.length > 0) {
+            this.state = stateBuffer.shift(); // get the oldest state from the buffer
+            this.drawState();
+        }
+    }
+
+    drawState() {
 
         /*
         Iterate over the objects defined in the state and
@@ -153,7 +453,12 @@ class GymScene extends Phaser.Scene {
          */
 
         // Retrieve the list of object contexts
-        let game_state_objects = this.state.state;
+        if (this.state == null || this.state == undefined) {
+            console.log("No state to render.");
+            return;
+        }
+
+        let game_state_objects = this.state.game_state_objects;
         let game_state_image = this.state.game_image_base64;
 
         // If we don't have any object contexts, we render the image from `env.render()`
@@ -226,6 +531,18 @@ class GymScene extends Phaser.Scene {
 
         }
     };
+
+    removeAllObjects() {
+        Object.keys(this.temp_object_map).forEach(obj_uuid => {
+            this.temp_object_map[obj_uuid].destroy();
+            delete this.temp_object_map[obj_uuid];
+        })
+
+        Object.keys(this.perm_object_map).forEach(obj_uuid => {
+            this.perm_object_map[obj_uuid].destroy();
+            delete this.perm_object_map[obj_uuid];
+        })
+    }
 
     _addObject(object_config, object_map) {
         if (object_config.object_type === "sprite") {
@@ -300,13 +617,8 @@ class GymScene extends Phaser.Scene {
         //     obj.play(object_config.cur_animation)
         // } else
         if (object_config.image_name !== null) {
-
-            // console.log(this.textures.exists(object_config.image_name))
-            // sprite.setTexture(object_config.image_name, object_config.frame);
-
             if (object_config.frame !== null) {
                 sprite.setTexture(object_config.image_name, object_config.frame);
-
             } else {
                 sprite.setTexture(object_config.image_name)
             }
@@ -323,8 +635,8 @@ class GymScene extends Phaser.Scene {
             sprite.tween == null &&
             (new_x !== sprite.x || new_y !== sprite.y)
             ) {
-                // sprite.tween =
-            this.tweens.add({
+
+            sprite.tween = this.tweens.add({
                 targets: [sprite],
                 x: new_x,
                 y: new_y,
@@ -487,4 +799,24 @@ class GymScene extends Phaser.Scene {
         return parseInt(color_str.replace(/^#/, ''), 16)
     }
 
+}
+
+
+function combinationsOf(arr, k) {
+    if (k === 0) return [[]];
+    if (arr.length === 0) return [];
+
+    const [head, ...tail] = arr;
+    const withoutHead = combinationsOf(tail, k);
+    const withHead = combinationsOf(tail, k - 1).map(combination => [head, ...combination]);
+
+    return [...withHead, ...withoutHead];
+}
+
+function arraysEqual(a, b) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+    }
+    return true;
 }

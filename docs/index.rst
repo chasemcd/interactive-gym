@@ -7,6 +7,17 @@
    :target: https://github.com/chasemcd/interactive-gym
    :alt: GitHub Repo stars
 
-
 .. include:: ../README.rst
+
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Contents:
+
+   content/quick_start
+   content/environment_graphics
+   content/client_side
+   content/server_side
+   content/examples
+
 
