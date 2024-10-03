@@ -57,10 +57,8 @@ env
         this.pyodideReady = true;
     }
 
-
-
     async reinitialize_environment(config) {
-        this.pyodide_ready = false;
+        this.pyodideReady = false;
         // If we need additional packages from micropip,
         // install them. Look at config.packages_to_install
         // and compare it to this.installed_packages.
@@ -82,20 +80,24 @@ env
     
         // The code executed here must instantiate an environment `env`
         const env = await this.pyodide.runPythonAsync(`
-${this.config.environment_initialization_code}
+${config.environment_initialization_code}
+print(env, env.current_layout_id)
 env
         `);
 
+        console.log("env: ", env);
         if (env == undefined) {
             throw new Error("The environment was not initialized correctly. Ensure the the environment_initialization_code correctly creates an `env` object.");
         }
 
+        this.shouldReset = true;
         this.state = "ready";
         this.pyodideReady = true;
     }
 
     async reset() {
         this.shouldReset = false;
+        console.log("Resetting the environment");
         const startTime = performance.now();
         const result = await this.pyodide.runPythonAsync(`
 obs, infos = env.reset()

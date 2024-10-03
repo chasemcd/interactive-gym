@@ -115,6 +115,7 @@ class GymScene(scene.Scene):
         self.run_through_pyodide: bool = False
         self.environment_initialization_code: str = ""
         self.packages_to_install: list[str] = []
+        self.restart_pyodide: bool = False
 
     def environment(
         self,
@@ -417,6 +418,7 @@ class GymScene(scene.Scene):
         environment_initialization_code: str = NotProvided,
         environment_initialization_code_filepath: str = NotProvided,
         packages_to_install: list[str] = NotProvided,
+        restart_pyodide: bool = NotProvided,
     ):
         """Configure Pyodide-related settings for the GymScene.
 
@@ -431,6 +433,8 @@ class GymScene(scene.Scene):
         :type environment_initialization_code_filepath: str, optional
         :param packages_to_install: List of Python packages to install in the Pyodide environment, defaults to NotProvided
         :type packages_to_install: list[str], optional
+        :param restart_pyodide: Whether to restart the Pyodide environment, defaults to NotProvided
+        :type restart_pyodide: bool, optional
         :return: The GymScene instance (self)
         :rtype: GymScene
         """
@@ -454,6 +458,9 @@ class GymScene(scene.Scene):
 
         if packages_to_install is not NotProvided:
             self.packages_to_install = packages_to_install
+
+        if restart_pyodide is not NotProvided:
+            self.restart_pyodide = restart_pyodide
 
         return self
 

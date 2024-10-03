@@ -20,6 +20,10 @@ export function addStateToBuffer(state_data) {
     stateBuffer.push(state_data);
 }
 
+function clearStateBuffer() {
+    stateBuffer = [];
+}
+
 // Contains an array for each bot that we'll shift to get the most recent action
 // Bots are queried asynchronously!
 let botActionBuffers = {};
@@ -264,23 +268,27 @@ class GymScene extends Phaser.Scene {
             return;
         };
 
-        if (this.pyodide_remote_game !== undefined && !this.isProcessingPyodide) {
+        if (this.pyodide_remote_game !== undefined && !this.isProcessingPyodide && this.pyodide_remote_game.pyodideReady) {
             this.processPyodideGame();
         }
         
         this.processRendering();
     };
 
+
+
     async processPyodideGame() {
         this.isProcessingPyodide = true;
-        if (this.pyodide_remote_game !== undefined) {
+        if (this.pyodide_remote_game !== undefined && this.pyodide_remote_game.pyodideReady) {
             let rewards, terminateds, truncateds, infos, render_state;
             if (this.pyodide_remote_game.shouldReset) {
+                currentObservations = {};
+                clearStateBuffer();
                 this.removeAllObjects();
                 [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
                 remoteGameLogger.logData(
                     {
-                        observations: currentObservations, 
+                        observations: currentObservations,
                         infos: infos, 
                         episode_num: this.pyodide_remote_game.num_episodes, 
                         t: this.pyodide_remote_game.step_num

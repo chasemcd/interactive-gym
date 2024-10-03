@@ -648,13 +648,13 @@ $(function() {
 
 async function initializePyodideRemoteGame(data) {
     // Only initialize a new RemoteGame if we don't already have one
-    // if (pyodideRemoteGame === null) {
-    //     pyodideRemoteGame = new RemoteGame(data);
-    // } else {
-    //     console.log("Not initializing a new RemoteGame because one already exists");
-    //     pyodideRemoteGame.reinitialize_environment(data);
-    // }
-    pyodideRemoteGame = new RemoteGame(data);
+    if (pyodideRemoteGame === null || data.restart_pyodide === true) {
+        pyodideRemoteGame = new RemoteGame(data);
+    } else {
+        console.log("Not initializing a new RemoteGame because one already exists");
+        await pyodideRemoteGame.reinitialize_environment(data);
+    }
+    // pyodideRemoteGame = new RemoteGame(data);
 };
 
 var checkPyodideDone;
