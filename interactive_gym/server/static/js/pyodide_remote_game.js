@@ -90,6 +90,7 @@ env
             throw new Error("The environment was not initialized correctly. Ensure the the environment_initialization_code correctly creates an `env` object.");
         }
 
+        this.setAttributes(config);
         this.shouldReset = true;
         this.state = "ready";
         this.pyodideReady = true;
