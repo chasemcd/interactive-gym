@@ -6,7 +6,6 @@ var socket = io();
 var start_pressed = false;
 
 
-
 var latencyMeasurements = [];
 var curLatency;
 var maxLatency;
@@ -406,29 +405,18 @@ socket.on('request_pressed_keys', function(data) {
 
 //  UPDATED
 
-// var canAdvance = true;
-// refreshCanAdvance = setInterval(() => {
-//     canAdvance = document.getElemendById("canContinue");
-//     // if (canContinue == true) {
-//     //          $("#advanceButton").attr("disabled", false);
-//     //     } else {
-//     //         canContinue.onchange = function() {
-//     //             if (canContinue.value == "true") {
-//     //                 $("#continueButton").attr("disabled", false);
-//     //             } else {
-//     //                 $("#continueButton").attr("disabled", true);
-//     //             }
-//     //         }
-//     //     }
-// } , 100);
-
-
-
 var currentSceneMetadata = {};
-
 
 socket.on("activate_scene", function(data) {
     console.log("Activating scene", data.scene_id)
+    // Retrieve interactiveGymGlobals from the global scope
+    console.log("interactiveGymGlobals", interactiveGymGlobals)
+    if (typeof interactiveGymGlobals !== 'undefined') {
+        // Add interactiveGymGlobals to data.globals
+        console.log("interactiveGymGlobals", interactiveGymGlobals)
+        data.globals = data.globals || {};
+        Object.assign(data.globals, interactiveGymGlobals);
+    }
     activateScene(data);
 });
 
@@ -441,7 +429,6 @@ socket.on("terminate_scene", function(data) {
     
     terminateScene(data);
     console.log("Terminating scene", data.scene_id);
-    // Add any cleanup logic here if needed
 });
 
 
