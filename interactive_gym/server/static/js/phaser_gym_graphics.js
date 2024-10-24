@@ -206,6 +206,10 @@ class GymScene extends Phaser.Scene {
         this.scene_metadata = config.scene_metadata;
         this.pyodide_remote_game = config.pyodide_remote_game;
         this.isProcessingPyodide = false;
+
+        if (this.pyodide_remote_game !== undefined) {
+            this.pyodide_remote_game.reinitialize_environment(this.pyodide_remote_game.config);
+        }
     }
     preload () {
 
@@ -325,8 +329,11 @@ class GymScene extends Phaser.Scene {
         );
 
         // Get the human action and populate the actions dictionary with corresponding agent id key
-        actions[human_policy_agent_id] = this.getHumanAction();
-        
+        if (human_policy_agent_id !== undefined) {
+            actions[human_policy_agent_id] = this.getHumanAction();
+        }
+
+
         // Loop over the policy mapping and populate the actions dictionary with bot actions
         for (let agentID in Object.keys(this.scene_metadata.policy_mapping)) {
             // Skip if the agent is the human

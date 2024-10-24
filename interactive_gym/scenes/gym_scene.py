@@ -114,6 +114,7 @@ class GymScene(scene.Scene):
         # pyodide
         self.run_through_pyodide: bool = False
         self.environment_initialization_code: str = ""
+        self.on_game_step_code: str = ""
         self.packages_to_install: list[str] = []
         self.restart_pyodide: bool = False
 
@@ -397,8 +398,7 @@ class GymScene(scene.Scene):
 
         if in_game_scene_body_filepath is not NotProvided:
             assert (
-                self.in_game_scene_body is NotProvided
-                and in_game_scene_body is NotProvided
+                in_game_scene_body is NotProvided
             ), "Cannot set both filepath and html_body."
 
             with open(in_game_scene_body_filepath, "r", encoding="utf-8") as f:
@@ -417,6 +417,7 @@ class GymScene(scene.Scene):
         run_through_pyodide: bool = NotProvided,
         environment_initialization_code: str = NotProvided,
         environment_initialization_code_filepath: str = NotProvided,
+        on_game_step_code: str = NotProvided,
         packages_to_install: list[str] = NotProvided,
         restart_pyodide: bool = NotProvided,
     ):
@@ -461,6 +462,9 @@ class GymScene(scene.Scene):
 
         if restart_pyodide is not NotProvided:
             self.restart_pyodide = restart_pyodide
+
+        if on_game_step_code is not NotProvided:
+            self.on_game_step_code = on_game_step_code
 
         return self
 

@@ -649,3 +649,150 @@ class OptionBoxesWithScalesAndTextBox(StaticScene):
             element_ids.append(f"scale-{i}")
 
         return element_ids
+
+
+class ScalesAndTextBox(StaticScene):
+    """A StaticScene subclass that displays option boxes with scales and a text box.
+
+    This class creates a static scene with multiple interactive elements:
+    - Option boxes that can be selected
+    - Likert scales for rating different aspects
+    - A text box for additional input
+
+    """
+
+    def __init__(
+        self,
+        text_box_header: str,  # TODO(chase): Move this to .display()
+        pre_scale_header: str,
+        scale_questions: list[str],
+        scale_size: int = 21,
+        scale_labels: list[str] = [
+            "Strongly Disagree",
+            "Disagree",
+            "Neutral",
+            "Agree",
+            "Strongly Agree",
+        ],
+    ):
+        super().__init__()
+        self.pre_scale_header = pre_scale_header
+        self.scale_size = scale_size
+        self.scale_questions = scale_questions
+        self.scale_labels = scale_labels
+        self.scene_body = self._create_html(text_box_header)
+        self.element_ids = self.get_data_element_ids()
+
+    def _create_html(self, text_box_header: str) -> str:
+        """
+        Given a list of N options, creates HTML code to display a horizontal line of N boxes,
+        each with a unique color. Each box is labeled by a string in the options list.
+        When a user clicks a box, it becomes highlighted.
+        The advance button is only enabled when a box is clicked, all scales are interacted with, and text is entered.
+        """
+        html = ""
+
+        # Add pre-scale header
+        html += f'<p style="text-align: center;">{self.pre_scale_header}</p>\n'
+
+        # Add slider scales
+        html += (
+            '<div id="scale-questions-container" style="margin-top: 20px;">\n'
+        )
+        for i, question in enumerate(self.scale_questions):
+            html += f"""
+            <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+                <div style="border: 1px solid #ccc; padding: 10px; display: inline-block; margin: 0 auto; width: 80%;">
+                    <p style="margin: 0 0 10px 0;">{question} <span style="color: red;">*</span></p>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="flex: 1; text-align: left; font-size: 12px;">{self.scale_labels[0]}</span>
+                        <span style="flex: 1; text-align: center; font-size: 12px;">{self.scale_labels[len(self.scale_labels)//2]}</span>
+                        <span style="flex: 1; text-align: right; font-size: 12px;">{self.scale_labels[-1]}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: center;">
+                        <input type="range" id="scale-{i}" class="scale-input" min="0" max="{self.scale_size - 1}" value="{(self.scale_size - 1) // 2}" style="margin: 10px 0; -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: #d3d3d3; outline: none; opacity: 0.7; transition: opacity .2s;">
+                    </div>
+                </div>
+            </div>
+            <style>
+                #scale-{i}::-webkit-slider-thumb {{
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    background: #d3d3d3;
+                    cursor: pointer;
+                    transition: background 0.3s ease;
+                }}
+                #scale-{i}::-moz-range-thumb {{
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    background: #d3d3d3;
+                    cursor: pointer;
+                    transition: background 0.3s ease;
+                }}
+                #scale-{i}.interacted::-webkit-slider-thumb {{
+                    background: #4CAF50;
+                }}
+                #scale-{i}.interacted::-moz-range-thumb {{
+                    background: #4CAF50;
+                }}
+            </style>
+            """
+        html += "</div>\n"
+
+        # Add text box
+        html += f"""
+        <div style="margin-top: 20px; text-align: center;">
+            <p>{text_box_header} <span style="color: red;">*</span></p>
+            <textarea id="user-input" rows="4" cols="50" style="width: 100%; max-width: 500px;"></textarea>
+        </div>
+        """
+
+        html += """
+        <script>
+        $("#advanceButton").attr("disabled", true);
+        $("#advanceButton").show();
+
+        function checkInputs() {
+            var textEntered = document.getElementById('user-input').value.trim() !== '';
+            var allScalesInteracted = Array.from(document.querySelectorAll('.scale-input')).every(scale => scale.classList.contains('interacted'));
+            document.getElementById('advanceButton').disabled = !(textEntered && allScalesInteracted);
+        }
+
+        document.getElementById('user-input').addEventListener('input', checkInputs);
+        document.querySelectorAll('.scale-input').forEach(function(scale) {
+            scale.addEventListener('input', function() {
+                if (!this.classList.contains('interacted')) {
+                    this.classList.add('interacted');
+                }
+                checkInputs();
+            });
+        });
+        </script>
+        """
+
+        return html
+
+    def get_data_element_ids(self) -> list[str]:
+        """
+        Identifies and returns a list of element IDs that should be retrieved to store user input data.
+
+        Returns:
+            list[str]: A list of element IDs corresponding to user input data.
+        """
+        element_ids = []
+
+        # Add the ID for the selected option box
+        element_ids.append("selected-option-box")
+
+        # Add the ID for the text input
+        element_ids.append("user-input")
+
+        # Add IDs for all range inputs (scales)
+        for i in range(len(self.scale_questions)):
+            element_ids.append(f"scale-{i}")
+
+        return element_ids

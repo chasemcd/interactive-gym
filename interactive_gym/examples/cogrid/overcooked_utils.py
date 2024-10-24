@@ -29,7 +29,9 @@ def overcooked_game_page_header_fn(
         if sid == player_name:
             player_id = pid
 
-    assert player_id is not None
+    if player_id is None:
+        # No player id means we're a spectator
+        return ""
 
     if player_id == 1:
         html_path = "interactive_gym/server/static/templates/overcooked_agent_1_header.html"

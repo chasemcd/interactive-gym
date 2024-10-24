@@ -3,8 +3,6 @@ import {RemoteGame} from './pyodide_remote_game.js';
 import * as ui_utils from './ui_utils.js';
 
 var socket = io();
-var start_pressed = false;
-
 
 var latencyMeasurements = [];
 var curLatency;
@@ -83,7 +81,7 @@ function pyodideReadyIfUsing() {
         return true;
     }
 
-    console.log(pyodideRemoteGame.pyodideReady)
+    console.log("Pyodide Ready:",pyodideRemoteGame.pyodideReady)
     return pyodideRemoteGame.pyodideReady;
 }
 
@@ -92,7 +90,6 @@ $(function() {
     $('#startButton').click( () => {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
-        start_pressed = true;
         console.log("joining game in session", window.sessionId)
         socket.emit("join_game", {session_id: window.sessionId});
 
@@ -476,8 +473,18 @@ function getData(elementIds) {
 
 
 function activateScene(data) {
+
+    // Add interactiveGymGlobals to the data object
+    if (typeof window.interactiveGymGlobals !== 'undefined') {
+        data.interactiveGymGlobals = window.interactiveGymGlobals;
+    } else {
+        console.warn('interactiveGymGlobals is not defined in the window object');
+        data.interactiveGymGlobals = {};
+    }
+
     console.log(data);
     currentSceneMetadata = data;
+
     if (data.scene_type == "EndScene" || data.scene_type == "CompletionCodeScene") {
         startEndScene(data);
     } else if (data.scene_type == "GymScene") {

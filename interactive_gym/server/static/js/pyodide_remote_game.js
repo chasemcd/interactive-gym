@@ -11,6 +11,7 @@ export class RemoteGame {
 
     setAttributes(config) {
         this.config = config;
+        this.interactive_gym_globals = config.interactive_gym_globals;
         this.micropip = null;
         this.pyodideReady = false;
         this.state = null;
@@ -43,8 +44,14 @@ export class RemoteGame {
             this.installed_packages.push(...this.config.packages_to_install);
         }
 
+        this.pyodide.globals.set("interactive_gym_globals", this.interactive_gym_globals);
+
+
         // The code executed here must instantiate an environment `env`
         const env = await this.pyodide.runPythonAsync(`
+import js
+interactive_gym_globals = dict(js.window.interactiveGymGlobals.object_entries())
+
 ${this.config.environment_initialization_code}
 env
         `);
@@ -80,8 +87,9 @@ env
     
         // The code executed here must instantiate an environment `env`
         const env = await this.pyodide.runPythonAsync(`
+import js
+interactive_gym_globals = dict(js.window.interactiveGymGlobals.object_entries())
 ${config.environment_initialization_code}
-print(env, env.current_layout_id)
 env
         `);
 
@@ -136,6 +144,7 @@ obs, infos, render_state
         const pyActions = this.pyodide.toPy(actions);
         // const startTime = performance.now();
         const result = await this.pyodide.runPythonAsync(`
+${this.config.on_game_step_code}
 agent_actions = {int(k): v for k, v in ${pyActions}.items()}
 obs, rewards, terminateds, truncateds, infos = env.step(agent_actions)
 render_state = env.render()

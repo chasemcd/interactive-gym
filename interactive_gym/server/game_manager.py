@@ -167,10 +167,14 @@ class GameManager:
             flask_socketio.join_room(game.game_id)
 
             available_human_agent_ids = game.get_available_human_agent_ids()
-            game.add_player(
-                random.choice(available_human_agent_ids), subject_id
-            )
-
+            if not available_human_agent_ids:
+                logger.warning(
+                    f"No available human agent IDs for game {game.game_id}. Adding as a spectator."
+                )
+            else:
+                game.add_player(
+                    random.choice(available_human_agent_ids), subject_id
+                )
             if self.scene.game_page_html_fn is not None:
                 self.sio.emit(
                     "update_game_page_text",

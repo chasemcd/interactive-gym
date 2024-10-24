@@ -1,0 +1,149 @@
+<center><p>
+
+
+    Try control your future partner's behavior by adjusting the sliders below! 
+    You will control the chef in the green hat <center><img src="static/assets/overcooked/green_chef.png" alt="Chef with green hat." width="24" height="32"></center>
+
+    <!-- <div id="scale-questions-container" style="margin-top: 20px; width: 50%; margin-left: auto; margin-right: auto;">
+        <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+            <p style="margin: 0 0 10px 0;">Delivering Dishes <span style="color: red;">*</span></p>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="flex: 1; text-align: left; font-size: 12px;">Less</span>
+                <span style="flex: 1; text-align: center; font-size: 12px;">Neutral</span>
+                <span style="flex: 1; text-align: right; font-size: 12px;">More</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <input type="range" id="delivery_act_reward" class="scale-input" min="-1" max="1" step="0.1" value="0" style="margin: 10px 0; -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: #d3d3d3; outline: none; opacity: 0.7; transition: opacity .2s;" oninput="updateSliderValue('delivery_act_reward', this.value)">
+            </div>
+        </div>
+        <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+            <p style="margin: 0 0 10px 0;">Onions in Pot <span style="color: red;">*</span></p>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="flex: 1; text-align: left; font-size: 12px;">Less</span>
+                <span style="flex: 1; text-align: center; font-size: 12px;">Neutral</span>
+                <span style="flex: 1; text-align: right; font-size: 12px;">More</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <input type="range" id="onion_in_pot_reward" class="scale-input" min="-1" max="1" step="0.1" value="0" style="margin: 10px 0; -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: #d3d3d3; outline: none; opacity: 0.7; transition: opacity .2s;" oninput="updateSliderValue('onion_in_pot_reward', this.value)">
+            </div>
+        </div>
+        <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+            <p style="margin: 0 0 10px 0;">Plating Dishes <span style="color: red;">*</span></p>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="flex: 1; text-align: left; font-size: 12px;">Less</span>
+                <span style="flex: 1; text-align: center; font-size: 12px;">Neutral</span>
+                <span style="flex: 1; text-align: right; font-size: 12px;">More</span>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <input type="range" id="soup_in_dish_reward" class="scale-input" min="-1" max="1" step="0.1" value="0" style="margin: 10px 0; -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: #d3d3d3; outline: none; opacity: 0.7; transition: opacity .2s;" oninput="updateSliderValue('soup_in_dish_reward', this.value)">
+            </div>
+        </div>
+    </div>
+    <style>
+        .scale-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #d3d3d3;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .scale-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #d3d3d3;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .scale-input::-webkit-slider-thumb {
+            background: var(--thumb-color, #d3d3d3);
+        }
+        .scale-input::-moz-range-thumb {
+            background: var(--thumb-color, #d3d3d3);
+        }
+    </style>
+    <script>
+    function updateSliderValue(key, value) {
+        var slider = document.getElementById(key);
+        if (!slider) {
+            console.error(`Slider element with id "${key}" not found`);
+            return;
+        }
+
+        var thumbColor;
+        if (parseFloat(value) > 0) {
+            thumbColor = '#4CAF50';  // Green
+        } else if (parseFloat(value) < 0) {
+            thumbColor = '#FF0000';  // Red
+        } else {
+            thumbColor = '#d3d3d3';  // Grey
+        }
+        slider.style.setProperty('--thumb-color', thumbColor);
+        
+        if (typeof window.interactiveGymGlobals === 'undefined') {
+            window.interactiveGymGlobals = {};
+        }
+        window.interactiveGymGlobals[key] = parseFloat(value);
+    }
+    
+    document.querySelectorAll('.scale-input').forEach(function(slider) {
+        slider.style.setProperty('--thumb-color', '#d3d3d3');
+    });
+    </script>
+ -->
+
+
+<!-- 
+<div id="scale-questions-container" style="margin-top: 20px; width: 50%; margin-left: auto; margin-right: auto;">
+    <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+        <p style="margin: 0 0 10px 0;">Delivering Dishes <span style="color: red;">*</span></p>
+        <div style="display: flex; justify-content: space-between;">
+            <label><input type="radio" name="delivery_act_reward" value="-1" onclick="updateRadioValue('delivery_act_reward', this.value)"> Discourage</label>
+            <label><input type="radio" name="delivery_act_reward" value="0" checked onclick="updateRadioValue('delivery_act_reward', this.value)"> Neutral</label>
+            <label><input type="radio" name="delivery_act_reward" value="1" onclick="updateRadioValue('delivery_act_reward', this.value)"> Encourage</label>
+        </div>
+    </div>
+    <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+        <p style="margin: 0 0 10px 0;">Onions in Pot <span style="color: red;">*</span></p>
+        <div style="display: flex; justify-content: space-between;">
+            <label><input type="radio" name="onion_in_pot_reward" value="-1" onclick="updateRadioValue('onion_in_pot_reward', this.value)"> Discourage</label>
+            <label><input type="radio" name="onion_in_pot_reward" value="0" checked onclick="updateRadioValue('onion_in_pot_reward', this.value)"> Neutral</label>
+            <label><input type="radio" name="onion_in_pot_reward" value="1" onclick="updateRadioValue('onion_in_pot_reward', this.value)"> Encourage</label>
+        </div>
+    </div>
+    <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+        <p style="margin: 0 0 10px 0;">Plating Dishes <span style="color: red;">*</span></p>
+        <div style="display: flex; justify-content: space-between;">
+            <label><input type="radio" name="soup_in_dish_reward" value="-1" onclick="updateRadioValue('soup_in_dish_reward', this.value)"> Discourage</label>
+            <label><input type="radio" name="soup_in_dish_reward" value="0" checked onclick="updateRadioValue('soup_in_dish_reward', this.value)"> Neutral</label>
+            <label><input type="radio" name="soup_in_dish_reward" value="1" onclick="updateRadioValue('soup_in_dish_reward', this.value)"> Encourage</label>
+        </div>
+    </div>
+</div>
+<script>
+function updateRadioValue(key, value) {
+    if (typeof window.interactiveGymGlobals === 'undefined') {
+        window.interactiveGymGlobals = {};
+    }
+    window.interactiveGymGlobals[key] = parseFloat(value);
+} -->
+
+// // Initialize the values to 0
+// window.interactiveGymGlobals = {
+//     delivery_act_reward: 0,
+//     onion_in_pot_reward: 0,
+//     soup_in_dish_reward: 0
+// };
+</script>
+
+
+
+
+
+
+
+
+</p></center>
