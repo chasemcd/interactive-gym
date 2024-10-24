@@ -1,4 +1,4 @@
-from __future__ import annotations
+# from __future__ import annotations
 
 import eventlet
 
@@ -19,9 +19,25 @@ from interactive_gym.configurations import experiment_config
 stager = stager.Stager(
     scenes=[
         controllable_scenes.start_scene,
-        # scenes.tutorial_gym_scene,
+        scenes.tutorial_gym_scene,
         controllable_scenes.control_tutorial_scene,
         controllable_scenes.cramped_room_controllable_0,
+        controllable_scenes.cramped_room_controllable_eval_0,
+        # controllable_scenes.cramped_room_controllable_0,
+        # controllable_scenes.cramped_room_controllable_eval_0,
+        # controllable_scenes.cramped_room_controllable_0,
+        # controllable_scenes.cramped_room_controllable_eval_0,
+        # controllable_scenes.cramped_room_controllable_0,
+        # controllable_scenes.cramped_room_controllable_eval_0,
+        controllable_scenes.cramped_room_fixed_0,
+        controllable_scenes.cramped_room_controllable_eval_0,
+        controllable_scenes.cramped_room_fixed_0,
+        controllable_scenes.cramped_room_controllable_eval_0,
+        controllable_scenes.cramped_room_fixed_0,
+        controllable_scenes.cramped_room_controllable_eval_0,
+        controllable_scenes.cramped_room_fixed_0,
+        controllable_scenes.cramped_room_controllable_eval_0,
+        controllable_scenes.cramped_room_fixed_0,
         controllable_scenes.cramped_room_controllable_eval_0,
         controllable_scenes.end_scene,
     ]

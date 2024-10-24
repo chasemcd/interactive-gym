@@ -105,7 +105,7 @@ control_tutorial_scene = (
 
 cramped_room_controllable_0 = (
     gym_scene.GymScene()
-    .scene(scene_id="cramped_room_sp_0", experiment_config={})
+    .scene(scene_id="cramped_room_fixed_0", experiment_config={})
     .policies(policy_mapping=IBC_POLICY_MAPPING_CRAMPED_ROOM, frame_skip=5)
     .rendering(
         fps=30,
@@ -160,6 +160,16 @@ cramped_room_controllable_eval_0 = (
     )
     .scene(scene_id="cramped_room_controllable_eval_0", experiment_config={})
     .display(scene_subheader="Partner Feedback")
+)
+
+
+cramped_room_fixed_0 = (
+    copy.deepcopy(cramped_room_controllable_0)
+    .scene(scene_id="cramped_room_fixed_0", experiment_config={})
+    .policies(policy_mapping=IBC_POLICY_MAPPING_CRAMPED_ROOM, frame_skip=5)
+    .user_experience(
+        scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/fixed_cramped_room.html",
+    )
 )
 
 

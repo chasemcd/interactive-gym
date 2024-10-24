@@ -4,8 +4,8 @@
     You will be playing on the layout pictured below. 
     <center><img src="static/assets/overcooked/cramped_room.png" alt="Annotated Overcooked environment." height="270" width="315"></center>
 
-    You have the ability to control the behavior of your AI partner across three dimensions: delivering dishes, 
-    putting onions in the pot, and plating dishes.
+    In this round, you will not be able to control your partner's behavior. The controls are disabled and set to the settings
+    shown below. 
 
 
     <div id="scale-questions-container" style="margin-top: 20px; width: 50%; margin-left: auto; margin-right: auto;">
@@ -16,13 +16,13 @@
                 <div style="flex: 3; display: flex; justify-content: space-between; align-items: center; position: relative;">
                     <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="delivery_act_reward" value="-1" onclick="updateRadioValue('delivery_act_reward', this.value)">
+                        <input type="radio" name="delivery_act_reward" value="-1" disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="delivery_act_reward" value="0" onclick="updateRadioValue('delivery_act_reward', this.value)">
+                        <input type="radio" name="delivery_act_reward" value="0" checked disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="delivery_act_reward" value="1" onclick="updateRadioValue('delivery_act_reward', this.value)">
+                        <input type="radio" name="delivery_act_reward" value="1" disabled>
                     </label>
                 </div>
                 <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
@@ -35,13 +35,13 @@
                 <div style="flex: 3; display: flex; justify-content: space-between; align-items: center; position: relative;">
                     <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="onion_in_pot_reward" value="-1" onclick="updateRadioValue('onion_in_pot_reward', this.value)">
+                        <input type="radio" name="onion_in_pot_reward" value="-1" disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="onion_in_pot_reward" value="0" onclick="updateRadioValue('onion_in_pot_reward', this.value)">
+                        <input type="radio" name="onion_in_pot_reward" value="0" checked disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="onion_in_pot_reward" value="1" onclick="updateRadioValue('onion_in_pot_reward', this.value)">
+                        <input type="radio" name="onion_in_pot_reward" value="1" disabled>
                     </label>
                 </div>
                 <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
@@ -54,13 +54,13 @@
                 <div style="flex: 3; display: flex; justify-content: space-between; align-items: center; position: relative;">
                     <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="soup_in_dish_reward" value="-1" onclick="updateRadioValue('soup_in_dish_reward', this.value)">
+                        <input type="radio" name="soup_in_dish_reward" value="-1" disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="soup_in_dish_reward" value="0" onclick="updateRadioValue('soup_in_dish_reward', this.value)">
+                        <input type="radio" name="soup_in_dish_reward" value="0" checked disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="soup_in_dish_reward" value="1" onclick="updateRadioValue('soup_in_dish_reward', this.value)">
+                        <input type="radio" name="soup_in_dish_reward" value="1" disabled>
                     </label>
                 </div>
                 <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
@@ -68,40 +68,12 @@
         </div>
     </div>
     <script>
-    function updateRadioValue(key, value) {
-        if (typeof window.interactiveGymGlobals === 'undefined') {
-            window.interactiveGymGlobals = {};
-        }
-        window.interactiveGymGlobals[key] = parseFloat(value);
-        checkAllScalesInteracted();
-    }
 
-
-    let startConditionMet = false;
-    const startButton = document.getElementById('startButton');
-    startButton.disabled = true;
-    const intervalId = setInterval(() => {
-        if (!startButton.disabled) {
-            startConditionMet = true;
-            startButton.disabled = true;
-            clearInterval(intervalId);
-        }
-    }, 100);
-
-    function checkAllScalesInteracted() {
-        const deliveryActRewardSelected = document.querySelector('input[name="delivery_act_reward"]:checked') !== null;
-        const onionInPotRewardSelected = document.querySelector('input[name="onion_in_pot_reward"]:checked') !== null;
-        const soupInDishRewardSelected = document.querySelector('input[name="soup_in_dish_reward"]:checked') !== null;
-
-        const allScalesInteracted = deliveryActRewardSelected && onionInPotRewardSelected && soupInDishRewardSelected && startConditionMet;
-        document.getElementById('startButton').disabled = !allScalesInteracted;
-    }
-
-    // Initialize the values to null
+    // Initialize the values to 0
     window.interactiveGymGlobals = {
-        delivery_act_reward: null,
-        onion_in_pot_reward: null,
-        soup_in_dish_reward: null
+        delivery_act_reward: 0,
+        onion_in_pot_reward: 0,
+        soup_in_dish_reward: 0
     };
 
 
