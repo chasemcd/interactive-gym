@@ -1,0 +1,182 @@
+<center><p>
+    You'll now play a final round on the layout pictured below.
+    <center><img src="static/assets/overcooked/cramped_room.png" alt="Annotated Overcooked environment." height="270" width="315"></center>
+
+    This round is a final opportunity for you to earn as many points as possible and maximize your bonus.
+    In this round, you can make a choice if you would like to enable the controls for your partner.
+
+
+    <div id="scale-questions-container" style="margin-top: 20px; width: 50%; margin-left: auto; margin-right: auto;">
+        <div style="text-align: center; margin-bottom: 20px; border: 2px solid black; padding: 10px; display: inline-block;">
+            <label for="enable-controls" class="switch">
+                <input type="checkbox" id="enable-controls" onchange="toggleControls()">
+                <span class="slider round"></span>
+            </label>
+            <span style="font-weight: bold; margin-left: 10px;">Enable Partner Controls</span>
+        </div>
+        <div style="margin-bottom: 40px;"></div>
+        <style>
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 60px;
+                height: 34px;
+            }
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: #ccc;
+                transition: .4s;
+                box-shadow: 0 0 5px rgba(0,0,0,0.2);
+            }
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 26px;
+                width: 26px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                transition: .4s;
+                box-shadow: 0 0 3px rgba(0,0,0,0.3);
+            }
+            input:checked + .slider {
+                background-color: #2196F3;
+            }
+            input:checked + .slider:before {
+                transform: translateX(26px);
+            }
+            .slider.round {
+                border-radius: 34px;
+            }
+            .slider.round:before {
+                border-radius: 50%;
+            }
+        </style>
+        <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+            <p style="margin: 0 0 10px 0;">Delivering Dishes <span style="color: red;">*</span></p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="flex: 1; text-align: left; font-size: 12px;">Discourage</span>
+                <div style="flex: 3; display: flex; justify-content: space-between; align-items: center; position: relative;">
+                    <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
+                    <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                        <input type="radio" name="delivery_act_reward" value="-1" disabled>
+                    </label>
+                    <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                        <input type="radio" name="delivery_act_reward" value="0" checked disabled>
+                    </label>
+                    <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                        <input type="radio" name="delivery_act_reward" value="1" disabled>
+                    </label>
+                </div>
+                <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
+            </div>
+        </div>
+        <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+            <p style="margin: 0 0 10px 0;">Onions in Pot <span style="color: red;">*</span></p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="flex: 1; text-align: left; font-size: 12px;">Discourage</span>
+                <div style="flex: 3; display: flex; justify-content: space-between; align-items: center; position: relative;">
+                    <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
+                    <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                        <input type="radio" name="onion_in_pot_reward" value="-1" disabled>
+                    </label>
+                    <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                        <input type="radio" name="onion_in_pot_reward" value="0" checked disabled>
+                    </label>
+                    <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                        <input type="radio" name="onion_in_pot_reward" value="1" disabled>
+                    </label>
+                </div>
+                <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
+            </div>
+        </div>
+        <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
+            <p style="margin: 0 0 10px 0;">Plating Dishes <span style="color: red;">*</span></p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="flex: 1; text-align: left; font-size: 12px;">Discourage</span>
+                <div style="flex: 3; display: flex; justify-content: space-between; align-items: center; position: relative;">
+                    <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
+                    <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                        <input type="radio" name="soup_in_dish_reward" value="-1" disabled>
+                    </label>
+                    <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                        <input type="radio" name="soup_in_dish_reward" value="0" checked disabled>
+                    </label>
+                    <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
+                        <input type="radio" name="soup_in_dish_reward" value="1" disabled>
+                    </label>
+                </div>
+                <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
+            </div>
+        </div>
+    </div>
+    <script>
+    function toggleControls() {
+        const enableControls = document.getElementById('enable-controls').checked;
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+        
+        radioButtons.forEach(radio => {
+            radio.disabled = !enableControls;
+            if (enableControls) {
+                radio.checked = false;
+            } else {
+                if (radio.value === "0") {
+                    radio.checked = true;
+                }
+            }
+        });
+    }
+
+
+    let startConditionMet = false;
+    const startButton = document.getElementById('startButton');
+    startButton.disabled = true;
+    const intervalId = setInterval(() => {
+        if (!startButton.disabled) {
+            startConditionMet = true;
+            startButton.disabled = true;
+        }
+
+        if (startConditionMet) {
+            const enableControls = document.getElementById('enable-controls').checked;
+            if (!enableControls) {
+                document.getElementById('startButton').disabled = false;
+            } else {
+                checkAllScalesInteracted();
+            }
+        }
+    }, 100);
+
+    function checkAllScalesInteracted() {
+        const deliveryActRewardSelected = document.querySelector('input[name="delivery_act_reward"]:checked') !== null;
+        const onionInPotRewardSelected = document.querySelector('input[name="onion_in_pot_reward"]:checked') !== null;
+        const soupInDishRewardSelected = document.querySelector('input[name="soup_in_dish_reward"]:checked') !== null;
+
+        const allScalesInteracted = deliveryActRewardSelected && onionInPotRewardSelected && soupInDishRewardSelected && startConditionMet;
+        document.getElementById('startButton').disabled = !allScalesInteracted;
+    }
+
+    // Initialize the values to 0
+    window.interactiveGymGlobals = {
+        delivery_act_reward: 0,
+        onion_in_pot_reward: 0,
+        soup_in_dish_reward: 0
+    };
+
+
+
+    </script>
+
+
+When the button activates, click it to begin. 
+</p></center>

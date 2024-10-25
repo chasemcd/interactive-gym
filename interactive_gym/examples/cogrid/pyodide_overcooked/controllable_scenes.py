@@ -173,6 +173,15 @@ cramped_room_fixed_0 = (
 )
 
 
+choice_cramped_room_0 = (
+    copy.deepcopy(cramped_room_controllable_0)
+    .scene(scene_id="cramped_room_fixed_0", experiment_config={})
+    .policies(policy_mapping=IBC_POLICY_MAPPING_CRAMPED_ROOM, frame_skip=5)
+    .user_experience(
+        scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/choice_cramped_room.html",
+    )
+)
+
 end_scene = (
     static_scene.CompletionCodeScene()
     .scene(
