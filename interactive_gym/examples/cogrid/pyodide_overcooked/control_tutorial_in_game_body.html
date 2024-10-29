@@ -45,25 +45,6 @@
             <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
         </div>
     </div>
-    <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
-        <p style="margin: 0 0 10px 0;">Plating Dishes <span style="color: red;">*</span></p>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="flex: 1; text-align: left; font-size: 12px;">Discourage</span>
-            <div style="flex: 3; display: flex; justify-content: space-between; align-items: center; position: relative;">
-                <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
-                <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                    <input type="radio" name="soup_in_dish_reward" value="-1" onclick="updateRadioValue('soup_in_dish_reward', this.value)">
-                </label>
-                <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                    <input type="radio" name="soup_in_dish_reward" value="0" checked onclick="updateRadioValue('soup_in_dish_reward', this.value)">
-                </label>
-                <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                    <input type="radio" name="soup_in_dish_reward" value="1" onclick="updateRadioValue('soup_in_dish_reward', this.value)">
-                </label>
-            </div>
-            <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
-        </div>
-    </div>
 </div>
 <script>
 function updateRadioValue(key, value) {
@@ -76,7 +57,6 @@ function updateRadioValue(key, value) {
 // Initialize the values to 0
 window.interactiveGymGlobals.delivery_act_reward = 0;
 window.interactiveGymGlobals.onion_in_pot_reward = 0; 
-window.interactiveGymGlobals.soup_in_dish_reward = 0;
 </script>
 
 

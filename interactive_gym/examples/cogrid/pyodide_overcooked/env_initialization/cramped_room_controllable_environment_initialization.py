@@ -858,7 +858,7 @@ overcooked_config = {
                 "onion_in_pot_reward", 0
             ),
             "soup_in_dish_reward": interactive_gym_globals.get(
-                "soup_in_dish_reward", 0
+                "delivery_act_reward", 0
             ),
         }
         for agent_id in range(2)
