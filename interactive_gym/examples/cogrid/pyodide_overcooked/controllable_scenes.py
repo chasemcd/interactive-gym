@@ -65,7 +65,7 @@ env.reward_weights[1] = {k: interactive_gym_globals.get(k, 0.0) for k in env.rew
 """
 control_tutorial_scene = (
     gym_scene.GymScene()
-    .scene(scene_id="cramped_room_sp_0", experiment_config={})
+    .scene(scene_id="cramped_room_control_tutorial_0", experiment_config={})
     .policies(
         policy_mapping={
             0: "static/assets/overcooked/models/ibc_cramped_room_00.onnx",
@@ -98,6 +98,57 @@ control_tutorial_scene = (
         run_through_pyodide=True,
         environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_controllable_tutorial_environment_initialization.py",
         on_game_step_code=on_game_step_code,
+        packages_to_install=["numpy", "cogrid==0.0.9", "opencv-python"],
+    )
+)
+
+
+tutorial_with_bot_scene = (
+    gym_scene.GymScene()
+    .scene(scene_id="cramped_room_with_bot_tutorial_0", experiment_config={})
+    .policies(policy_mapping=IBC_POLICY_MAPPING_CRAMPED_ROOM, frame_skip=5)
+    .rendering(
+        fps=30,
+        env_to_state_fn=overcooked_utils.overcooked_env_to_render_fn,
+        assets_to_preload=overcooked_utils.overcooked_preload_assets_spec(),
+        hud_text_fn=overcooked_utils.hud_text_fn,
+        game_width=overcooked_utils.TILE_SIZE * 7,
+        game_height=overcooked_utils.TILE_SIZE * 6,
+        background="#e6b453",
+    )
+    .gameplay(
+        default_action=Noop,
+        action_mapping=action_mapping,
+        num_episodes=1,
+        max_steps=1350,
+        input_mode=configuration_constants.InputModes.SingleKeystroke,
+    )
+    .user_experience(
+        scene_header="Overcooked",
+        scene_body="<center><p>"
+        "You'll now try playing with a partner for a single practice round. "
+        "<br><br> "
+        "You will be playing on the layout pictured below. "
+        '<center><img src="static/assets/overcooked/cramped_room.png" alt="Annotated Overcooked environment." height="270" width="315"></center>'
+        "When the button activates, click it to begin. "
+        "</p></center>",
+        game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
+        in_game_scene_body="""
+        <center>
+        <p>
+        Use the arrow keys <img src="static/assets/keys/arrow_keys_2.png" alt="Keyboard arrow keys" height="24" width="20" style="vertical-align:middle;"> 
+        to control your chef <img src="static/assets/overcooked/blue_chef.png" alt="Blue Chef" height="24" width="24" style="vertical-align:middle;"> 
+        and press <img src="static/assets/keys/icons8-w-key-50.png" alt="W key" height="24" width="24" style="vertical-align:middle;"> to pick up and 
+        drop objects. Try to deliver as many dishes as possible by combining onions in the pot, plating the cooked onions, 
+        and delivering them to the grey delivery zone.
+        </p>
+        </center>
+        <br><br>
+        """,
+    )
+    .pyodide(
+        run_through_pyodide=True,
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_environment_initialization.py",
         packages_to_install=["numpy", "cogrid==0.0.9", "opencv-python"],
     )
 )
