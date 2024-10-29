@@ -19,7 +19,7 @@
                         <input type="radio" name="delivery_act_reward" value="-1" disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="delivery_act_reward" value="0" checked disabled>
+                        <input type="radio" name="delivery_act_reward" value="0" disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
                         <input type="radio" name="delivery_act_reward" value="1" disabled>
@@ -52,6 +52,29 @@
 
     window.interactiveGymGlobals.delivery_act_reward = 0;
     window.interactiveGymGlobals.onion_in_pot_reward = 0; 
+
+
+    // Function to randomly select initial radio values
+    function initializeRandomValues() {
+        const values = [-1, 0, 1];
+        const deliveryValue = values[Math.floor(Math.random() * values.length)];
+        const onionValue = values[Math.floor(Math.random() * values.length)];
+        
+        // Set delivery radio
+        document.querySelector(`input[name="delivery_act_reward"][value="${deliveryValue}"]`).checked = true;
+        window.interactiveGymGlobals.delivery_act_reward = deliveryValue;
+        
+        // Set onion radio
+        document.querySelector(`input[name="onion_in_pot_reward"][value="${onionValue}"]`).checked = true;
+        window.interactiveGymGlobals.onion_in_pot_reward = onionValue;
+    }
+    
+
+    // Initialize random values on page load
+    if (typeof window.interactiveGymGlobals === 'undefined') {
+        window.interactiveGymGlobals = {};
+    }
+    initializeRandomValues();
 
 
 

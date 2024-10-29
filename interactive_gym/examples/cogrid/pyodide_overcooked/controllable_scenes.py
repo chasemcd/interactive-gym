@@ -115,7 +115,7 @@ end_tutorial_static_scene = (
 
 cramped_room_controllable_0 = (
     gym_scene.GymScene()
-    .scene(scene_id="cramped_room_fixed_0", experiment_config={})
+    .scene(scene_id="cramped_room_controllable_0", experiment_config={})
     .policies(policy_mapping=IBC_POLICY_MAPPING_CRAMPED_ROOM, frame_skip=5)
     .rendering(
         fps=30,
@@ -145,8 +145,24 @@ cramped_room_controllable_0 = (
         drop objects. Try to deliver as many dishes as possible by combining onions in the pot, plating the cooked onions, 
         and delivering them to the grey delivery zone.
         </p>
+        <div style="border: 1px solid black; padding: 10px; display: inline-block;">
+            <p style="margin: 0 0 5px 0; font-weight: bold;">Current AI Partner Behavior Settings</p>
+            <p id="reward-status" style="margin: 0;"></p>
+        </div>
+        <script>
+            function getControlText(value) {
+                if (value === -1) return "<span style='color: red'>Discourage</span>";
+                if (value === 1) return "<span style='color: green'>Encourage</span>"; 
+                if (value === 0) return "Neutral";
+                return value;
+            }
+
+
+            document.getElementById('reward-status').innerHTML = 
+                "Delivering Dishes: " + getControlText(window.interactiveGymGlobals.delivery_act_reward) + ", " +
+                "Onions in Pot: " + getControlText(window.interactiveGymGlobals.onion_in_pot_reward);
+        </script>
         </center>
-        <br><br>
         """,
     )
     .pyodide(
@@ -155,23 +171,74 @@ cramped_room_controllable_0 = (
         packages_to_install=["numpy", "cogrid==0.0.9", "opencv-python"],
     )
 )
-
-
 cramped_room_controllable_eval_0 = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
             "My partner's behavior was predictable.",
-            "My partner's behavior aligned with what I expected it would be.",
             "My partner was effective as a teammate.",
+            "I enjoyed working with my partner.",
+            "My partner and I coordinated our actions well together.",
+            "My partner perceived accurately what tasks I was trying to accomplish.",
+            "I was able to understand and predict what tasks my partner was trying to accomplish.",
+            "My partner felt human-like.",
+            "My ability to control my partner made it more effective as a teammate.",
+            "My ability to control my partner made it more predictable.",
+            "I enjoyed being able to control my partner's behavior.",
         ],
         # scale_labels=["Not at all", "Very much"],
-        pre_scale_header="Please indicate the relative extent to which you agree with the following statements about each partner.",
+        pre_scale_header="Please indicate the extent to which you agree with the following statements about your partner in the previous round.",
         text_box_header="Please describe any additional reasoning for your selections. This might include specific actions or behaviors. You may write N/A if you do not have any anything to add.",
     )
     .scene(scene_id="cramped_room_controllable_eval_0", experiment_config={})
     .display(scene_subheader="Partner Feedback")
 )
 
+
+cramped_room_controllable_1 = copy.deepcopy(cramped_room_controllable_0).scene(
+    scene_id="cramped_room_controllable_1", experiment_config={}
+)
+cramped_room_controllable_eval_1 = copy.deepcopy(
+    cramped_room_controllable_eval_0
+).scene(scene_id="cramped_room_controllable_eval_1", experiment_config={})
+
+cramped_room_controllable_2 = copy.deepcopy(cramped_room_controllable_0).scene(
+    scene_id="cramped_room_controllable_2", experiment_config={}
+)
+cramped_room_controllable_eval_2 = copy.deepcopy(
+    cramped_room_controllable_eval_0
+).scene(scene_id="cramped_room_controllable_eval_2", experiment_config={})
+
+cramped_room_controllable_3 = copy.deepcopy(cramped_room_controllable_0).scene(
+    scene_id="cramped_room_controllable_3", experiment_config={}
+)
+cramped_room_controllable_eval_3 = copy.deepcopy(
+    cramped_room_controllable_eval_0
+).scene(scene_id="cramped_room_controllable_eval_3", experiment_config={})
+
+
+cramped_room_controllable_4 = copy.deepcopy(cramped_room_controllable_0).scene(
+    scene_id="cramped_room_controllable_4", experiment_config={}
+)
+cramped_room_controllable_eval_4 = copy.deepcopy(
+    cramped_room_controllable_eval_0
+).scene(scene_id="cramped_room_controllable_eval_4", experiment_config={})
+
+
+cramped_room_control_0 = scene.SceneWrapper(
+    [cramped_room_controllable_0, cramped_room_controllable_eval_0]
+)
+cramped_room_control_1 = scene.SceneWrapper(
+    [cramped_room_controllable_1, cramped_room_controllable_eval_1]
+)
+cramped_room_control_2 = scene.SceneWrapper(
+    [cramped_room_controllable_2, cramped_room_controllable_eval_2]
+)
+cramped_room_control_3 = scene.SceneWrapper(
+    [cramped_room_controllable_3, cramped_room_controllable_eval_3]
+)
+cramped_room_control_4 = scene.SceneWrapper(
+    [cramped_room_controllable_4, cramped_room_controllable_eval_4]
+)
 
 cramped_room_fixed_0 = (
     copy.deepcopy(cramped_room_controllable_0)
@@ -181,7 +248,88 @@ cramped_room_fixed_0 = (
         scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/fixed_cramped_room.html",
     )
 )
+cramped_room_fixed_eval_0 = (
+    static_scene.ScalesAndTextBox(
+        scale_questions=[
+            "My partner's behavior was predictable.",
+            "My partner was effective as a teammate.",
+            "I enjoyed working with my partner.",
+            "My partner and I coordinated our actions well together.",
+            "My partner perceived accurately what tasks I was trying to accomplish.",
+            "I was able to understand and predict what tasks my partner was trying to accomplish.",
+            "My partner felt human-like.",
+        ],
+        pre_scale_header="Please indicate the extent to which you agree with the following statements about your partner in the previous round.",
+        text_box_header="Please describe any additional reasoning for your selections. This might include specific actions or behaviors. You may write N/A if you do not have any anything to add.",
+    )
+    .scene(scene_id="cramped_room_fixed_eval_0", experiment_config={})
+    .display(scene_subheader="Partner Feedback")
+)
 
+
+cramped_room_fixed_1 = copy.deepcopy(cramped_room_fixed_0).scene(
+    scene_id="cramped_room_fixed_1", experiment_config={}
+)
+cramped_room_fixed_eval_1 = copy.deepcopy(cramped_room_fixed_eval_0).scene(
+    scene_id="cramped_room_fixed_eval_1", experiment_config={}
+)
+
+
+cramped_room_fixed_2 = copy.deepcopy(cramped_room_fixed_0).scene(
+    scene_id="cramped_room_fixed_2", experiment_config={}
+)
+cramped_room_fixed_eval_2 = copy.deepcopy(cramped_room_fixed_eval_0).scene(
+    scene_id="cramped_room_fixed_eval_2", experiment_config={}
+)
+
+
+cramped_room_fixed_3 = copy.deepcopy(cramped_room_fixed_0).scene(
+    scene_id="cramped_room_fixed_3", experiment_config={}
+)
+cramped_room_fixed_eval_3 = copy.deepcopy(cramped_room_fixed_eval_0).scene(
+    scene_id="cramped_room_fixed_eval_3", experiment_config={}
+)
+
+
+cramped_room_fixed_4 = copy.deepcopy(cramped_room_fixed_0).scene(
+    scene_id="cramped_room_fixed_4", experiment_config={}
+)
+cramped_room_fixed_eval_4 = copy.deepcopy(cramped_room_fixed_eval_0).scene(
+    scene_id="cramped_room_fixed_eval_4", experiment_config={}
+)
+
+
+cramped_room_fix_0 = scene.SceneWrapper(
+    [cramped_room_fixed_0, cramped_room_fixed_eval_0]
+)
+cramped_room_fix_1 = scene.SceneWrapper(
+    [cramped_room_fixed_1, cramped_room_fixed_eval_1]
+)
+cramped_room_fix_2 = scene.SceneWrapper(
+    [cramped_room_fixed_2, cramped_room_fixed_eval_2]
+)
+cramped_room_fix_3 = scene.SceneWrapper(
+    [cramped_room_fixed_3, cramped_room_fixed_eval_3]
+)
+cramped_room_fix_4 = scene.SceneWrapper(
+    [cramped_room_fixed_4, cramped_room_fixed_eval_4]
+)
+
+
+cramped_room_randomization = scene.RandomizeOrder(
+    [
+        cramped_room_control_0,
+        cramped_room_control_1,
+        cramped_room_control_2,
+        cramped_room_control_3,
+        cramped_room_control_4,
+        cramped_room_fix_0,
+        cramped_room_fix_1,
+        cramped_room_fix_2,
+        cramped_room_fix_3,
+        cramped_room_fix_4,
+    ],
+)
 
 choice_cramped_room_0 = (
     copy.deepcopy(cramped_room_controllable_0)
@@ -192,6 +340,10 @@ choice_cramped_room_0 = (
     )
 )
 
+
+cramped_room_scenes = scene.SceneWrapper(
+    [cramped_room_randomization, choice_cramped_room_0]
+)
 
 # class ScoreCompletionCodeScene(static_scene.CompletionCodeScene):
 #     def _create_html_completion_code(self) -> str:

@@ -785,9 +785,6 @@ class ScalesAndTextBox(StaticScene):
         """
         element_ids = []
 
-        # Add the ID for the selected option box
-        element_ids.append("selected-option-box")
-
         # Add the ID for the text input
         element_ids.append("user-input")
 
