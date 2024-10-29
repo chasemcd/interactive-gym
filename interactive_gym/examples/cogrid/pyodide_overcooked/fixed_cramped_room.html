@@ -17,12 +17,15 @@
                     <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
                         <input type="radio" name="delivery_act_reward" value="-1" disabled>
+                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: transparent; border-radius: 50%; z-index: -1;"></span>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
                         <input type="radio" name="delivery_act_reward" value="0" disabled>
+                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: transparent; border-radius: 50%; z-index: -1;"></span>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
                         <input type="radio" name="delivery_act_reward" value="1" disabled>
+                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: transparent; border-radius: 50%; z-index: -1;"></span>
                     </label>
                 </div>
                 <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
@@ -36,12 +39,15 @@
                     <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
                         <input type="radio" name="onion_in_pot_reward" value="-1" disabled>
+                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: transparent; border-radius: 50%; z-index: -1;"></span>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
                         <input type="radio" name="onion_in_pot_reward" value="0" checked disabled>
+                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: transparent; border-radius: 50%; z-index: -1;"></span>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
                         <input type="radio" name="onion_in_pot_reward" value="1" disabled>
+                        <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; background: transparent; border-radius: 50%; z-index: -1;"></span>
                     </label>
                 </div>
                 <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
@@ -54,18 +60,22 @@
     window.interactiveGymGlobals.onion_in_pot_reward = 0; 
 
 
-    // Function to randomly select initial radio values
+    // Function to randomly select initial radio values and highlight selected buttons
     function initializeRandomValues() {
         const values = [-1, 0, 1];
         const deliveryValue = values[Math.floor(Math.random() * values.length)];
         const onionValue = values[Math.floor(Math.random() * values.length)];
         
-        // Set delivery radio
-        document.querySelector(`input[name="delivery_act_reward"][value="${deliveryValue}"]`).checked = true;
+        // Set delivery radio and highlight
+        const deliveryRadio = document.querySelector(`input[name="delivery_act_reward"][value="${deliveryValue}"]`);
+        deliveryRadio.checked = true;
+        deliveryRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
         window.interactiveGymGlobals.delivery_act_reward = deliveryValue;
         
-        // Set onion radio
-        document.querySelector(`input[name="onion_in_pot_reward"][value="${onionValue}"]`).checked = true;
+        // Set onion radio and highlight
+        const onionRadio = document.querySelector(`input[name="onion_in_pot_reward"][value="${onionValue}"]`);
+        onionRadio.checked = true;
+        onionRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
         window.interactiveGymGlobals.onion_in_pot_reward = onionValue;
     }
     

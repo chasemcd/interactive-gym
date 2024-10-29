@@ -58,12 +58,18 @@
     }
 
 
-    let startConditionMet = false;
+    if (typeof window.startConditionMet === 'undefined') {
+        window.startConditionMet = false;
+    } else {
+        window.startConditionMet = false;
+    }
+
+
     let startButton = document.getElementById('startButton');
     startButton.disabled = true;
     const intervalId = setInterval(() => {
         if (!startButton.disabled) {
-            startConditionMet = true;
+            window.startConditionMet = true;
             startButton.disabled = true;
             clearInterval(intervalId);
         }
@@ -73,7 +79,7 @@
         const deliveryActRewardSelected = document.querySelector('input[name="delivery_act_reward"]:checked') !== null;
         const onionInPotRewardSelected = document.querySelector('input[name="onion_in_pot_reward"]:checked') !== null;
 
-        const allScalesInteracted = deliveryActRewardSelected && onionInPotRewardSelected && startConditionMet;
+        const allScalesInteracted = deliveryActRewardSelected && onionInPotRewardSelected && window.startConditionMet;
         document.getElementById('startButton').disabled = !allScalesInteracted;
     }
 

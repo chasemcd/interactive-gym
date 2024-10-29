@@ -10,6 +10,7 @@ from cogrid.envs import registry
 from cogrid.feature_space import feature_space
 from cogrid.core import layouts
 import collections
+from cogrid.core import layouts
 
 
 import copy
@@ -823,7 +824,6 @@ class ScaledFullMapEncoding(features.FullMapEncoding):
 feature_space.register_feature(
     "scaled_full_map_encoding", ScaledFullMapEncoding
 )
-
 
 overcooked_config = {
     "name": "overcooked",

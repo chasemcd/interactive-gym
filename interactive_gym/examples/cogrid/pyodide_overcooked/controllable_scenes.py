@@ -204,7 +204,7 @@ cramped_room_controllable_0 = (
             function getControlText(value) {
                 if (value === -1) return "<span style='color: red'>Discourage</span>";
                 if (value === 1) return "<span style='color: green'>Encourage</span>"; 
-                if (value === 0) return "Neutral";
+                if (value === 0) return "<span style='color: #b3a600'>Neutral</span>";
                 return value;
             }
 
