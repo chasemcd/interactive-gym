@@ -68,13 +68,13 @@
                 <div style="flex: 3; display: flex; justify-content: space-between; align-items: center; position: relative;">
                     <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="delivery_act_reward" value="-1" disabled>
+                        <input type="radio" name="delivery_act_reward" value="-1" onclick="updateRadioValue('delivery_act_reward', this.value)" disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="delivery_act_reward" value="0" checked disabled>
+                        <input type="radio" name="delivery_act_reward" value="0" onclick="updateRadioValue('delivery_act_reward', this.value)" disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="delivery_act_reward" value="1" disabled>
+                        <input type="radio" name="delivery_act_reward" value="1" onclick="updateRadioValue('delivery_act_reward', this.value)" disabled>
                     </label>
                 </div>
                 <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
@@ -87,13 +87,13 @@
                 <div style="flex: 3; display: flex; justify-content: space-between; align-items: center; position: relative;">
                     <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #d3d3d3; z-index: 0;"></div>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="onion_in_pot_reward" value="-1" disabled>
+                        <input type="radio" name="onion_in_pot_reward" value="-1" onclick="updateRadioValue('onion_in_pot_reward', this.value)" disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="onion_in_pot_reward" value="0" checked disabled>
+                        <input type="radio" name="onion_in_pot_reward" value="0" onclick="updateRadioValue('onion_in_pot_reward', this.value)" disabled>
                     </label>
                     <label style="flex: 1; text-align: center; position: relative; z-index: 1;">
-                        <input type="radio" name="onion_in_pot_reward" value="1" disabled>
+                        <input type="radio" name="onion_in_pot_reward" value="1" onclick="updateRadioValue('onion_in_pot_reward', this.value)" disabled>
                     </label>
                 </div>
                 <span style="flex: 1; text-align: right; font-size: 12px;">Encourage</span>
@@ -103,6 +103,28 @@
 
 
     <script>
+    // Function to randomly select initial radio values
+    function initializeRandomValues() {
+        const values = [-1, 0, 1];
+        const deliveryValue = values[Math.floor(Math.random() * values.length)];
+        const onionValue = values[Math.floor(Math.random() * values.length)];
+        
+        // Set delivery radio
+        document.querySelector(`input[name="delivery_act_reward"][value="${deliveryValue}"]`).checked = true;
+        window.interactiveGymGlobals.delivery_act_reward = deliveryValue;
+        
+        // Set onion radio
+        document.querySelector(`input[name="onion_in_pot_reward"][value="${onionValue}"]`).checked = true;
+        window.interactiveGymGlobals.onion_in_pot_reward = onionValue;
+    }
+    
+
+    // Initialize random values on page load
+    if (typeof window.interactiveGymGlobals === 'undefined') {
+        window.interactiveGymGlobals = {};
+    }
+    initializeRandomValues();
+
     function toggleControls() {
         const enableControls = document.getElementById('enable-controls').checked;
         const radioButtons = document.querySelectorAll('input[type="radio"]');
@@ -112,16 +134,20 @@
             if (enableControls) {
                 radio.checked = false;
             } else {
-                if (radio.value === "0") {
-                    radio.checked = true;
-                }
+                // When disabling, restore to random initial values
+                initializeRandomValues();
             }
         });
     }
 
 
-    let startConditionMet = false;
-    const startButton = document.getElementById('startButton');
+    if (typeof startConditionMet === 'undefined') {
+        let startConditionMet = false;
+    } else {
+        startConditionMet = false;
+    }
+
+    let startButton = document.getElementById('startButton');
     startButton.disabled = true;
     const intervalId = setInterval(() => {
         if (!startButton.disabled) {
@@ -139,19 +165,20 @@
         }
     }, 100);
 
+    function updateRadioValue(key, value) {
+        if (typeof window.interactiveGymGlobals === 'undefined') {
+            window.interactiveGymGlobals = {};
+        }
+        window.interactiveGymGlobals[key] = parseFloat(value);
+    }
+
+
     function checkAllScalesInteracted() {
         const deliveryActRewardSelected = document.querySelector('input[name="delivery_act_reward"]:checked') !== null;
         const onionInPotRewardSelected = document.querySelector('input[name="onion_in_pot_reward"]:checked') !== null;
-
         const allScalesInteracted = deliveryActRewardSelected && onionInPotRewardSelected && startConditionMet;
         document.getElementById('startButton').disabled = !allScalesInteracted;
     }
-
-    // Initialize the values to 0
-    window.interactiveGymGlobals.delivery_act_reward = 0;
-    window.interactiveGymGlobals.onion_in_pot_reward = 0; 
-
-
 
     </script>
 
