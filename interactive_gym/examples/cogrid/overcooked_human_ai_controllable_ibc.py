@@ -21,8 +21,8 @@ stager = stager.Stager(
         controllable_scenes.start_scene,
         scenes.tutorial_gym_scene,
         controllable_scenes.tutorial_with_bot_scene,
-        controllable_scenes.end_tutorial_static_scene,
         controllable_scenes.control_tutorial_scene,
+        controllable_scenes.end_tutorial_static_scene,
         controllable_scenes.cramped_room_scenes,
         controllable_scenes.end_scene,
     ]
