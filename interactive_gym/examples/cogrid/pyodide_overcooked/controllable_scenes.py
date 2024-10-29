@@ -71,7 +71,7 @@ control_tutorial_scene = (
             0: "static/assets/overcooked/models/ibc_cramped_room_00.onnx",
             1: "static/assets/overcooked/models/ibc_cramped_room_00.onnx",
         },
-        frame_skip=8,
+        frame_skip=5,
     )
     .rendering(
         fps=30,
@@ -85,7 +85,7 @@ control_tutorial_scene = (
         default_action=Noop,
         action_mapping=action_mapping,
         num_episodes=1,
-        max_steps=1350,
+        max_steps=2000,
         input_mode=configuration_constants.InputModes.SingleKeystroke,
     )
     .user_experience(
@@ -99,6 +99,16 @@ control_tutorial_scene = (
         environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_controllable_tutorial_environment_initialization.py",
         on_game_step_code=on_game_step_code,
         packages_to_install=["numpy", "cogrid==0.0.9", "opencv-python"],
+    )
+)
+
+
+end_tutorial_static_scene = (
+    static_scene.StaticScene()
+    .scene(scene_id="end_tutorial_static_scene", experiment_config={})
+    .display(
+        scene_header="Tutorial Complete",
+        scene_body="You've completed the tutorial! All rounds after this will be part of the main study and all points earned will count towards your bonus.",
     )
 )
 
@@ -181,6 +191,48 @@ choice_cramped_room_0 = (
         scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/choice_cramped_room.html",
     )
 )
+
+
+# class ScoreCompletionCodeScene(static_scene.CompletionCodeScene):
+#     def _create_html_completion_code(self) -> str:
+#         """Create HTML content for displaying a completion code.
+
+#         This method generates a unique completion code using UUIDs and formats it as HTML.
+#         It also includes instructions for participants to copy and submit the code.
+
+#         :return: A tuple containing the HTML content and the completion code
+#         :rtype: tuple[str, str]
+#         """
+#         html, completion_code = super()._create_html_completion_code()
+
+#         score_html = """
+#         <script>
+#             var dishesDelivered = window.interactiveGymGlobals.dishesDelivered || 0;
+#             document.write(`
+#                 <div style="margin: 20px 0;">
+#                     <p>You delivered a total of <strong>${dishesDelivered}</strong> dishes during the stud.</p>
+#                 </div>
+#             `);
+#         </script>
+#         """
+#         html = score_html + html
+
+
+#         return html, completion_code
+
+
+# score_completion_code_scene = (
+#     static_scene.CompletionCodeScene()
+#     .scene(
+#         scene_id="end_completion_code_scene",
+#         should_export_metadata=True,
+#         experiment_config={},
+#     )
+#     .display(
+#         scene_header="Thank you for participating!",
+#     )
+# )
+
 
 end_scene = (
     static_scene.CompletionCodeScene()
