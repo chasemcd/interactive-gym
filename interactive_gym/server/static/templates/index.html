@@ -15,25 +15,24 @@
             background-color: #f0f4f8;
             color: #333;
             margin: 0;
-            padding: 0;
-            height: 100vh;
+            padding: 20px;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             text-align: center;
-            overflow: hidden; /* Prevents the whole page from scrolling */
+            overflow-y: auto;
         }
 
         .text-container {
-            max-width: 800px;
-            max-height: 100vh; /* Ensure the container doesn't exceed the viewport height */
+            width: 800px;
             background-color: #ffffff;
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Prevents overflow from showing */
+            margin: 20px auto;
         }
 
         h1 {
@@ -54,11 +53,10 @@
             color: #555;
             text-align: left;
             line-height: 1.6;
-            overflow-y: auto; /* Adds a scrollbar when content overflows */
-            flex-grow: 1; /* Allow this to grow and take available space */
-            padding: 15px 25px 15px 15px; /* Extra padding on the right for the scrollbar */
-            box-sizing: border-box; /* Include padding in the element's total width and height */
-            margin-bottom: 20px; /* Add some space between sceneBody and buttons */
+            flex-grow: 1;
+            padding: 15px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
         }
 
         #startButton, #advanceButton, #redirectButton {
@@ -110,12 +108,12 @@
             right: 10px;
             padding: 10px 15px;
             border-radius: 8px;
-            color: rgba(182, 179, 179, 0.7); /* Light, faint text color */
+            color: rgba(182, 179, 179, 0.7);
             font-size: 16px;
             font-family: 'Roboto', sans-serif;
-            box-shadow: none; /* Remove or reduce the shadow to make it less prominent */
-            opacity: 0.7; /* Lower opacity to make the container itself faint */
-            transition: opacity 0.3s ease; /* Optional: Add a transition for a smoother appearance */
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
         }
 
         #gameContainer {
