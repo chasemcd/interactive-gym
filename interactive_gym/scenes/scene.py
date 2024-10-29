@@ -211,3 +211,11 @@ class RandomizeOrder(SceneWrapper):
             self.scenes = self.scenes[: self.keep_n]
 
         return super().build()
+
+    def unpack(self) -> list[Scene]:
+        """
+        Recursively unpack all scenes from this wrapper.
+        """
+        random.shuffle(self.scenes)
+
+        return super().unpack()
