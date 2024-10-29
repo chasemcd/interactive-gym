@@ -473,6 +473,7 @@ function getData(elementIds) {
 
 
 function activateScene(data) {
+    window.scrollTo(0, 0);
 
     // Add interactiveGymGlobals to the data object
     if (typeof window.interactiveGymGlobals !== 'undefined') {
@@ -603,7 +604,6 @@ function terminateGymScene(data) {
     graphics_end();
 
     let remoteGameData = getRemoteGameData();
-    console.log("emitting data", remoteGameData)
     const binaryData = msgpack.encode(remoteGameData);
     socket.emit("emit_remote_game_data", {data: binaryData, scene_id: data.scene_id, session_id: window.sessionId});
 
