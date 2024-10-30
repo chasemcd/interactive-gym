@@ -1,0 +1,18 @@
+<center><p>
+    You'll now play with a partner for a single round. 
+    <br><br> 
+    You will be playing on the layout pictured below. 
+    <center><img src="static/assets/overcooked/cramped_room.png" alt="Annotated Overcooked environment." height="270" width="315"></center>
+
+    This partner has no specific behavioral controls. 
+    <br><br>
+    <script>
+    // Randomly initialize the values to -1, 0, or 1
+    const possibleValues = [-1, 0, 1];
+    window.interactiveGymGlobals.delivery_act_reward = possibleValues[Math.floor(Math.random() * possibleValues.length)];
+    window.interactiveGymGlobals.onion_in_pot_reward = possibleValues[Math.floor(Math.random() * possibleValues.length)];
+    </script>
+
+
+When the button activates, click it to begin. 
+</p></center>
