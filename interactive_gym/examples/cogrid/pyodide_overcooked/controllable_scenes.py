@@ -17,7 +17,7 @@ from interactive_gym.scenes import static_scene
 from interactive_gym.scenes import scene
 
 
-SCENES_PER_SETTING = 3
+SCENES_PER_SETTING = 5
 
 
 # Constants for controls/actions/etc.
@@ -382,8 +382,8 @@ cramped_room_nospec_scenes = [
 
 cramped_room_randomization = scene.RandomizeOrder(
     [
-        # *cramped_room_controllable_scenes,
-        # *cramped_room_fixed_scenes,
+        *cramped_room_controllable_scenes,
+        *cramped_room_fixed_scenes,
         *cramped_room_nospec_scenes,
     ],
 )

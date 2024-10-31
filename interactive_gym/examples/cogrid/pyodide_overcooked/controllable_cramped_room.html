@@ -67,7 +67,7 @@
 
     let startButton = document.getElementById('startButton');
     startButton.disabled = true;
-    const intervalId = setInterval(() => {
+    var intervalId = setInterval(() => {
         if (!startButton.disabled) {
             window.startConditionMet = true;
             startButton.disabled = true;

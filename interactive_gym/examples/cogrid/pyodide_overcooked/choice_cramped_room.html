@@ -89,6 +89,24 @@
         window.interactiveGymGlobals.onion_in_pot_reward = window.interactiveGymGlobals.initialOnionValue;
     }
 
+    function checkStartButtonState() {
+        const mode = document.getElementById('partner-mode').value;
+        const startButton = document.getElementById('startButton');
+        
+        if (!window.startConditionMet) {
+            startButton.disabled = true;
+            return;
+        }
+
+        if (mode === 'enable') {
+            startButton.disabled = !checkAllScalesInteracted();
+        } else if (mode === 'disable' || mode === 'noSpec') {
+            startButton.disabled = false;
+        } else {
+            startButton.disabled = true;
+        }
+    }
+
     function handleModeChange() {
         const mode = document.getElementById('partner-mode').value;
         const radioButtons = document.querySelectorAll('input[type="radio"]');
@@ -169,23 +187,7 @@
         return deliveryActRewardSelected && onionInPotRewardSelected;
     }
 
-    function checkStartButtonState() {
-        const mode = document.getElementById('partner-mode').value;
-        const startButton = document.getElementById('startButton');
-        
-        if (!window.startConditionMet) {
-            startButton.disabled = true;
-            return;
-        }
 
-        if (mode === 'enable') {
-            startButton.disabled = !checkAllScalesInteracted();
-        } else if (mode === 'disable' || mode === 'noSpec') {
-            startButton.disabled = false;
-        } else {
-            startButton.disabled = true;
-        }
-    }
     </script>
 
 When the button activates, click it to begin. 
