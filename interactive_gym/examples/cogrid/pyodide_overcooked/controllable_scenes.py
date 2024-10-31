@@ -230,6 +230,7 @@ cramped_room_controllable_eval_ = (
         scale_questions=[
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
+            "My partner followed its behavior settings.",
             "I enjoyed working with my partner.",
             "My partner and I coordinated our actions well together.",
             "My partner perceived accurately what tasks I was trying to accomplish.",
@@ -277,6 +278,7 @@ cramped_room_fixed_eval_ = (
         scale_questions=[
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
+            "My partner followed its behavior settings.",
             "I enjoyed working with my partner.",
             "My partner and I coordinated our actions well together.",
             "My partner perceived accurately what tasks I was trying to accomplish.",
