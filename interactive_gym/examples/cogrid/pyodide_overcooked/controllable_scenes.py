@@ -128,13 +128,27 @@ tutorial_with_bot_scene = (
     )
     .user_experience(
         scene_header="Overcooked",
-        scene_body="<center><p>"
-        "You'll now try playing with a partner for a single practice round. "
-        "<br><br> "
+        scene_body="""
+        <center><p>
+        You'll now try playing with a partner for a single practice round. 
+        <br><br> 
         "You will be playing on the layout pictured below. "
         '<center><img src="static/assets/overcooked/cramped_room.png" alt="Annotated Overcooked environment." height="270" width="315"></center>'
-        "When the button activates, click it to begin. "
-        "</p></center>",
+        
+        <div style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 20px 0;">
+        <div style="text-align: center;">
+            <img src="static/assets/overcooked/blue_chef.png" alt="Chef with blue hat." width="24" height="32">
+            <p style="margin: 5px 0;">Your Chef</p>
+        </div>
+        <div style="text-align: center;">
+            <img src="static/assets/overcooked/green_chef.png" alt="Chef with green hat." width="24" height="32">
+            <p style="margin: 5px 0;">AI Chef</p>
+        </div>
+    </div>
+        
+        When the button activates, click it to begin. 
+        </p></center>
+        """,
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
         in_game_scene_body="""
         <center>
