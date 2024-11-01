@@ -17,7 +17,7 @@ from interactive_gym.scenes import static_scene
 from interactive_gym.scenes import scene
 
 
-SCENES_PER_SETTING = 5
+SCENES_PER_SETTING = 1
 
 
 # Constants for controls/actions/etc.
@@ -228,24 +228,20 @@ cramped_room_controllable_ = (
 cramped_room_controllable_eval_ = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
+            "My partner followed its behavior settings.",
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
-            "My partner followed its behavior settings.",
-            "I enjoyed working with my partner.",
-            "My partner and I coordinated our actions well together.",
             "My partner perceived accurately what tasks I was trying to accomplish.",
-            "I was able to understand and predict what tasks my partner was trying to accomplish.",
             "My partner felt human-like.",
-            "My ability to control my partner made it more effective as a teammate.",
-            "My ability to control my partner made it more predictable.",
-            "I enjoyed being able to control my partner's behavior.",
+            "My ability to control my partner's behavior made it more effective as a teammate.",
+            "My ability to control my partner's behavior made it more predictable.",
         ],
         # scale_labels=["Not at all", "Very much"],
         pre_scale_header="Please indicate the extent to which you agree with the following statements about your partner in the previous round.",
         text_box_header="Please describe any additional reasoning for your selections. This might include specific actions or behaviors. You may write N/A if you do not have any anything to add.",
     )
     .scene(scene_id="cramped_room_controllable_eval_", experiment_config={})
-    .display(scene_subheader="Partner Feedback")
+    .display(scene_subheader="Feedback About Your AI Partner")
 )
 
 
@@ -276,20 +272,19 @@ cramped_room_fixed_ = (
 cramped_room_fixed_eval_ = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
+            "My partner followed its behavior settings.",
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
-            "My partner followed its behavior settings.",
-            "I enjoyed working with my partner.",
-            "My partner and I coordinated our actions well together.",
             "My partner perceived accurately what tasks I was trying to accomplish.",
-            "I was able to understand and predict what tasks my partner was trying to accomplish.",
             "My partner felt human-like.",
+            "My inability to control my partner's behavior made it less effective as a teammate.",
+            "My inability to control my partner's behavior made it less predictable.",
         ],
         pre_scale_header="Please indicate the extent to which you agree with the following statements about your partner in the previous round.",
         text_box_header="Please describe any additional reasoning for your selections. This might include specific actions or behaviors. You may write N/A if you do not have any anything to add.",
     )
     .scene(scene_id="cramped_room_fixed_eval_", experiment_config={})
-    .display(scene_subheader="Partner Feedback")
+    .display(scene_subheader="Feedback About Your AI Partner")
 )
 
 cramped_room_fixed_scenes = [
@@ -353,18 +348,17 @@ cramped_room_nospec_eval_ = (
         scale_questions=[
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
-            "I enjoyed working with my partner.",
-            "My partner and I coordinated our actions well together.",
             "My partner perceived accurately what tasks I was trying to accomplish.",
-            "I was able to understand and predict what tasks my partner was trying to accomplish.",
             "My partner felt human-like.",
+            "My inability to control my partner's behavior made it less effective as a teammate.",
+            "My inability to control my partner's behavior made it less predictable.",
         ],
         # scale_labels=["Not at all", "Very much"],
         pre_scale_header="Please indicate the extent to which you agree with the following statements about your partner in the previous round.",
         text_box_header="Please describe any additional reasoning for your selections. This might include specific actions or behaviors. You may write N/A if you do not have any anything to add.",
     )
     .scene(scene_id="cramped_room_nospec_eval_", experiment_config={})
-    .display(scene_subheader="Partner Feedback")
+    .display(scene_subheader="Feedback About Your AI Partner")
 )
 
 cramped_room_nospec_scenes = [
