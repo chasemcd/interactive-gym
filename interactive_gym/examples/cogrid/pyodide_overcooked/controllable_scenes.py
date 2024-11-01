@@ -17,7 +17,7 @@ from interactive_gym.scenes import static_scene
 from interactive_gym.scenes import scene
 
 
-SCENES_PER_SETTING = 1
+SCENES_PER_SETTING = 3
 
 
 # Constants for controls/actions/etc.
