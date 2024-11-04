@@ -732,3 +732,7 @@ function enableStartRefreshInterval() {
 function redirect_subject(url) {
     window.location.href = url;
 };
+
+
+
+const startButton = window.document.getElementById('startButton');

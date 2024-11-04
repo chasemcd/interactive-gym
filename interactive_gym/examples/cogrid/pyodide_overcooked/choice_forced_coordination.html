@@ -95,7 +95,7 @@
 
     function checkStartButtonState() {
         const mode = document.getElementById('partner-mode').value;
-        var startButton = document.getElementById('startButton');
+        // var startButton = document.getElementById('startButton');
         
         if (!window.startConditionMet) {
             startButton.disabled = true;
@@ -155,7 +155,7 @@
 
     document.getElementById('startButton').disabled = true;
     var intervalId = setInterval(() => {
-        var startButton = document.getElementById('startButton');
+        // var startButton = document.getElementById('startButton');
         if (!startButton.disabled && !window.startConditionMet) {
             startButton.disabled = true;
             window.startConditionMet = true;
