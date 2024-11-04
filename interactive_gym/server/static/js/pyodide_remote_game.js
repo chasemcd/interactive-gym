@@ -89,6 +89,7 @@ env
         const env = await this.pyodide.runPythonAsync(`
 import js
 interactive_gym_globals = dict(js.window.interactiveGymGlobals.object_entries())
+print("Globals on initialization: ", interactive_gym_globals)
 ${config.environment_initialization_code}
 env
         `);

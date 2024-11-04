@@ -19,11 +19,20 @@ from interactive_gym.configurations import experiment_config
 stager = stager.Stager(
     scenes=[
         controllable_scenes.start_scene,
-        scenes.tutorial_gym_scene,
-        controllable_scenes.tutorial_with_bot_scene,
-        controllable_scenes.control_tutorial_scene,
-        controllable_scenes.end_tutorial_static_scene,
-        controllable_scenes.cramped_room_scenes,
+        # scenes.tutorial_gym_scene,
+        # controllable_scenes.tutorial_with_bot_scene,
+        # controllable_scenes.control_tutorial_scene,
+        # controllable_scenes.end_tutorial_static_scene,
+        scene.RandomizeOrder(
+            [
+                controllable_scenes.SCENES_BY_LAYOUT["counter_circuit"],
+                controllable_scenes.SCENES_BY_LAYOUT["forced_coordination"],
+                controllable_scenes.SCENES_BY_LAYOUT["asymmetric_advantages"],
+                controllable_scenes.SCENES_BY_LAYOUT["coordination_ring"],
+                controllable_scenes.SCENES_BY_LAYOUT["cramped_room"],
+            ],
+            keep_n=2,
+        ),
         controllable_scenes.end_scene,
     ]
 )
