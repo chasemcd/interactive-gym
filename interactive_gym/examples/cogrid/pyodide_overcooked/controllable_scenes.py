@@ -502,6 +502,7 @@ def make_choice_scene(layout_name):
             scene_id=f"{layout_name}_choice_0",
             experiment_config={},
         )
+        .policies(policy_mapping=POLICY_MAPPING_BY_LAYOUT[layout_name])
         .user_experience(
             scene_body_filepath=f"interactive_gym/examples/cogrid/pyodide_overcooked/choice_{layout_name}.html",
         )
@@ -529,7 +530,7 @@ for layout_name in [
     fixed_scenes = make_n_fixed_scenes(layout_name, SCENES_PER_SETTING)
     nospec_scenes = make_n_nospec_scenes(layout_name, SCENES_PER_SETTING)
     randomized_game_scenes = scene.RandomizeOrder(
-        [*controllable_scenes, *fixed_scenes, *nospec_scenes]
+        []  # [*controllable_scenes, *fixed_scenes, *nospec_scenes]
     )
 
     choice_scene = make_choice_scene(layout_name)
