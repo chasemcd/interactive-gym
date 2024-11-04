@@ -282,11 +282,17 @@ base_controllable_eval_ = (
             "My partner followed its behavior settings.",
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
-            "My ability to control my partner's behavior made it more effective as a teammate.",
-            "My ability to control my partner's behavior made it more predictable.",
+            "My ability to control my partner's behavior made it, as a teammate:",
+            "My ability to control my partner's behavior made it, as a teammate:",
         ],
-        # scale_labels=["Not at all", "Very much"],
-        pre_scale_header="Please indicate the extent to which you agree with the following statements about your partner in the previous round.",
+        scale_labels=[
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Less Effective", "No Difference", "More Effective"],
+            ["Less Predictable", "No Difference", "More Predictable"],
+        ],
+        pre_scale_header="Please indicate your responses to the following statements about your partner in the previous round.",
         text_box_header="Please describe any additional reasoning for your selections. This might include specific actions or behaviors. You may write N/A if you do not have any anything to add.",
     )
     .scene(scene_id="base_controllable_eval_", experiment_config={})
@@ -308,10 +314,17 @@ base_fixed_eval_ = (
             "My partner followed its behavior settings.",
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
-            "My inability to control my partner's behavior made it less effective as a teammate.",
-            "My inability to control my partner's behavior made it less predictable.",
+            "My inability to control my partner's behavior made it, as a teammate:",
+            "My inability to control my partner's behavior made it, as a teammate:",
         ],
-        pre_scale_header="Please indicate the extent to which you agree with the following statements about your partner in the previous round.",
+        scale_labels=[
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Less Effective", "No Difference", "More Effective"],
+            ["Less Predictable", "No Difference", "More Predictable"],
+        ],
+        pre_scale_header="Please indicate your responses to the following statements about your partner in the previous round.",
         text_box_header="Please describe any additional reasoning for your selections. This might include specific actions or behaviors. You may write N/A if you do not have any anything to add.",
     )
     .scene(scene_id="cramped_room_fixed_eval_", experiment_config={})
@@ -341,10 +354,16 @@ base_nospec_eval_ = (
         scale_questions=[
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
-            "My inability to control my partner's behavior made it less effective as a teammate.",
-            "My inability to control my partner's behavior made it less predictable.",
+            "My inability to control my partner's behavior made it, as a teammate:",
+            "My inability to control my partner's behavior made it, as a teammate:",
         ],
-        pre_scale_header="Please indicate the extent to which you agree with the following statements about your partner in the previous round.",
+        scale_labels=[
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Less Effective", "No Difference", "More Effective"],
+            ["Less Predictable", "No Difference", "More Predictable"],
+        ],
+        pre_scale_header="Please indicate your responses to the following statements about your partner in the previous round.",
         text_box_header="Please describe any additional reasoning for your selections. This might include specific actions or behaviors. You may write N/A if you do not have any anything to add.",
     )
     .scene(scene_id="base_nospec_eval_", experiment_config={})
@@ -530,7 +549,7 @@ for layout_name in [
     fixed_scenes = make_n_fixed_scenes(layout_name, SCENES_PER_SETTING)
     nospec_scenes = make_n_nospec_scenes(layout_name, SCENES_PER_SETTING)
     randomized_game_scenes = scene.RandomizeOrder(
-        []  # [*controllable_scenes, *fixed_scenes, *nospec_scenes]
+        [*controllable_scenes, *fixed_scenes, *nospec_scenes]
     )
 
     choice_scene = make_choice_scene(layout_name)
