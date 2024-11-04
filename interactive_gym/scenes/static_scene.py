@@ -764,6 +764,12 @@ class ScalesAndTextBox(StaticScene):
 
         document.getElementById('user-input').addEventListener('input', checkInputs);
         document.querySelectorAll('.scale-input').forEach(function(scale) {
+            scale.addEventListener('mousedown', function() {
+                if (!this.classList.contains('interacted')) {
+                    this.classList.add('interacted');
+                    checkInputs();
+                }
+            });
             scale.addEventListener('input', function() {
                 if (!this.classList.contains('interacted')) {
                     this.classList.add('interacted');
