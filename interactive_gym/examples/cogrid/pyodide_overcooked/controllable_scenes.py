@@ -280,12 +280,14 @@ base_controllable_eval_ = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
             "My partner followed its behavior settings.",
+            "My partner was enjoyable to work with.",
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
             "My ability to control my partner's behavior made it, as a teammate:",
             "My ability to control my partner's behavior made it, as a teammate:",
         ],
         scale_labels=[
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
@@ -312,12 +314,14 @@ base_fixed_eval_ = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
             "My partner followed its behavior settings.",
+            "My partner was enjoyable to work with.",
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
             "My inability to control my partner's behavior made it, as a teammate:",
             "My inability to control my partner's behavior made it, as a teammate:",
         ],
         scale_labels=[
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
@@ -354,10 +358,12 @@ base_nospec_eval_ = (
         scale_questions=[
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
+            "My partner was enjoyable to work with.",
             "My inability to control my partner's behavior made it, as a teammate:",
             "My inability to control my partner's behavior made it, as a teammate:",
         ],
         scale_labels=[
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Less Effective", "No Difference", "More Effective"],
