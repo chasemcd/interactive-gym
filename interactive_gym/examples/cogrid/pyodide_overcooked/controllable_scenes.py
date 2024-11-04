@@ -168,9 +168,9 @@ tutorial_with_bot_scene = (
         scene_body="""
         <center><p>
         You'll now try playing with a partner for a single practice round. 
-        <br><br> 
-        "You will be playing on the layout pictured below. "
-        '<center><img src="static/assets/overcooked/cramped_room.png" alt="Annotated Overcooked environment." height="270" width="315"></center>'
+        <br><br>
+        You will be playing on the layout pictured below. 
+        <center><img src="static/assets/overcooked/cramped_room.png" alt="Annotated Overcooked environment." height="270" width="315"></center>
         
         <div style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 20px 0;">
         <div style="text-align: center;">
