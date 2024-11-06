@@ -679,7 +679,16 @@ class ScalesAndTextBox(StaticScene):
         self.pre_scale_header = pre_scale_header
         self.scale_size = scale_size
         self.scale_questions = scale_questions
-        self.scale_labels = scale_labels
+
+        if isinstance(scale_labels[0], list):
+            self.scale_labels = scale_labels
+        elif isinstance(scale_labels[0], str):
+            self.scale_labels = [scale_labels] * len(scale_questions)
+        else:
+            raise ValueError(
+                "scale_labels must be a list of strings or a list of lists of strings"
+            )
+
         self.scene_body = self._create_html(text_box_header)
         self.element_ids = self.get_data_element_ids()
 
@@ -705,9 +714,9 @@ class ScalesAndTextBox(StaticScene):
                 <div style="border: 1px solid #ccc; padding: 10px; display: inline-block; margin: 0 auto; width: 80%;">
                     <p style="margin: 0 0 10px 0;">{question} <span style="color: red;">*</span></p>
                     <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <span style="flex: 1; text-align: left; font-size: 12px;">{self.scale_labels[0]}</span>
-                        <span style="flex: 1; text-align: center; font-size: 12px;">{self.scale_labels[len(self.scale_labels)//2]}</span>
-                        <span style="flex: 1; text-align: right; font-size: 12px;">{self.scale_labels[-1]}</span>
+                        <span style="flex: 1; text-align: left; font-size: 12px;">{self.scale_labels[i][0]}</span>
+                        <span style="flex: 1; text-align: center; font-size: 12px;">{self.scale_labels[i][len(self.scale_labels[i])//2]}</span>
+                        <span style="flex: 1; text-align: right; font-size: 12px;">{self.scale_labels[i][-1]}</span>
                     </div>
                     <div style="display: flex; align-items: center; justify-content: center;">
                         <input type="range" id="scale-{i}" class="scale-input" min="0" max="{self.scale_size - 1}" value="{(self.scale_size - 1) // 2}" style="margin: 10px 0; -webkit-appearance: none; appearance: none; width: 100%; height: 2px; background: #d3d3d3; outline: none; opacity: 0.7; transition: opacity .2s;">
@@ -764,6 +773,12 @@ class ScalesAndTextBox(StaticScene):
 
         document.getElementById('user-input').addEventListener('input', checkInputs);
         document.querySelectorAll('.scale-input').forEach(function(scale) {
+            scale.addEventListener('mousedown', function() {
+                if (!this.classList.contains('interacted')) {
+                    this.classList.add('interacted');
+                    checkInputs();
+                }
+            });
             scale.addEventListener('input', function() {
                 if (!this.classList.contains('interacted')) {
                     this.classList.add('interacted');

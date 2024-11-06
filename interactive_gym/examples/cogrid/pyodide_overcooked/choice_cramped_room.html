@@ -5,10 +5,14 @@
     This round is a final opportunity for you to earn as many points as possible and maximize your bonus.
     In this round, you can choose how you would like to interact with your partner.
 
+    <div style="text-align: center; margin: 20px 0;">
+        <p style="font-weight: bold;">Once you make your selection you will not be able to change it for this round!</p>
+    </div>
+
     <div id="scale-questions-container" style="margin-top: 20px; width: 50%; margin-left: auto; margin-right: auto;">
         <div style="text-align: center; margin-bottom: 20px; border: 2px solid black; padding: 10px; display: inline-block;">
             <div style="margin-bottom: 10px; font-weight: bold;">Partner Configuration <span style="color: red;">*</span></div>
-            <select id="partner-mode" onchange="handleModeChange()" style="padding: 5px; font-size: 14px;" required>
+            <select id="partner-mode" onchange="handleModeChange(); this.disabled = true;" style="padding: 5px; font-size: 14px;" required>
                 <option value="" disabled selected>Select a configuration...</option>
                 <option value="disable">Disable Controls</option>
                 <option value="enable">Enable Controls</option>
@@ -91,7 +95,7 @@
 
     function checkStartButtonState() {
         const mode = document.getElementById('partner-mode').value;
-        var startButton = document.getElementById('startButton');
+        // var startButton = document.getElementById('startButton');
         
         if (!window.startConditionMet) {
             startButton.disabled = true;
@@ -151,7 +155,7 @@
 
     document.getElementById('startButton').disabled = true;
     var intervalId = setInterval(() => {
-        var startButton = document.getElementById('startButton');
+        // var startButton = document.getElementById('startButton');
         if (!startButton.disabled && !window.startConditionMet) {
             startButton.disabled = true;
             window.startConditionMet = true;

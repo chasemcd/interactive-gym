@@ -10,6 +10,7 @@ import msgpack
 import pandas as pd
 import os
 import flatten_dict
+import json
 
 import flask
 import flask_socketio
@@ -468,6 +469,7 @@ def data_emission(data):
 
     # Generate a unique filename
     filename = f"data/{scene_id}/{subject_id}.csv"
+    globals_filename = f"data/{scene_id}/{subject_id}_globals.json"
 
     # Save as CSV
     logger.info(f"Saving {filename}")
@@ -481,6 +483,9 @@ def data_emission(data):
     df["timestamp"] = pd.to_datetime("now")
 
     df.to_csv(filename, index=False)
+
+    with open(globals_filename, "w") as f:
+        json.dump(data["interactiveGymGlobals"], f)
 
 
 @socketio.on("emit_remote_game_data")
@@ -515,10 +520,13 @@ def receive_remote_game_data(data):
 
     # Generate a unique filename
     filename = f"data/{data['scene_id']}/{subject_id}.csv"
+    globals_filename = f"data/{data['scene_id']}/{subject_id}_globals.json"
 
     # Save as CSV
     logger.info(f"Saving {filename}")
     df.to_csv(filename, index=False)
+    with open(globals_filename, "w") as f:
+        json.dump(data["interactiveGymGlobals"], f)
 
     # Also get the current scene for this participant and save the metadata
     # TODO(chase): this has issues where the data may not be received before the

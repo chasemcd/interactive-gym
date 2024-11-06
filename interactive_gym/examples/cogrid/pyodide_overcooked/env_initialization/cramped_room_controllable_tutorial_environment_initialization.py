@@ -797,6 +797,7 @@ class InteractiveGymOvercooked(OvercookedRewardEnv):
             infos[agent_id]["col"] = int(col)
             infos[agent_id]["direction"] = int(agent.dir)
             infos[agent_id]["layout_id"] = self.current_layout_id
+            infos[agent_id]["behavior_weights"] = self.reward_weights[agent_id]
 
         return infos
 

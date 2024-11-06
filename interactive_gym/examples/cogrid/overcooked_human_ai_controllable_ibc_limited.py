@@ -26,9 +26,9 @@ stager = stager.Stager(
         scene.RandomizeOrder(
             [
                 controllable_scenes.SCENES_BY_LAYOUT["counter_circuit"],
-                controllable_scenes.SCENES_BY_LAYOUT["forced_coordination"],
-                controllable_scenes.SCENES_BY_LAYOUT["asymmetric_advantages"],
-                controllable_scenes.SCENES_BY_LAYOUT["coordination_ring"],
+                # controllable_scenes.SCENES_BY_LAYOUT["forced_coordination"],
+                # controllable_scenes.SCENES_BY_LAYOUT["asymmetric_advantages"],
+                # controllable_scenes.SCENES_BY_LAYOUT["coordination_ring"],
                 controllable_scenes.SCENES_BY_LAYOUT["cramped_room"],
             ],
             keep_n=2,
