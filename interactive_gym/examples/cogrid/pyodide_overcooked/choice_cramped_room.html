@@ -3,21 +3,26 @@
     <center><img src="static/assets/overcooked/cramped_room.png" alt="Annotated Overcooked environment." height="270" width="315"></center>
 
     This round is a final opportunity for you to earn as many points as possible and maximize your bonus.
-    In this round, you can choose how you would like to interact with your partner.
+    In this round, you can choose which partner you would like to play with: the one you can control, the one that has behaviors pre-specified, or the one that has no specific behavioral controls.
+    Note that the pre-specified behavior partner and the one without behavioral controls are the exact same partner that you played with in the previous rounds on this layout.
 
-    <div style="text-align: center; margin: 20px 0;">
-        <p style="font-weight: bold;">Once you make your selection you will not be able to change it for this round!</p>
-    </div>
-
-    <div id="scale-questions-container" style="margin-top: 20px; width: 50%; margin-left: auto; margin-right: auto;">
+    <div id="scale-questions-container" style="margin-top: 20px; width: 75%; margin-left: auto; margin-right: auto;">
         <div style="text-align: center; margin-bottom: 20px; border: 2px solid black; padding: 10px; display: inline-block;">
             <div style="margin-bottom: 10px; font-weight: bold;">Partner Configuration <span style="color: red;">*</span></div>
-            <select id="partner-mode" onchange="handleModeChange(); this.disabled = true;" style="padding: 5px; font-size: 14px;" required>
-                <option value="" disabled selected>Select a configuration...</option>
-                <option value="disable">Disable Controls</option>
-                <option value="enable">Enable Controls</option>
-                <option value="noSpec">No Behavior Specifications</option>
-            </select>
+            <div style="display: flex; justify-content: space-between; gap: 20px;">
+                <label style="display: flex; align-items: center; gap: 5px;"></label>
+                    <input type="radio" name="partner-mode" value="enable" onchange="handleModeChange()">
+                    Enabled Behavioral Controls
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px;">
+                    <input type="radio" name="partner-mode" value="disable" onchange="handleModeChange()">
+                    Pre-Specified Behaviors
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px;">
+                    <input type="radio" name="partner-mode" value="noSpec" onchange="handleModeChange()">
+                    No Behavioral Settings
+                </label>
+            </div>
         </div>
         <div style="margin-bottom: 40px;"></div>
         
@@ -70,32 +75,21 @@
     </div>
 
     <script>
-    if (typeof window.interactiveGymGlobals === 'undefined') {
-        window.interactiveGymGlobals = {};
-    }
-    
-    // Generate and store initial random values only once on page load
-    if (typeof window.interactiveGymGlobals.initialDeliveryValue === 'undefined') {
-        const values = [-1, 0, 1];
-        window.interactiveGymGlobals.initialDeliveryValue = values[Math.floor(Math.random() * values.length)];
-        window.interactiveGymGlobals.initialOnionValue = values[Math.floor(Math.random() * values.length)];
-    }
 
-    function setInitialValues() {
-        const deliveryRadio = document.querySelector(`input[name="delivery_act_reward"][value="${window.interactiveGymGlobals.initialDeliveryValue}"]`);
+    function setFixedValues() {
+        const deliveryRadio = document.querySelector(`input[name="delivery_act_reward"][value="${window.interactiveGymGlobals.fixedControls.delivery_act_reward}"]`);
         deliveryRadio.checked = true;
         deliveryRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
-        window.interactiveGymGlobals.delivery_act_reward = window.interactiveGymGlobals.initialDeliveryValue;
+        window.interactiveGymGlobals.delivery_act_reward = window.interactiveGymGlobals.fixedControls.delivery_act_reward;
         
-        const onionRadio = document.querySelector(`input[name="onion_in_pot_reward"][value="${window.interactiveGymGlobals.initialOnionValue}"]`);
+        const onionRadio = document.querySelector(`input[name="onion_in_pot_reward"][value="${window.interactiveGymGlobals.fixedControls.onion_in_pot_reward}"]`);
         onionRadio.checked = true;
         onionRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
-        window.interactiveGymGlobals.onion_in_pot_reward = window.interactiveGymGlobals.initialOnionValue;
+        window.interactiveGymGlobals.onion_in_pot_reward = window.interactiveGymGlobals.fixedControls.onion_in_pot_reward;
     }
 
     function checkStartButtonState() {
-        const mode = document.getElementById('partner-mode').value;
-        // var startButton = document.getElementById('startButton');
+        const mode = document.querySelector('input[name="partner-mode"]:checked')?.value;
         
         if (!window.startConditionMet) {
             startButton.disabled = true;
@@ -112,13 +106,13 @@
     }
 
     function handleModeChange() {
-        const mode = document.getElementById('partner-mode').value;
+        const mode = document.querySelector('input[name="partner-mode"]:checked')?.value;
         const radioButtons = document.querySelectorAll('input[type="radio"]');
         const controlPanel = document.getElementById('control-panel');
         
         window.interactiveGymGlobals.partner_mode = mode;
 
-        if (mode === '') {
+        if (!mode) {
             controlPanel.style.display = 'none';
             document.getElementById('startButton').disabled = true;
             return;
@@ -127,21 +121,32 @@
         if (mode === 'enable') {
             controlPanel.style.display = 'block';
             radioButtons.forEach(radio => {
-                radio.disabled = false;
-                radio.checked = false;
-                radio.nextElementSibling.style.background = 'transparent';
+                if (radio.name !== 'partner-mode') {
+                    radio.disabled = false;
+                    radio.checked = false;
+                    radio.nextElementSibling.style.background = 'transparent';
+                }
             });
         } else if (mode === 'disable') {
             controlPanel.style.display = 'block';
-            setInitialValues();
             radioButtons.forEach(radio => {
-                radio.disabled = true;
+                if (radio.name !== 'partner-mode') {
+                    radio.disabled = false;
+                    radio.checked = false;
+                    radio.nextElementSibling.style.background = 'transparent';
+                }
+            });
+            setFixedValues();
+            radioButtons.forEach(radio => {
+                if (radio.name !== 'partner-mode') {
+                    radio.disabled = true;
+                }
             });
         } else if (mode === 'noSpec') {
+            setHiddenValues();
             controlPanel.style.display = 'none';
-            const values = [-1, 0, 1];
-            window.interactiveGymGlobals.delivery_act_reward = values[Math.floor(Math.random() * values.length)];
-            window.interactiveGymGlobals.onion_in_pot_reward = values[Math.floor(Math.random() * values.length)];
+            window.interactiveGymGlobals.delivery_act_reward = window.interactiveGymGlobals.hiddenControls.delivery_act_reward;
+            window.interactiveGymGlobals.onion_in_pot_reward = window.interactiveGymGlobals.hiddenControls.onion_in_pot_reward;
         }
         
         checkStartButtonState();
@@ -155,7 +160,6 @@
 
     document.getElementById('startButton').disabled = true;
     var intervalId = setInterval(() => {
-        // var startButton = document.getElementById('startButton');
         if (!startButton.disabled && !window.startConditionMet) {
             startButton.disabled = true;
             window.startConditionMet = true;
@@ -190,7 +194,6 @@
         const onionInPotRewardSelected = document.querySelector('input[name="onion_in_pot_reward"]:checked') !== null;
         return deliveryActRewardSelected && onionInPotRewardSelected;
     }
-
 
     </script>
 

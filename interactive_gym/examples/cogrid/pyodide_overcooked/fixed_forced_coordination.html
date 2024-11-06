@@ -67,37 +67,7 @@
     </div>
     <script>
 
-    window.interactiveGymGlobals.delivery_act_reward = 0;
-    window.interactiveGymGlobals.onion_in_pot_reward = 0; 
-
-
-    // Function to randomly select initial radio values and highlight selected buttons
-    function initializeRandomValues() {
-        const values = [-1, 0, 1];
-        const deliveryValue = values[Math.floor(Math.random() * values.length)];
-        const onionValue = values[Math.floor(Math.random() * values.length)];
-        
-        // Set delivery radio and highlight
-        const deliveryRadio = document.querySelector(`input[name="delivery_act_reward"][value="${deliveryValue}"]`);
-        deliveryRadio.checked = true;
-        deliveryRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
-        window.interactiveGymGlobals.delivery_act_reward = deliveryValue;
-        
-        // Set onion radio and highlight
-        const onionRadio = document.querySelector(`input[name="onion_in_pot_reward"][value="${onionValue}"]`);
-        onionRadio.checked = true;
-        onionRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
-        window.interactiveGymGlobals.onion_in_pot_reward = onionValue;
-    }
-    
-
-    // Initialize random values on page load
-    if (typeof window.interactiveGymGlobals === 'undefined') {
-        window.interactiveGymGlobals = {};
-    }
-    initializeRandomValues();
-
-
+    setFixedValues();
 
     </script>
 
