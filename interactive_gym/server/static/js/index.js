@@ -551,6 +551,16 @@ function startEndScene(data) {
 function startGymScene(data) {
     enableStartRefreshInterval();
 
+    // Initialize or increment the gym scene counter
+    if (typeof window.interactiveGymGlobals === 'undefined') {
+        window.interactiveGymGlobals = {};
+    }
+    if (typeof window.interactiveGymGlobals.gymSceneCounter === 'undefined') {
+        window.interactiveGymGlobals.gymSceneCounter = 1;
+    } else {
+        window.interactiveGymGlobals.gymSceneCounter++;
+    }
+
     // First, check if we need to initialize Pyodide
     if (data.run_through_pyodide) {
         initializePyodideRemoteGame(data);
