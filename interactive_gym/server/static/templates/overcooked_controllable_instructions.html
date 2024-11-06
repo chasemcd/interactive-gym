@@ -89,17 +89,7 @@
         function setHiddenValues() {
             const deliveryValue = window.interactiveGymGlobals.hiddenControls.delivery_act_reward;
             const onionValue = window.interactiveGymGlobals.hiddenControls.onion_in_pot_reward;
-            
-            // Set delivery radio and highlight
-            const deliveryRadio = document.querySelector(`input[name="delivery_act_reward"][value="${deliveryValue}"]`);
-            deliveryRadio.checked = true;
-            deliveryRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
             window.interactiveGymGlobals.delivery_act_reward = deliveryValue;
-            
-            // Set onion radio and highlight
-            const onionRadio = document.querySelector(`input[name="onion_in_pot_reward"][value="${onionValue}"]`);
-            onionRadio.checked = true;
-            onionRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
             window.interactiveGymGlobals.onion_in_pot_reward = onionValue;
         }
         
