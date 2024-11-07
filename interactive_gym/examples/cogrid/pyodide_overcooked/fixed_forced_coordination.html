@@ -4,9 +4,6 @@
     You will be playing on the layout pictured below. 
     <center><img src="static/assets/overcooked/forced_coordination.png" alt="Annotated Overcooked environment." height="270" width="315"></center>
 
-    In this round, you will not be able to control your partner's behavior. The controls are disabled and set to the settings
-    shown below. 
-
     <div style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 20px 0;">
         <div style="text-align: center;">
             <img src="static/assets/overcooked/blue_chef.png" alt="Chef with blue hat." width="24" height="32">
@@ -18,6 +15,8 @@
         </div>
     </div>
 
+    In this round, you will be playing with the partner that has pre-specified behaviors. All interactions with this partner have the same behaviors and you will not be able to change them.
+    The behavior settings are shown below.
 
     <div id="scale-questions-container" style="margin-top: 20px; width: 50%; margin-left: auto; margin-right: auto;">
         <div class="scale-question" style="margin-bottom: 15px; text-align: center;">
@@ -67,37 +66,7 @@
     </div>
     <script>
 
-    window.interactiveGymGlobals.delivery_act_reward = 0;
-    window.interactiveGymGlobals.onion_in_pot_reward = 0; 
-
-
-    // Function to randomly select initial radio values and highlight selected buttons
-    function initializeRandomValues() {
-        const values = [-1, 0, 1];
-        const deliveryValue = values[Math.floor(Math.random() * values.length)];
-        const onionValue = values[Math.floor(Math.random() * values.length)];
-        
-        // Set delivery radio and highlight
-        const deliveryRadio = document.querySelector(`input[name="delivery_act_reward"][value="${deliveryValue}"]`);
-        deliveryRadio.checked = true;
-        deliveryRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
-        window.interactiveGymGlobals.delivery_act_reward = deliveryValue;
-        
-        // Set onion radio and highlight
-        const onionRadio = document.querySelector(`input[name="onion_in_pot_reward"][value="${onionValue}"]`);
-        onionRadio.checked = true;
-        onionRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
-        window.interactiveGymGlobals.onion_in_pot_reward = onionValue;
-    }
-    
-
-    // Initialize random values on page load
-    if (typeof window.interactiveGymGlobals === 'undefined') {
-        window.interactiveGymGlobals = {};
-    }
-    initializeRandomValues();
-
-
+    setFixedValues();
 
     </script>
 

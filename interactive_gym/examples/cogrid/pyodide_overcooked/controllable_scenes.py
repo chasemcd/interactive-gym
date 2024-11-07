@@ -61,7 +61,7 @@ IBC_POLICY_MAPPING_COUNTER_CIRCUIT = {
 
 IBC_POLICY_MAPPING_FORCED_COORDINATION = {
     0: configuration_constants.PolicyTypes.Human,
-    1: "static/assets/overcooked/models/ibc_forced_coordination_00.onnx",
+    1: "static/assets/overcooked/models/ibc_forced_coordination_0.008tau_00.onnx",
 }
 
 IBC_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES = {

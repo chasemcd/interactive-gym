@@ -4,7 +4,7 @@
     You will be playing on the layout pictured below. 
     <center><img src="static/assets/overcooked/asymmetric_advantages.png" alt="Annotated Overcooked environment." height="270" width="315"></center>
 
-    This partner has no specific behavioral controls. 
+    This partner has no specific behavioral settings and it will behave the same way each round that you play with it on this layout.
     <br><br>
 
     <div style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 20px 0;">
@@ -21,10 +21,7 @@
 
 
     <script>
-    // Randomly initialize the values to -1, 0, or 1
-    var possibleValues = [-1, 0, 1];
-    window.interactiveGymGlobals.delivery_act_reward = possibleValues[Math.floor(Math.random() * possibleValues.length)];
-    window.interactiveGymGlobals.onion_in_pot_reward = possibleValues[Math.floor(Math.random() * possibleValues.length)];
+        setHiddenValues();
     </script>
 
 
