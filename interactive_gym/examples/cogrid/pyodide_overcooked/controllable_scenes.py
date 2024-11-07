@@ -356,9 +356,9 @@ base_nospec_ = (
 base_nospec_eval_ = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
+            "My partner was enjoyable to work with.",
             "My partner's behavior was predictable.",
             "My partner was effective as a teammate.",
-            "My partner was enjoyable to work with.",
             "My inability to control my partner's behavior made it, as a teammate:",
             "My inability to control my partner's behavior made it, as a teammate:",
         ],
