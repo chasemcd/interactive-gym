@@ -4,7 +4,7 @@
 
 
 <p>
-    This is a reproduction of the Overcooked-AI environment (<a href="https://arxiv.org/abs/1910.05789">Carroll et al., 2019</a>) that uses <a href="https://cogrid.readthedocs.io/en/latest/">CoGrid</a> and <a href="https://interactive-gym.readthedocs.io/en/latest/">Interactive Gym</a>. 
+    This is a demo for an experiment on Human-AI teaming  and preferences for controllability (McDonald & Gonzalez, in prep.) in a reproduction of the Overcooked-AI environment (<a href="https://arxiv.org/abs/1910.05789">Carroll et al., 2019</a>) that uses <a href="https://cogrid.readthedocs.io/en/latest/">CoGrid</a> and <a href="https://interactive-gym.readthedocs.io/en/latest/">Interactive Gym</a>. 
 </p>
 <p>
     CoGrid and Interactive Gym were developed in the <a href="https://www.cmu.edu/dietrich/sds/ddmlab/">Dynamic Decision Making Lab</a> at Carnegie Mellon University. They comprise a framework for developing Human-AI interaction experiments, 
@@ -12,28 +12,99 @@
     Interactive Gym is a library for developing and running these experiments in a web browser, it provides the novel functionality to run these Python-based environments directly in the browser (alongside AI model inference using ONNX).
 </p>
  
-<p>  
-    In this demo, you'll be playing a simplified version of the Overcooked video game. Your goal is to collaborate with your AI partner to cook and deliver as many dishes as possible before time runs out.
-</p>
-
 <p>
     Here's how the demo will work:
     <ol>
-        <li>You'll complete a tutorial to learn the basics of the game.</li>
-        <li>You'll play one 45-second round with an AI partner.</li>
-        <li>Then, you'll play another 45-second round with a different AI partner.</li>
-        <li>After these two rounds, you'll indicate which partner you preferred and provide an evaluation of the partners.</li>
+        <li>You'll read through the instructions for the game.</li>
+        <li>You'll control the behavior of an AI partner and learn how the controls correspond to the AI's behavior.</li>
+        <li>You'll play three 45-second rounds with three diffferent partners, then a fourth with your choice of partner. One of them has controllable behaviors, another has fixed behaviors, and the last has no specific behavioral settings. You may find some of the partners to be unskilled or difficult to work with, while others may be skilled and helpful. This is intentional!</li>
+        <li>After each round, you can provide feedback on the partner you played with.</li>
     </ol>
     
-    One of these AI partners is trained in standard self-play using deep reinforcement learning. This means that the AI partner has learned to play the game by playing against itself.
     
     
-    <br><br>
-    The other AI partner is trained using a new method we developed called Interpretable Behavior Conditioning (IBC). This method teaches the AI to adapt its behavior based on different sub-goals. During training, we randomly change these goals, which helps the AI learn to play well with many different types of partners. This makes the AI more flexible and able to work better with various human players. It also means we can adjust how the AI behaves by changing its sub-goals. We'll be sharing more details about this method in an upcoming paper.
-</p>
+    <br>
 
+
+
+</p>
+    Our goal in running the experiment corresponding to this demo is to understand how 
+    people interact with controllable AI partners in a collaborative task. 
+    We're interested in how human controllable AI partners can be used to complement
+    both human subjective and objective preferences. 
 
 <p>
     <b>Click "Continue" to start the tutorial.</b>
 </p>
 
+
+<script>
+
+    if (typeof window.interactiveGymGlobals === 'undefined') {
+            window.interactiveGymGlobals = {};
+        }
+
+    // Initialize the values to 0
+    window.interactiveGymGlobals.delivery_act_reward = 0;
+    window.interactiveGymGlobals.onion_in_pot_reward = 0; 
+    
+    
+    // Initialize fixedControls with random values
+    // Helper function to generate random values ensuring only one -1
+    function generateRandomPair() {
+        const values = [-1, 0, 1];
+        let delivery, onion;
+        
+        // Randomly decide which value might be -1
+        if (Math.random() < 0.5) {
+            delivery = values[Math.floor(Math.random() * values.length)];
+            // If delivery is -1, onion can only be 0 or 1
+            onion = delivery === -1 ? [0, 1][Math.floor(Math.random() * 2)] : values[Math.floor(Math.random() * values.length)];
+        } else {
+            onion = values[Math.floor(Math.random() * values.length)];
+            // If onion is -1, delivery can only be 0 or 1
+            delivery = onion === -1 ? [0, 1][Math.floor(Math.random() * 2)] : values[Math.floor(Math.random() * values.length)];
+        }
+        
+        return {delivery_act_reward: delivery, onion_in_pot_reward: onion};
+    }
+    
+    // Initialize fixedControls with random values
+    window.interactiveGymGlobals.fixedControls = generateRandomPair();
+    
+    // Initialize hiddenControls with random values 
+    window.interactiveGymGlobals.hiddenControls = generateRandomPair();
+    
+        // Function to randomly select initial radio values and highlight selected buttons
+    function setFixedValues() {
+        const deliveryValue = window.interactiveGymGlobals.fixedControls.delivery_act_reward;
+        const onionValue = window.interactiveGymGlobals.fixedControls.onion_in_pot_reward;
+        
+        // Set delivery radio and highlight
+        const deliveryRadio = document.querySelector(`input[name="delivery_act_reward"][value="${deliveryValue}"]`);
+        deliveryRadio.checked = true;
+        deliveryRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
+        window.interactiveGymGlobals.delivery_act_reward = deliveryValue;
+        
+        // Set onion radio and highlight
+        const onionRadio = document.querySelector(`input[name="onion_in_pot_reward"][value="${onionValue}"]`);
+        onionRadio.checked = true;
+        onionRadio.nextElementSibling.style.background = 'rgba(0, 123, 255, 0.3)';
+        window.interactiveGymGlobals.onion_in_pot_reward = onionValue;
+    }
+
+    // Function to randomly select initial radio values and highlight selected buttons
+    function setHiddenValues() {
+        const deliveryValue = window.interactiveGymGlobals.hiddenControls.delivery_act_reward;
+        const onionValue = window.interactiveGymGlobals.hiddenControls.onion_in_pot_reward;
+        window.interactiveGymGlobals.delivery_act_reward = deliveryValue;
+        window.interactiveGymGlobals.onion_in_pot_reward = onionValue;
+    }
+    
+    
+    </script>
+
+
+
+
+</div>
