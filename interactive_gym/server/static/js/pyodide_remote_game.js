@@ -113,9 +113,11 @@ env
 obs, infos = env.reset()
 render_state = env.render()
 
-# TODO(chase): make this more generic
-obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
-
+if isinstance([*obs.values()][0], dict):
+    obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
+else:
+    obs = {k: v.reshape(-1).astype(np.float32) for k, v in obs.items()}
+    
 obs, infos, render_state
         `);
         const endTime = performance.now();
@@ -149,7 +151,12 @@ ${this.config.on_game_step_code}
 agent_actions = {int(k): v for k, v in ${pyActions}.items()}
 obs, rewards, terminateds, truncateds, infos = env.step(agent_actions)
 render_state = env.render()
-obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
+
+if isinstance([*obs.values()][0], dict):
+    obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
+else:
+    obs = {k: v.reshape(-1).astype(np.float32) for k, v in obs.items()}
+
 obs, rewards, terminateds, truncateds, infos, render_state
         `);
         // const endTime = performance.now();
@@ -164,8 +171,23 @@ obs, rewards, terminateds, truncateds, infos, render_state
 
         this.step_num = this.step_num + 1;
 
+        // Check if render_state is an RGB array (has shape and dtype properties)
+        let game_image_base64 = null;
+        if (render_state && render_state.shape !== undefined && render_state.dtype !== undefined) {
+            // Convert RGB array to base64 string
+            const uint8Array = new Uint8Array(render_state.toJs().buffer);
+            const blob = new Blob([uint8Array], { type: 'image/png' });
+            // Create a base64 string from the blob
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+                game_image_base64 = reader.result.split(',')[1]; // Remove the data URL prefix
+            };
+        }
+
         render_state = {
-            "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
+            "game_state_objects": game_image_base64 ? null : render_state.map(item => convertUndefinedToNull(item)),
+            "game_image_base64": game_image_base64
         };
 
         ui_utils.updateHUDText(this.getHUDText());
