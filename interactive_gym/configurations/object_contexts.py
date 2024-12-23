@@ -349,24 +349,12 @@ class ImgSpec:
     def as_dict(self) -> dict[str, typing.Any]:
         return dataclasses.asdict(self)
 
-    def as_dict(self) -> dict[str, typing.Any]:
-        return dataclasses.asdict(self)
-
 
 @dataclasses.dataclass
-class ImgSpec:
-    """
-    Context for an img spec object to render it.
-
-    :param name: Name of the img
-    :type name: str
-    :param img_path: Path to the image file
-    :type img_path: str
-    """
-
+class RenderedEnvRGB:
     name: str
-    img_path: str
-    object_type: str = "img_spec"
+    game_image: list[list[float]]
+    object_type: str = "rendered_env_rgb"
 
     def as_dict(self) -> dict[str, typing.Any]:
         return dataclasses.asdict(self)
