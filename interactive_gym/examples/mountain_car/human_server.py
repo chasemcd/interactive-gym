@@ -7,17 +7,13 @@ eventlet.monkey_patch()
 import argparse
 
 from interactive_gym.server import app
-from interactive_gym.scenes import scene
 from interactive_gym.scenes import stager
-from interactive_gym.examples.cogrid.pyodide_overcooked import (
-    scenes as oc_scenes,
-)
+
 from interactive_gym.scenes import static_scene
 
 from interactive_gym.configurations import experiment_config
 from interactive_gym.scenes import gym_scene
 from interactive_gym.scenes import static_scene
-from interactive_gym.scenes import scene
 
 
 from interactive_gym.configurations import (
@@ -25,8 +21,7 @@ from interactive_gym.configurations import (
 )
 
 POLICY_MAPPING = {
-    "agent_right": configuration_constants.PolicyTypes.Human,
-    "agent_left": "static/assets/slime_volleyball/models/model.onnx",
+    "human": configuration_constants.PolicyTypes.Human,
 }
 
 
@@ -62,18 +57,18 @@ start_scene = (
 slime_sceme = (
     gym_scene.GymScene()
     .scene(scene_id="mountain_car_scene", experiment_config={})
-    # .policies(policy_mapping=POLICY_MAPPING, frame_skip=5)
+    .policies(policy_mapping=POLICY_MAPPING)
     .rendering(
         fps=30,
-        game_width=400,
-        game_height=300,
+        game_width=600,
+        game_height=400,
     )
     .gameplay(
         default_action=NOOP_ACTION,
         action_mapping=action_mapping,
         num_episodes=5,
-        max_steps=3000,
-        input_mode=configuration_constants.InputModes.SingleKeystroke,
+        max_steps=200,
+        input_mode=configuration_constants.InputModes.PressedKeys,
     )
     .user_experience(
         scene_header="Mountain Car",
@@ -89,25 +84,29 @@ slime_sceme = (
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code="""
-import gymnasium
-
-env = gymnasium.make("MountainCar-v0", render_mode="rgb_array")
-env
-        """,
+        environment_initialization_code_filepath="interactive_gym/examples/mountain_car/mountain_car_rgb_env.py",
         packages_to_install=[
-            "swig",
-            "gymnasium[box2d]",
+            "gymnasium==1.0.0",
+            "numpy",
         ],
     )
 )
 
 
+end_scene = (
+    static_scene.EndScene()
+    .scene(scene_id="mountain_car_end_scene")
+    .display(
+        scene_header="Thanks for playing!",
+        scene_body="For more information on Interactive Gym or to contact us with any questions, visit interactive-gym.readthedocs.io!",
+    )
+)
+
 stager = stager.Stager(
     scenes=[
         start_scene,
         slime_sceme,
-        oc_scenes.end_scene,
+        end_scene,
     ]
 )
 
