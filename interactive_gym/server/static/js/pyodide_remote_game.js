@@ -122,15 +122,62 @@ elif isisntance(obs, dict):
 else:
     raise ValueError(f"obs is not a valid type, got {type(obs)} but need array, dict, or dict of dicts.")
 
+
+if not isinstance(obs, dict):
+    obs = {"human": obs}
+
 obs, infos, render_state
         `);
         const endTime = performance.now();
         console.log(`Reset operation took ${endTime - startTime} milliseconds`);
         let [obs, infos, render_state] = await this.pyodide.toPy(result).toJs();
 
+        // Check if render_state is an RGB array (has shape and dtype properties)
+        let game_image_base64 = null;
+        if (Array.isArray(render_state) && Array.isArray(render_state[0])) {
+            // Assuming render_state is an array of arrays with [row][column][RGB values]
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            const height = render_state.length;
+            const width = render_state[0].length;
+
+            // Set canvas dimensions
+            canvas.width = width;
+            canvas.height = height;
+
+            // Create ImageData object
+            const imageData = context.createImageData(width, height);
+            const data = imageData.data;
+
+            // Populate the ImageData with pixel values from render_state
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const pixelIndex = (y * width + x) * 4; // RGBA values in ImageData
+                    const [r, g, b] = render_state[y][x];
+
+                    data[pixelIndex] = r;     // Red
+                    data[pixelIndex + 1] = g; // Green
+                    data[pixelIndex + 2] = b; // Blue
+                    data[pixelIndex + 3] = 255; // Alpha (fully opaque)
+                }
+            }
+
+            // Put the image data on the canvas
+            context.putImageData(imageData, 0, 0);
+
+            // Convert canvas to Base64 image
+            game_image_base64 = canvas.toDataURL('image/png'); // You can change 'image/png' to 'image/jpeg' if needed
+
+        }
+
+
         render_state = {
-            "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
+            "game_state_objects": game_image_base64 ? null : render_state.map(item => convertUndefinedToNull(item)),
+            "game_image_base64": game_image_base64,
+            "step": this.step_num,
         };
+
         this.step_num = 0;
         this.shouldReset = false;
 
@@ -152,7 +199,9 @@ obs, infos, render_state
         // const startTime = performance.now();
         const result = await this.pyodide.runPythonAsync(`
 ${this.config.on_game_step_code}
-agent_actions = {int(k): v for k, v in ${pyActions}.items()}
+agent_actions = {int(k) if isinstance(k, (float, int)) else k: v for k, v in ${pyActions}.items()}
+if len(agent_actions) == 1:
+    agent_actions = [*agent_actions.values()][0]
 obs, rewards, terminateds, truncateds, infos = env.step(agent_actions)
 render_state = env.render()
 
@@ -164,6 +213,18 @@ elif isisntance(obs, dict):
     obs = {k: v.reshape(-1).astype(np.float32) for k, v in obs.items()}
 else:
     raise ValueError(f"obs is not a valid type, got {type(obs)} but need array, dict, or dict of dicts.")
+
+if isinstance(rewards, (float, int)):
+    rewards = {"human": rewards}
+
+if not isinstance(obs, dict):
+    obs = {"human": obs}
+
+if not isinstance(terminateds, dict):
+    terminateds = {"human": terminateds}
+
+if not isinstance(truncateds, dict):
+    truncateds = {"human": truncateds}
 
 obs, rewards, terminateds, truncateds, infos, render_state
         `);
@@ -180,22 +241,50 @@ obs, rewards, terminateds, truncateds, infos, render_state
         this.step_num = this.step_num + 1;
 
         // Check if render_state is an RGB array (has shape and dtype properties)
+        // Check if render_state is an RGB array (has shape and dtype properties)
         let game_image_base64 = null;
-        if (render_state && render_state.shape !== undefined && render_state.dtype !== undefined) {
-            // Convert RGB array to base64 string
-            const uint8Array = new Uint8Array(render_state.toJs().buffer);
-            const blob = new Blob([uint8Array], { type: 'image/png' });
-            // Create a base64 string from the blob
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = () => {
-                game_image_base64 = reader.result.split(',')[1]; // Remove the data URL prefix
-            };
+        if (Array.isArray(render_state) && Array.isArray(render_state[0])) {
+            // Assuming render_state is an array of arrays with [row][column][RGB values]
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            const height = render_state.length;
+            const width = render_state[0].length;
+
+            // Set canvas dimensions
+            canvas.width = width;
+            canvas.height = height;
+
+            // Create ImageData object
+            const imageData = context.createImageData(width, height);
+            const data = imageData.data;
+
+            // Populate the ImageData with pixel values from render_state
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const pixelIndex = (y * width + x) * 4; // RGBA values in ImageData
+                    const [r, g, b] = render_state[y][x];
+
+                    data[pixelIndex] = r;     // Red
+                    data[pixelIndex + 1] = g; // Green
+                    data[pixelIndex + 2] = b; // Blue
+                    data[pixelIndex + 3] = 255; // Alpha (fully opaque)
+                }
+            }
+
+            // Put the image data on the canvas
+            context.putImageData(imageData, 0, 0);
+
+            // Convert canvas to Base64 image
+            game_image_base64 = canvas.toDataURL('image/png'); // You can change 'image/png' to 'image/jpeg' if needed
         }
+
+        
 
         render_state = {
             "game_state_objects": game_image_base64 ? null : render_state.map(item => convertUndefinedToNull(item)),
-            "game_image_base64": game_image_base64
+            "game_image_base64": game_image_base64,
+            "step": this.step_num,
         };
 
         ui_utils.updateHUDText(this.getHUDText());
