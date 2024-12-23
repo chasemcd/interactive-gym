@@ -333,10 +333,8 @@ class GymScene extends Phaser.Scene {
             actions[human_policy_agent_id] = this.getHumanAction();
         }
 
-
         // Loop over the policy mapping and populate the actions dictionary with bot actions
-        for (let agentID in Object.keys(this.scene_metadata.policy_mapping)) {
-            // Skip if the agent is the human
+        for (let [agentID, policy] of Object.entries(this.scene_metadata.policy_mapping)) {
             if (agentID == human_policy_agent_id) {
                 continue;
             }
@@ -408,17 +406,21 @@ class GymScene extends Phaser.Scene {
             }
         } else if (this.scene_metadata.input_mode === "pressed_keys") {
             // If pressed_keys, we get the (potentially composite) action from the currently pressed keys
-            if (pressedKeys.length == 0) {
+            if (pressedKeys == undefined || pressedKeys.length == 0 || Object.keys(pressedKeys).length === 0) {
                 // if no keys are pressed, we'll use the default action
                 human_action = this.scene_metadata.default_action;
-            } else if (pressedKeys.length == 1) {
+            } else if (Object.keys(pressedKeys).length === 1) {
                 human_action = this.scene_metadata.action_mapping[Object.keys(pressedKeys)[0]];
+                console.log("defined action!", human_action)
                 if (human_action == undefined) {
                     human_action = this.scene_metadata.default_action;
                 }
             } else {
                 // multiple keys are pressed so check for a composite action
                 human_action = this.scene_metadata.action_mapping[this.generateCompositeAction()[0]];
+                if (human_action == undefined) {
+                    human_action = this.scene_metadata.default_action;
+                }
             }
         }
 
@@ -448,8 +450,17 @@ class GymScene extends Phaser.Scene {
                     break;
                 }
             }
+        } else {
+            // For single key actions, find the first pressed key that has a valid mapping
+            const validKeys = Object.keys(pressedKeys).filter(key => 
+                key in this.scene_metadata.action_mapping
+            );
+            if (validKeys.length > 0) {
+                pressedKeys = [validKeys[0]];
+            } else {
+                pressedKeys = undefined;
+            }
         }
-    
         return pressedKeys;
     }
 
@@ -507,7 +518,9 @@ class GymScene extends Phaser.Scene {
             }, this);
 
             // Load the new image
-            var base64String = 'data:image/png;base64,' + this.state.game_image_base64; // Replace with your actual Base64 string
+            var base64String = this.state.game_image_base64.startsWith('data:image/png;base64,') ? 
+                this.state.game_image_base64 : 
+                'data:image/png;base64,' + this.state.game_image_base64;
 
             // Success here will trigger the `addtexture` callback
             this.textures.addBase64(`curStateImage_${this.state.step}`, base64String);
