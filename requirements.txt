@@ -1,12 +1,2 @@
-eventlet==0.38.2
-Flask==3.1.0
-Flask_SocketIO==5.3.6
-flatten_dict==0.4.2
-gymnasium==0.29.1
-msgpack_python==0.5.6
+gymnasium==1.0.0
 numpy==2.2.1
-onnxruntime==1.16.3
-pandas==2.2.3
-redis==5.0.7
-scipy==1.14.1
-setuptools==68.2.2
