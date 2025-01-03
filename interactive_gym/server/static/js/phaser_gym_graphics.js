@@ -353,7 +353,7 @@ class GymScene extends Phaser.Scene {
             // Check if the policy mapping ends with .onnx to indicate an ONNX model
             if (policyID.endsWith(".onnx")) {
                 // Cast the agent ID to an integer
-                let observation = currentObservations.get(parseInt(agentID));
+                let observation = currentObservations.get(isNaN(agentID) ? agentID : parseInt(agentID));
                 this.queryBotPolicy(agentID, policyID, observation);
             } else if (policyID === "random") {
                 // If the policy is random, return a random action
@@ -411,7 +411,6 @@ class GymScene extends Phaser.Scene {
                 human_action = this.scene_metadata.default_action;
             } else if (Object.keys(pressedKeys).length === 1) {
                 human_action = this.scene_metadata.action_mapping[Object.keys(pressedKeys)[0]];
-                console.log("defined action!", human_action)
                 if (human_action == undefined) {
                     human_action = this.scene_metadata.default_action;
                 }
@@ -429,39 +428,46 @@ class GymScene extends Phaser.Scene {
 
     generateCompositeAction() {
         // TODO: Set this in the config so we don't recalculate every time
+        let compPressedKeys = undefined;
         const maxCompositeActionSize = Math.max(
             ...Object.keys(this.scene_metadata.action_mapping)
-                .filter(key => Array.isArray(key))
-                .map(key => key.length),
+                .filter(key => typeof key === 'string' && key.includes(','))
+                .map(key => key.split(',').length),
             0
         );
     
         if (maxCompositeActionSize > 1) {
-            const compositeActions = Object.keys(this.scene_metadata)
-                .filter(key => Array.isArray(key))
-                .map(key => key.sort());
-    
-            const combinations = combinationsOf(pressedKeys, maxCompositeActionSize);
-    
+            const compositeActions = Object.keys(this.scene_metadata.action_mapping)
+            .filter(key => typeof key === 'string' && key.includes(','))
+
+            let curKeys = Object.keys(pressedKeys);
+            let combinations = [];
+            for (let k = 2; k <= maxCompositeActionSize; k++) {
+                combinations = combinations.concat(combinationsOf(curKeys, k));
+            }
+            
             for (const combination of combinations) {
-                const sortedCombination = combination.sort();
-                if (compositeActions.some(action => arraysEqual(action, sortedCombination))) {
-                    pressedKeys = [sortedCombination];
+                const sortedCombination = combination.sort().join(',');
+                if (compositeActions.includes(sortedCombination)) {
+                    compPressedKeys = [sortedCombination];
                     break;
                 }
             }
-        } else {
+        } 
+        
+        // If we don't get a composite action, check if any single-keys within the composite work
+        if (compPressedKeys == undefined) {
             // For single key actions, find the first pressed key that has a valid mapping
             const validKeys = Object.keys(pressedKeys).filter(key => 
                 key in this.scene_metadata.action_mapping
             );
             if (validKeys.length > 0) {
-                pressedKeys = [validKeys[0]];
+                compPressedKeys = [validKeys[0]];
             } else {
-                pressedKeys = undefined;
+                compPressedKeys = [undefined];
             }
         }
-        return pressedKeys;
+        return compPressedKeys;
     }
 
     processRendering() {
@@ -832,7 +838,7 @@ class GymScene extends Phaser.Scene {
 
 function combinationsOf(arr, k) {
     if (k === 0) return [[]];
-    if (arr.length === 0) return [];
+    if (arr.length === 0) return [[]];
 
     const [head, ...tail] = arr;
     const withoutHead = combinationsOf(tail, k);
