@@ -31,9 +31,6 @@ async function inferenceONNXPolicy(policyID, observation) {
         }
     }
 
-    
-
-
     // Ensure observation is a Float32Array
     if (typeof observation === 'object' && !Array.isArray(observation)) {
         // If observation is a dictionary
@@ -72,9 +69,11 @@ async function inferenceONNXPolicy(policyID, observation) {
     // and convert to an ort.Tensor
     const inputTensor = new window.ort.Tensor('float32', observation, [1, observation.length]);
 
+    // TODO(chase): We need to add the onnx inputs to the configuration!
     const feeds = {
         'obs': inputTensor,
-        'seq_lens': new window.ort.Tensor('float32', new Float32Array([1])),
+        // 'seq_lens': new window.ort.Tensor('float32', new Float32Array([1])),
+        // 'state_ins': [new window.ort.Tensor('float32', new Float32Array([0]), [1])]
     };
 
     // Check if the model is recurrent by inspecting input names, we're following
@@ -100,8 +99,12 @@ async function inferenceONNXPolicy(policyID, observation) {
                 feeds[name] = hiddenStates[policyID][name];
             }
         });
-    }
 
+        feeds['seq_lens'] = new window.ort.Tensor('float32', new Float32Array([1]));
+    } else {
+        feeds['state_ins'] = new window.ort.Tensor('float32', new Float32Array([1]));
+
+    }
 
     // Run inference
     const results = await session.run(feeds);
