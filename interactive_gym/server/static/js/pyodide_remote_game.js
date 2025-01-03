@@ -110,14 +110,15 @@ env
         console.log("Resetting the environment");
         const startTime = performance.now();
         const result = await this.pyodide.runPythonAsync(`
+import numpy as np
 obs, infos = env.reset()
 render_state = env.render()
 
 if not isinstance(obs, dict):
     obs = obs.reshape(-1).astype(np.float32)
-elif isisntance(obs, dict) and isinstance([*obs.values()][0], dict):
+elif isinstance(obs, dict) and isinstance([*obs.values()][0], dict):
     obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
-elif isisntance(obs, dict):
+elif isinstance(obs, dict):
     obs = {k: v.reshape(-1).astype(np.float32) for k, v in obs.items()}
 else:
     raise ValueError(f"obs is not a valid type, got {type(obs)} but need array, dict, or dict of dicts.")
@@ -199,17 +200,15 @@ obs, infos, render_state
         // const startTime = performance.now();
         const result = await this.pyodide.runPythonAsync(`
 ${this.config.on_game_step_code}
-agent_actions = {int(k) if isinstance(k, (float, int)) else k: v for k, v in ${pyActions}.items()}
-if len(agent_actions) == 1:
-    agent_actions = [*agent_actions.values()][0]
+agent_actions = {int(k) if k.isnumeric() or isinstance(k, (float, int)) else k: v for k, v in ${pyActions}.items()}
 obs, rewards, terminateds, truncateds, infos = env.step(agent_actions)
 render_state = env.render()
 
 if not isinstance(obs, dict):
     obs = obs.reshape(-1).astype(np.float32)
-elif isisntance(obs, dict) and isinstance([*obs.values()][0], dict):
+elif isinstance(obs, dict) and isinstance([*obs.values()][0], dict):
     obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
-elif isisntance(obs, dict):
+elif isinstance(obs, dict):
     obs = {k: v.reshape(-1).astype(np.float32) for k, v in obs.items()}
 else:
     raise ValueError(f"obs is not a valid type, got {type(obs)} but need array, dict, or dict of dicts.")
