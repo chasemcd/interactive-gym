@@ -302,15 +302,17 @@ class GymScene(scene.Scene):
         :rtype: GymScene
         """
         if action_mapping is not NotProvided:
-            # ensure the composite action tuples are sorted
-            sorted_tuple_action_map = {}
+            # ensure the composite action tuples are sorted and
+            # formatted as strings to work with serialization
+            converted_action_mapping = {}
             for k, v in action_mapping.items():
                 if isinstance(k, tuple):
                     self.game_has_composite_actions = True
-                    sorted_tuple_action_map[tuple(sorted(k))] = v
+                    converted_action_mapping[",".join(list(sorted(k)))] = v
                 else:
-                    sorted_tuple_action_map[k] = v
-            self.action_mapping = action_mapping
+                    converted_action_mapping[k] = v
+            print(converted_action_mapping)
+            self.action_mapping = converted_action_mapping
 
         if action_population_method is not NotProvided:
             self.action_population_method = action_population_method
