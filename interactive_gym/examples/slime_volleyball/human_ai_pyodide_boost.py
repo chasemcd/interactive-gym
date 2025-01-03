@@ -26,9 +26,8 @@ from interactive_gym.configurations import (
 
 POLICY_MAPPING = {
     "agent_right": configuration_constants.PolicyTypes.Human,
-    "agent_left": "static/assets/slime_volleyball/models/model.onnx",
+    "agent_left": "static/assets/slime_volleyball/models/boost_model.onnx",
 }
-
 
 NOOP = 0
 LEFT = 1
@@ -36,6 +35,12 @@ UPLEFT = 2
 UP = 3
 UPRIGHT = 4
 RIGHT = 5
+BOOST = 6
+LEFT_BOOST = 7
+UPLEFT_BOOST = 8
+UP_BOOST = 9
+UPRIGHT_BOOST = 10
+RIGHT_BOOST = 11
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
 ACTION_MAPPING = {
@@ -44,8 +49,13 @@ ACTION_MAPPING = {
     "ArrowUp": UP,
     ("ArrowRight", "ArrowUp"): UPRIGHT,
     "ArrowRight": RIGHT,
+    " ": BOOST,
+    ("ArrowLeft", " "): LEFT_BOOST,
+    ("ArrowUp", " "): UP_BOOST,
+    ("ArrowRight", " "): RIGHT_BOOST,
+    ("ArrowLeft", "ArrowUp", " "): UPLEFT_BOOST,
+    ("ArrowRight", "ArrowUp", " "): UPRIGHT_BOOST,
 }
-
 
 # Define the start scene, which is the landing page for participants.
 start_scene = (
@@ -96,15 +106,13 @@ slime_scene = (
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code_filepath="interactive_gym/examples/slime_volleyball/slimevb_env.py",
+        environment_initialization_code_filepath="interactive_gym/examples/slime_volleyball/slimevb_boost_env.py",
         packages_to_install=[
-            "slimevb==0.0.2",
+            "slimevb==0.1.0",
             "opencv-python",
         ],
     )
 )
-
-# slime_scene.action_mapping = ACTION_MAPPING
 
 
 stager = stager.Stager(
