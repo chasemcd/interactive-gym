@@ -25,7 +25,8 @@ from interactive_gym.configurations import (
 )
 
 POLICY_MAPPING = {
-    "agent_right": configuration_constants.PolicyTypes.Human,
+    # "agent_right": configuration_constants.PolicyTypes.Human,
+    "agent_right": "static/assets/slime_volleyball/models/boost_model.onnx",
     "agent_left": "static/assets/slime_volleyball/models/boost_model.onnx",
 }
 

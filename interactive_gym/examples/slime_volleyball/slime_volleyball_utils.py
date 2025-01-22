@@ -3,8 +3,8 @@ from __future__ import annotations
 import math
 import os
 
-from slime_volleyball import slimevolley_env
-from slime_volleyball.core import constants
+from slimevb import slimevolley_env
+from slimevb.core import constants
 
 from interactive_gym.configurations import object_contexts, remote_config
 from interactive_gym.server import remote_game
