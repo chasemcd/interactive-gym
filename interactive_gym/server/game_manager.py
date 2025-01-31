@@ -1,22 +1,16 @@
 from __future__ import annotations
 from typing import Any
 
-import atexit
 import base64
 import itertools
 import logging
-import os
 import random
-import secrets
-import threading
 import time
 import uuid
 
 import eventlet
 import flask
 import flask_socketio
-import redis
-from eventlet import queue
 
 from interactive_gym.utils.typing import SubjectID, GameID, RoomID
 
