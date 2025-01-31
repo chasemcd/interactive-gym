@@ -1,2 +1,9 @@
 gymnasium
 numpy
+eventlet
+msgpack
+pandas
+flatten_dict
+flask
+flask_socketio
+redis
