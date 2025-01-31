@@ -108,6 +108,9 @@ try:
 except redis.exceptions.ConnectionError:
     print("Redis is not available for message queue. Proceeding without it...")
     message_queue = None
+except Exception as e:
+    print(f"An unexpected error occurred when trying to connect to redis: {e}")
+    message_queue = None
 
 socketio = flask_socketio.SocketIO(
     app,
