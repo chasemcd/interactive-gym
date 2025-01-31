@@ -25,6 +25,13 @@ from interactive_gym.server import utils
 from interactive_gym.scenes import stager
 from interactive_gym.server import game_manager as gm
 
+try:
+    import redis
+except Exception as e:
+    print(
+        f"Unable to import redis, got the following Exception. If you want to use the message queue, you must install redis. {e}"
+    )
+
 
 def setup_logger(name, log_file, level=logging.INFO):
     formatter = logging.Formatter(
