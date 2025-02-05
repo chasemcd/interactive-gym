@@ -134,7 +134,7 @@ obs, infos, render_state
         let [obs, infos, render_state] = await this.pyodide.toPy(result).toJs();
 
         // Check if render_state is an RGB array (has shape and dtype properties)
-        let game_image_base64 = null;
+        let game_image_binary = null;
         if (Array.isArray(render_state) && Array.isArray(render_state[0])) {
             // Assuming render_state is an array of arrays with [row][column][RGB values]
             const canvas = document.createElement('canvas');

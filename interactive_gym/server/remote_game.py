@@ -200,12 +200,6 @@ class RemoteGameV2:
 
         try:
             self.pending_actions[subject_id].put(action, block=False)
-
-            if subject_id == "agent_left":
-                print(
-                    self.pending_actions[subject_id].qsize(),
-                    "enqueue_action!!!",
-                )
         except queue.Full:
             pass
 
@@ -240,11 +234,8 @@ class RemoteGameV2:
             # should be keying it by subject id.
             index_id = pid
 
-            print(self.human_players, "human_players")
-
             try:
                 action = self.pending_actions[index_id].get(block=False)
-                print(action, "tick!!!")
             except queue.Empty:
                 if (
                     self.scene.action_population_method

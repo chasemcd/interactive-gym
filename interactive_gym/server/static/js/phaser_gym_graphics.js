@@ -191,6 +191,7 @@ class GraphicsManager {
 }
 
 
+
 class GymScene extends Phaser.Scene {
 
     constructor(config) {
@@ -206,7 +207,7 @@ class GymScene extends Phaser.Scene {
         this.scene_metadata = config.scene_metadata;
         this.pyodide_remote_game = config.pyodide_remote_game;
         this.isProcessingPyodide = false;
-
+        this.stateImageSprite = null;
         if (this.pyodide_remote_game) {
             this.pyodide_remote_game.reinitialize_environment(this.pyodide_remote_game.config);
         }
@@ -248,6 +249,7 @@ class GymScene extends Phaser.Scene {
         this.canvas.id = "phaser-canvas";
         this.height = this.canvas.height;
         this.width = this.canvas.width;
+        this.stateImageSprite = this.add.image(0, 0, "curStateImage").setOrigin(0, 0);
 
         // Check if the background is just a color, if so fill
         if (this._checkIfHex(this.background)) {
@@ -491,45 +493,109 @@ class GymScene extends Phaser.Scene {
         }
 
         let game_state_objects = this.state.game_state_objects;
-        let game_state_image = this.state.game_image_base64;
+        let game_state_image = this.state.game_image_binary;
 
         // If we don't have any object contexts, we render the image from `env.render()`
         // NOTE: This approach is very inefficient and not good practice! It's oriented
         //  to testing or local experiments.
         if (game_state_objects == null && !(game_state_image == null)) {
 
-            // Remove the current image
-            let oldImage;
+            const blob = new Blob([game_state_image], { type: 'image/jpeg' });
+            const url = URL.createObjectURL(blob);
 
-            if (this.temp_object_map.hasOwnProperty("curStateImage")) {
-                oldImage = this.temp_object_map['curStateImage'];
-            }
+            // // This will trigger when the new texture is added
+            // this.textures.once('addtexture', function () {
 
-            // This will trigger when the new texture is added
-            this.textures.once('addtexture', function () {
+            //     this.stateImageSprite.setTexture("curStateImage");
+            //     console.log("set texture curstateImage");
 
-                // Place the updated image and store so we can remove later
-                this.temp_object_map['curStateImage'] = this.add.image(
-                    0,
-                    0,
-                    `curStateImage_${this.state.step}`
-                );
-                this.temp_object_map['curStateImage'].setOrigin(0, 0);
+            // }, this);
 
-                // Remove the old image
-                if (!(oldImage == null)) {
-                    oldImage.destroy();
+            // this.textures.addImage("curStateImage", url, () => {
+            //     URL.revokeObjectURL(url);
+            //     if (this.stateImageSprite) {
+            //         this.stateImageSprite.setTexture("curStateImage");
+            //     }
+            //     console.log("set texture curstateImage in addBase64");
+            //  });        
+            
+                // Create an image element to load Blob URL
+            const img = new Image();
+            img.crossOrigin = "anonymous"; // Prevent CORS issues
+            img.src = url;
+
+            img.onload = () => {
+                console.log("Image loaded successfully:", img.width, img.height);
+
+                // Create a temporary canvas to ensure it's WebGL-compatible
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                // Set canvas dimensions to match the image
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                // ✅ **Do NOT remove the old texture immediately!**
+                // ✅ **Ensure old texture is removed first**
+                if (this.textures.exists("curStateImage")) {
+                    this.textures.remove("curStateImage");
                 }
 
-            }, this);
+                // ✅ **Now safely add the new texture**
+                this.textures.addImage("curStateImage", canvas);
 
-            // Load the new image
-            var base64String = this.state.game_image_base64.startsWith('data:image/png;base64,') ? 
-                this.state.game_image_base64 : 
-                'data:image/png;base64,' + this.state.game_image_base64;
+                if (this.stateImageSprite) {
+                    this.stateImageSprite.setTexture("curStateImage");
+                } else {
+                    this.stateImageSprite = this.add.image(0, 0, "curStateImage").setOrigin(0, 0);
+                }
 
-            // Success here will trigger the `addtexture` callback
-            this.textures.addBase64(`curStateImage_${this.state.step}`, base64String);
+                // Cleanup URL to prevent memory leaks
+                URL.revokeObjectURL(url);
+
+                // Cleanup URL to prevent memory leaks
+                URL.revokeObjectURL(url);
+            };
+
+            img.onerror = (err) => {
+                console.error("Failed to load image:", err);
+            };
+
+            // // Remove the current image
+            // let oldImage;
+
+            // if (this.temp_object_map.hasOwnProperty("curStateImage")) {
+            //     oldImage = this.temp_object_map['curStateImage'];
+            // }
+
+            // // This will trigger when the new texture is added
+            // this.textures.once('addtexture', function () {
+
+            //     // Place the updated image and store so we can remove later
+            //     this.temp_object_map['curStateImage'] = this.add.image(
+            //         0,
+            //         0,
+            //         `curStateImage_${this.state.step}`
+            //     );
+            //     this.temp_object_map['curStateImage'].setOrigin(0, 0);
+
+            //     // Remove the old image
+            //     if (!(oldImage == null)) {
+            //         oldImage.destroy();
+            //     }
+
+            // }, this);
+
+            // // Load the new image
+            // var base64String = this.state.game_image_base64.startsWith('data:image/png;base64,') ? 
+            //     this.state.game_image_binary : 
+            //     'data:image/png;base64,' + this.state.game_image_binary;
+
+            // // Success here will trigger the `addtexture` callback
+            // this.textures.addBase64(`curStateImage_${this.state.step}`, base64String);
+
+
 
 
         } else if (!(game_state_objects == null)) {

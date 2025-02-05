@@ -491,7 +491,6 @@ class GameManager:
                 f"Subject {subject_id} is not in game {game.game_id} but we received key presses."
             )
 
-        print(pressed_keys, "process_pressed_keys")
         # No keys pressed, queue the default action
         if len(pressed_keys) == 0:
             game.enqueue_action(subject_agent_id, self.scene.default_action)
@@ -516,7 +515,6 @@ class GameManager:
 
         assert action is not None
 
-        print("enqueue_action", action, "human_player", subject_agent_id)
         game.enqueue_action(subject_agent_id, action)
 
     def generate_composite_action(self, pressed_keys) -> list[tuple[str]]:
@@ -563,9 +561,12 @@ class GameManager:
             assert (
                 game.env.render_mode == "rgb_array"
             ), "Env must be using render mode `rgb_array`!"
+
             game_image = game.env.render()
-            _, encoded_image = cv2.imencode(".png", game_image)
-            encoded_image = base64.b64encode(encoded_image).decode()
+            _, encoded_image = cv2.imencode(
+                ".jpg", game_image, [cv2.IMWRITE_JPEG_QUALITY, 75]
+            )
+            # encoded_image = base64.b64encode(encoded_image).decode()
 
         hud_text = (
             self.scene.hud_text_fn(game)
@@ -580,7 +581,7 @@ class GameManager:
             "environment_state",
             {
                 "game_state_objects": state,
-                "game_image_base64": encoded_image,
+                "game_image_binary": encoded_image.tobytes(),
                 "step": game.tick_num,
                 "hud_text": hud_text,
             },
