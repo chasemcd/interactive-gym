@@ -19,14 +19,23 @@ class ExperimentConfig:
         self.max_ping = 100000
         self.min_ping_measurements = 5
 
+        # Experiment data
+        self.save_experiment_data = True
+
     def experiment(
-        self, experiment_id: str = NotProvided, stager: Stager = NotProvided
+        self,
+        experiment_id: str = NotProvided,
+        stager: Stager = NotProvided,
+        save_experiment_data: bool = True,
     ) -> ExperimentConfig:
         if experiment_id is not NotProvided:
             self.experiment_id = experiment_id
 
         if stager is not NotProvided:
             self.stager = stager
+
+        if save_experiment_data is not NotProvided:
+            self.save_experiment_data = save_experiment_data
 
         return self
 

@@ -359,35 +359,37 @@ def send_pressed_keys(data):
     """
     Translate pressed keys into game action and add them to the pending_actions queue.
     """
-    return
-    # # sess_id = flask.request.sid
-    # subject_id = get_subject_id_from_session_id(flask.request.sid)
-    # # subject_id = flask.session.get("subject_id")
-    # # print(subject_id, sess_id, STAGERS)
+    # return
+    # sess_id = flask.request.sid
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+    subject_id = flask.session.get("subject_id")
+    # print(subject_id, sess_id, STAGERS)
 
     # # TODO(chase): figure out why we're getting a different session ID here...
-    # participant_stager = STAGERS.get(subject_id, None)
-    # if participant_stager is None:
-    #     logger.error(
-    #         f"Pressed keys requested for {subject_id} but they don't have a Stager."
-    #     )
-    #     return
+    participant_stager = STAGERS.get(subject_id, None)
+    if participant_stager is None:
+        logger.error(
+            f"Pressed keys requested for {subject_id} but they don't have a Stager."
+        )
+        return
 
-    # current_scene = participant_stager.current_scene
-    # game_manager = GAME_MANAGERS.get(current_scene.scene_id, None)
-    # # game = game_manager.get_subject_game(subject_id)
+    current_scene = participant_stager.current_scene
+    game_manager = GAME_MANAGERS.get(current_scene.scene_id, None)
+    # game = game_manager.get_subject_game(subject_id)
 
-    # client_reported_server_session_id = data.get("server_session_id")
+    client_reported_server_session_id = data.get("server_session_id")
+    # print(client_reported_server_session_id, "send_pressed_keys")
+    # print(sess_id, subject_id, "send_pressed_keys")
     # if not is_valid_session(
     #     client_reported_server_session_id, subject_id, "send_pressed_keys"
     # ):
     #     return
 
-    # pressed_keys = data["pressed_keys"]
+    pressed_keys = data["pressed_keys"]
 
-    # game_manager.process_pressed_keys(
-    #     subject_id=subject_id, pressed_keys=pressed_keys
-    # )
+    game_manager.process_pressed_keys(
+        subject_id=subject_id, pressed_keys=pressed_keys
+    )
 
 
 @socketio.on("reset_complete")

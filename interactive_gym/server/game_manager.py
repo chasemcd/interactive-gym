@@ -326,11 +326,11 @@ class GameManager:
         del self.subject_games[subject_id]
         del self.subject_rooms[subject_id]
 
-        # with app.app_context():
-        self.sio.leave_room(game_id)
+        # Use flask_socketio.leave_room instead of self.sio.leave_room
+        flask_socketio.leave_room(game_id)
 
         # If the game is now empty, remove it
-        if not game.remote_game.cur_num_human_players():
+        if not game.cur_num_human_players():
             self._remove_game(game_id)
 
     def start_game(self, game: remote_game.RemoteGameV2):
@@ -372,18 +372,21 @@ class GameManager:
             with game.lock:
                 if self.scene.callback is not None:
                     self.scene.callback.on_game_tick_start(game)
+
                 game.tick()
 
                 if self.scene.callback is not None:
                     self.scene.callback.on_game_tick_end(game)
 
             self.render_server_game(game)
+
             if (
                 self.scene.input_mode
                 == configuration_constants.InputModes.PressedKeys
             ):
                 self.sio.emit("request_pressed_keys", {})
-            self.sio.sleep(1 / game.config.fps)
+
+            self.sio.sleep(1 / game.scene.fps)
 
             if (
                 game.status == remote_game.GameStatus.Reset
@@ -398,7 +401,7 @@ class GameManager:
                     "game_reset",
                     {
                         "timeout": self.scene.reset_timeout,
-                        "config": self.scene.to_dict(serializable=True),
+                        "config": self.scene.scene_metadata,
                         "room": game.game_id,
                     },
                     room=game.game_id,
@@ -422,23 +425,23 @@ class GameManager:
 
                 self.render_server_game(game)
 
-                self.sio.sleep(1 / game.config.fps)
+                self.sio.sleep(1 / game.scene.fps)
 
-            with game.lock:
-                logger.info(
-                    f"Game loop ended for {game.game_id}, ending and cleaning up."
-                )
-                if game.status != remote_game.GameStatus.Inactive:
-                    game.tear_down()
+        with game.lock:
+            logger.info(
+                f"Game loop ended for {game.game_id}, ending and cleaning up."
+            )
+            if game.status != remote_game.GameStatus.Inactive:
+                game.tear_down()
 
-                if self.scene.callback is not None:
-                    self.scene.callback.on_game_end(game)
-                self.sio.emit(
-                    "end_game",
-                    {},
-                    room=game.game_id,
-                )
-                self.cleanup_game(game)
+            if self.scene.callback is not None:
+                self.scene.callback.on_game_end(game)
+            self.sio.emit(
+                "end_game",
+                {},
+                room=game.game_id,
+            )
+            self.cleanup_game(game)
 
     def trigger_reset(self, subject_id: SubjectID):
         game = self.get_subject_game(subject_id)
@@ -488,6 +491,7 @@ class GameManager:
                 f"Subject {subject_id} is not in game {game.game_id} but we received key presses."
             )
 
+        print(pressed_keys, "process_pressed_keys")
         # No keys pressed, queue the default action
         if len(pressed_keys) == 0:
             game.enqueue_action(subject_agent_id, self.scene.default_action)
@@ -512,6 +516,7 @@ class GameManager:
 
         assert action is not None
 
+        print("enqueue_action", action, "human_player", subject_agent_id)
         game.enqueue_action(subject_agent_id, action)
 
     def generate_composite_action(self, pressed_keys) -> list[tuple[str]]:

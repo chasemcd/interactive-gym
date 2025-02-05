@@ -66,7 +66,11 @@ if __name__ == "__main__":
 
     experiment_config = (
         experiment_config.ExperimentConfig()
-        .experiment(stager=stager, experiment_id="overcooked_controllable")
+        .experiment(
+            stager=stager,
+            experiment_id="overcooked_controllable",
+            save_experiment_data=False,
+        )
         .hosting(port=5704, host="0.0.0.0")
     )
 

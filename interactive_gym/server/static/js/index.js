@@ -1,4 +1,4 @@
-import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData} from './phaser_gym_graphics.js';
+import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData, pressedKeys} from './phaser_gym_graphics.js';
 import {RemoteGame} from './pyodide_remote_game.js';
 import * as ui_utils from './ui_utils.js';
 
@@ -268,6 +268,14 @@ socket.on("game_reset", function(data) {
 
     let scene_metadata = data.scene_metadata
 
+    if (!scene_metadata) {
+        scene_metadata = data.config;
+    }
+
+    if (!scene_metadata) {
+        console.log("scene_metadata is undefined on game reset!")
+        return;
+    }   
 
     // Initialize game
     let graphics_config = {
@@ -286,7 +294,7 @@ socket.on("game_reset", function(data) {
         'scene_metadata': scene_metadata,
     };
 
-    input_mode = scene_metadata.input_mode;
+    let input_mode = scene_metadata.input_mode;
 
     startResetCountdown(data.timeout, function() {
         // This function will be called after the countdown
@@ -393,7 +401,8 @@ socket.on('update_game_page_text', function(data) {
 // var pressedKeys = {};
 
 socket.on('request_pressed_keys', function(data) {
-    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(ui_utils.pressedKeys), session_id: window.sessionId});
+    console.log("request_pressed_keys", ui_utils.pressedKeys, pressedKeys, window.sessionId)
+    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(pressedKeys), session_id: window.sessionId});
 });
 
 

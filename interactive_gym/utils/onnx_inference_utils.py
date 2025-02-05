@@ -26,12 +26,22 @@ def inference_onnx_model(
     model_path: str,
 ) -> np.ndarray:
     """Given an input dict and path to an ONNX model, return the model outputs"""
-    input_dict["seq_lens"] = [
-        1,
-    ]
-    print(list(input_dict.keys()))
+    # input_dict["seq_lens"] = [
+    #     1,
+    # ]
+    # print(list(input_dict.keys()))
     outputs = ORT_SESSIONS[model_path].run(["output"], input_dict)
     return outputs
+
+
+def onnx_model_inference_fn(
+    observation: dict[str, np.ndarray] | np.ndarray, onnx_model_path: str
+):
+    # if it's a dictionary observation, the onnx model expects a flattened input array
+    if isinstance(observation, dict):
+        observation = np.hstack(list(observation.values())).reshape((1, -1))
+
+    # TODO(chase): add compatibility with recurrent networks, must pass state in and seq lens
 
 
 def onnx_model_inference_fn(
@@ -45,15 +55,28 @@ def onnx_model_inference_fn(
     model_outputs = inference_onnx_model(
         {
             "obs": observation.astype(np.float32),
-            "state_ins": [
-                np.zeros((1, 256), dtype=np.float32) for _ in range(2)
-            ],
-            "seq_lens": np.array([1], dtype=np.int32),
+            "state_ins": np.array([0.0], dtype=np.float32),  # rllib artifact
         },
         model_path=onnx_model_path,
     )[0].reshape(
         -1
     )  # outputs list of a batch. batch size always 1 so index list and reshape
+
+    action = inference_utils.sample_action_via_softmax(model_outputs)
+
+    return action
+    # model_outputs = inference_onnx_model(
+    #     {
+    #         "obs": observation.astype(np.float32),
+    #         # "state_ins": [
+    #         #     np.zeros((1, 256), dtype=np.float32) for _ in range(2)
+    #         # ],
+    #         # "seq_lens": np.array([1], dtype=np.int32),
+    #     },
+    #     model_path=onnx_model_path,
+    # )[0].reshape(
+    #     -1
+    # )  # outputs list of a batch. batch size always 1 so index list and reshape
 
     action = inference_utils.sample_action_via_softmax(model_outputs)
 

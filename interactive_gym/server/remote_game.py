@@ -96,7 +96,7 @@ class RemoteGameV2:
 
     def _build_env(self) -> None:
         self.env = self.scene.env_creator(
-            **self.config.env_config, render_mode="rgb_array"
+            **self.scene.env_config, render_mode="rgb_array"
         )
 
     def _load_policies(self) -> None:
@@ -200,6 +200,12 @@ class RemoteGameV2:
 
         try:
             self.pending_actions[subject_id].put(action, block=False)
+
+            if subject_id == "agent_left":
+                print(
+                    self.pending_actions[subject_id].qsize(),
+                    "enqueue_action!!!",
+                )
         except queue.Full:
             pass
 
@@ -222,19 +228,29 @@ class RemoteGameV2:
         # If the queue is empty, we have a mechanism for deciding which action to submit
         # Either the previous submitted action or the default action.
         player_actions = {}
+
         for pid, sid in self.human_players.items():
             action = None
             # Attempt to get an action from the action queue
             # If there's no action, use default or previous depending
             # on the method specified.
+
+            # TODO(chase): Right now pending actions is keyed by the game agent id
+            # rather than the subject id. Check if this is correct or we
+            # should be keying it by subject id.
+            index_id = pid
+
+            print(self.human_players, "human_players")
+
             try:
-                action = self.pending_actions[sid].get(block=False)
+                action = self.pending_actions[index_id].get(block=False)
+                print(action, "tick!!!")
             except queue.Empty:
                 if (
                     self.scene.action_population_method
                     == configuration_constants.ActionSettings.PreviousSubmittedAction
                 ):
-                    action = self.prev_actions.get(pid)
+                    action = self.prev_actions.get(index_id)
 
             if action is None:
                 action = self.scene.default_action

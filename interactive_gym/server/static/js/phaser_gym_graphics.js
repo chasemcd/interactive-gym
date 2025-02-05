@@ -39,7 +39,7 @@ export function addHumanKeyPressToBuffer(action) {
     humanKeyPressBuffer.push(action);
 }
 
-var pressedKeys = {};
+export var pressedKeys = {};
 export function updatePressedKeys(updatedPressedKeys) {
     pressedKeys = updatedPressedKeys;
 }
@@ -207,7 +207,7 @@ class GymScene extends Phaser.Scene {
         this.pyodide_remote_game = config.pyodide_remote_game;
         this.isProcessingPyodide = false;
 
-        if (this.pyodide_remote_game !== undefined) {
+        if (this.pyodide_remote_game) {
             this.pyodide_remote_game.reinitialize_environment(this.pyodide_remote_game.config);
         }
     }
@@ -267,12 +267,12 @@ class GymScene extends Phaser.Scene {
 
     update() {
 
-        if (this.pyodide_remote_game !== undefined && this.pyodide_remote_game.state === "done") {
+        if (this.pyodide_remote_game && this.pyodide_remote_game.state === "done") {
             this.removeAllObjects();
             return;
         };
 
-        if (this.pyodide_remote_game !== undefined && !this.isProcessingPyodide && this.pyodide_remote_game.pyodideReady) {
+        if (this.pyodide_remote_game && !this.isProcessingPyodide && this.pyodide_remote_game.pyodideReady) {
             this.processPyodideGame();
         }
         
@@ -283,7 +283,7 @@ class GymScene extends Phaser.Scene {
 
     async processPyodideGame() {
         this.isProcessingPyodide = true;
-        if (this.pyodide_remote_game !== undefined && this.pyodide_remote_game.pyodideReady) {
+        if (this.pyodide_remote_game && this.pyodide_remote_game.pyodideReady) {
             let rewards, terminateds, truncateds, infos, render_state;
             if (this.pyodide_remote_game.shouldReset) {
                 currentObservations = {};
@@ -348,7 +348,7 @@ class GymScene extends Phaser.Scene {
         let policy_mapping = this.scene_metadata.policy_mapping;
         
         // If the bot is action on this step (according to frame skip), calculate an action.
-        if (this.pyodide_remote_game.step_num % this.scene_metadata.frame_skip == 0) {
+        if (this.pyodide_remote_game && this.pyodide_remote_game.step_num % this.scene_metadata.frame_skip == 0) {
             let policyID = policy_mapping[agentID];
             // Check if the policy mapping ends with .onnx to indicate an ONNX model
             if (policyID.endsWith(".onnx")) {
