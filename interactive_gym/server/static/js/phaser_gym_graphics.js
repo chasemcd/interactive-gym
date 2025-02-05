@@ -554,8 +554,6 @@ class GymScene extends Phaser.Scene {
                 // Cleanup URL to prevent memory leaks
                 URL.revokeObjectURL(url);
 
-                // Cleanup URL to prevent memory leaks
-                URL.revokeObjectURL(url);
             };
 
             img.onerror = (err) => {
