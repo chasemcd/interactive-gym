@@ -128,9 +128,16 @@ class GameManager:
         if game_id in self.waiting_games:
             self.waiting_games.remove(game_id)
 
-        del self.games[game_id]
-        del self.reset_events[game_id]
-        del self.waitroom_timeouts[game_id]
+        if game_id in self.games:
+            del self.games[game_id]
+        if game_id in self.reset_events:
+            del self.reset_events[game_id]
+        if game_id in self.waitroom_timeouts:
+            del self.waitroom_timeouts[game_id]
+        if game_id in self.active_games:
+            self.active_games.remove(game_id)
+        if game_id in self.waiting_games:
+            self.waiting_games.remove(game_id)
 
         self.sio.close_room(game_id)
 
@@ -441,7 +448,7 @@ class GameManager:
                 {},
                 room=game.game_id,
             )
-            self.cleanup_game(game)
+            self.cleanup_game(game.game_id)
 
     def trigger_reset(self, subject_id: SubjectID):
         game = self.get_subject_game(subject_id)
