@@ -10,6 +10,7 @@ import msgpack
 import pandas as pd
 import os
 import flatten_dict
+import json
 
 import flask
 import flask_socketio
@@ -23,6 +24,13 @@ from interactive_gym.configurations import remote_config
 from interactive_gym.server import utils
 from interactive_gym.scenes import stager
 from interactive_gym.server import game_manager as gm
+
+try:
+    import redis
+except Exception as e:
+    print(
+        f"Unable to import redis, got the following Exception. If you want to use the message queue, you must install redis. {e}"
+    )
 
 
 def setup_logger(name, log_file, level=logging.INFO):
@@ -106,6 +114,9 @@ try:
     message_queue = f"redis://{redis_host}:6379/0"
 except redis.exceptions.ConnectionError:
     print("Redis is not available for message queue. Proceeding without it...")
+    message_queue = None
+except Exception as e:
+    print(f"An unexpected error occurred when trying to connect to redis: {e}")
     message_queue = None
 
 socketio = flask_socketio.SocketIO(
@@ -348,35 +359,37 @@ def send_pressed_keys(data):
     """
     Translate pressed keys into game action and add them to the pending_actions queue.
     """
-    return
-    # # sess_id = flask.request.sid
-    # subject_id = get_subject_id_from_session_id(flask.request.sid)
-    # # subject_id = flask.session.get("subject_id")
-    # # print(subject_id, sess_id, STAGERS)
+    # return
+    # sess_id = flask.request.sid
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+    subject_id = flask.session.get("subject_id")
+    # print(subject_id, sess_id, STAGERS)
 
     # # TODO(chase): figure out why we're getting a different session ID here...
-    # participant_stager = STAGERS.get(subject_id, None)
-    # if participant_stager is None:
-    #     logger.error(
-    #         f"Pressed keys requested for {subject_id} but they don't have a Stager."
-    #     )
-    #     return
+    participant_stager = STAGERS.get(subject_id, None)
+    if participant_stager is None:
+        logger.error(
+            f"Pressed keys requested for {subject_id} but they don't have a Stager."
+        )
+        return
 
-    # current_scene = participant_stager.current_scene
-    # game_manager = GAME_MANAGERS.get(current_scene.scene_id, None)
-    # # game = game_manager.get_subject_game(subject_id)
+    current_scene = participant_stager.current_scene
+    game_manager = GAME_MANAGERS.get(current_scene.scene_id, None)
+    # game = game_manager.get_subject_game(subject_id)
 
-    # client_reported_server_session_id = data.get("server_session_id")
+    client_reported_server_session_id = data.get("server_session_id")
+    # print(client_reported_server_session_id, "send_pressed_keys")
+    # print(sess_id, subject_id, "send_pressed_keys")
     # if not is_valid_session(
     #     client_reported_server_session_id, subject_id, "send_pressed_keys"
     # ):
     #     return
 
-    # pressed_keys = data["pressed_keys"]
+    pressed_keys = data["pressed_keys"]
 
-    # game_manager.process_pressed_keys(
-    #     subject_id=subject_id, pressed_keys=pressed_keys
-    # )
+    game_manager.process_pressed_keys(
+        subject_id=subject_id, pressed_keys=pressed_keys
+    )
 
 
 @socketio.on("reset_complete")
@@ -468,6 +481,7 @@ def data_emission(data):
 
     # Generate a unique filename
     filename = f"data/{scene_id}/{subject_id}.csv"
+    globals_filename = f"data/{scene_id}/{subject_id}_globals.json"
 
     # Save as CSV
     logger.info(f"Saving {filename}")
@@ -481,6 +495,9 @@ def data_emission(data):
     df["timestamp"] = pd.to_datetime("now")
 
     df.to_csv(filename, index=False)
+
+    with open(globals_filename, "w") as f:
+        json.dump(data["interactiveGymGlobals"], f)
 
 
 @socketio.on("emit_remote_game_data")
@@ -515,10 +532,13 @@ def receive_remote_game_data(data):
 
     # Generate a unique filename
     filename = f"data/{data['scene_id']}/{subject_id}.csv"
+    globals_filename = f"data/{data['scene_id']}/{subject_id}_globals.json"
 
     # Save as CSV
     logger.info(f"Saving {filename}")
     df.to_csv(filename, index=False)
+    with open(globals_filename, "w") as f:
+        json.dump(data["interactiveGymGlobals"], f)
 
     # Also get the current scene for this participant and save the metadata
     # TODO(chase): this has issues where the data may not be received before the

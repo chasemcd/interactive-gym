@@ -11,6 +11,7 @@ export class RemoteGame {
 
     setAttributes(config) {
         this.config = config;
+        this.interactive_gym_globals = config.interactive_gym_globals;
         this.micropip = null;
         this.pyodideReady = false;
         this.state = null;
@@ -43,8 +44,14 @@ export class RemoteGame {
             this.installed_packages.push(...this.config.packages_to_install);
         }
 
+        this.pyodide.globals.set("interactive_gym_globals", this.interactive_gym_globals);
+
+
         // The code executed here must instantiate an environment `env`
         const env = await this.pyodide.runPythonAsync(`
+import js
+interactive_gym_globals = dict(js.window.interactiveGymGlobals.object_entries())
+
 ${this.config.environment_initialization_code}
 env
         `);
@@ -57,10 +64,8 @@ env
         this.pyodideReady = true;
     }
 
-
-
     async reinitialize_environment(config) {
-        this.pyodide_ready = false;
+        this.pyodideReady = false;
         // If we need additional packages from micropip,
         // install them. Look at config.packages_to_install
         // and compare it to this.installed_packages.
@@ -82,27 +87,45 @@ env
     
         // The code executed here must instantiate an environment `env`
         const env = await this.pyodide.runPythonAsync(`
-${this.config.environment_initialization_code}
+import js
+interactive_gym_globals = dict(js.window.interactiveGymGlobals.object_entries())
+print("Globals on initialization: ", interactive_gym_globals)
+${config.environment_initialization_code}
 env
         `);
 
+        console.log("env: ", env);
         if (env == undefined) {
             throw new Error("The environment was not initialized correctly. Ensure the the environment_initialization_code correctly creates an `env` object.");
         }
 
+        this.setAttributes(config);
+        this.shouldReset = true;
         this.state = "ready";
         this.pyodideReady = true;
     }
 
     async reset() {
         this.shouldReset = false;
+        console.log("Resetting the environment");
         const startTime = performance.now();
         const result = await this.pyodide.runPythonAsync(`
+import numpy as np
 obs, infos = env.reset()
 render_state = env.render()
 
-# TODO(chase): make this more generic
-obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
+if not isinstance(obs, dict):
+    obs = obs.reshape(-1).astype(np.float32)
+elif isinstance(obs, dict) and isinstance([*obs.values()][0], dict):
+    obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
+elif isinstance(obs, dict):
+    obs = {k: v.reshape(-1).astype(np.float32) for k, v in obs.items()}
+else:
+    raise ValueError(f"obs is not a valid type, got {type(obs)} but need array, dict, or dict of dicts.")
+
+
+if not isinstance(obs, dict):
+    obs = {"human": obs}
 
 obs, infos, render_state
         `);
@@ -110,9 +133,52 @@ obs, infos, render_state
         console.log(`Reset operation took ${endTime - startTime} milliseconds`);
         let [obs, infos, render_state] = await this.pyodide.toPy(result).toJs();
 
+        // Check if render_state is an RGB array (has shape and dtype properties)
+        let game_image_binary = null;
+        if (Array.isArray(render_state) && Array.isArray(render_state[0])) {
+            // Assuming render_state is an array of arrays with [row][column][RGB values]
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            const height = render_state.length;
+            const width = render_state[0].length;
+
+            // Set canvas dimensions
+            canvas.width = width;
+            canvas.height = height;
+
+            // Create ImageData object
+            const imageData = context.createImageData(width, height);
+            const data = imageData.data;
+
+            // Populate the ImageData with pixel values from render_state
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const pixelIndex = (y * width + x) * 4; // RGBA values in ImageData
+                    const [r, g, b] = render_state[y][x];
+
+                    data[pixelIndex] = r;     // Red
+                    data[pixelIndex + 1] = g; // Green
+                    data[pixelIndex + 2] = b; // Blue
+                    data[pixelIndex + 3] = 255; // Alpha (fully opaque)
+                }
+            }
+
+            // Put the image data on the canvas
+            context.putImageData(imageData, 0, 0);
+
+            // Convert canvas to Base64 image
+            game_image_base64 = canvas.toDataURL('image/png'); // You can change 'image/png' to 'image/jpeg' if needed
+
+        }
+
+
         render_state = {
-            "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
+            "game_state_objects": game_image_base64 ? null : render_state.map(item => convertUndefinedToNull(item)),
+            "game_image_base64": game_image_base64,
+            "step": this.step_num,
         };
+
         this.step_num = 0;
         this.shouldReset = false;
 
@@ -133,10 +199,32 @@ obs, infos, render_state
         const pyActions = this.pyodide.toPy(actions);
         // const startTime = performance.now();
         const result = await this.pyodide.runPythonAsync(`
-agent_actions = {int(k): v for k, v in ${pyActions}.items()}
+${this.config.on_game_step_code}
+agent_actions = {int(k) if k.isnumeric() or isinstance(k, (float, int)) else k: v for k, v in ${pyActions}.items()}
 obs, rewards, terminateds, truncateds, infos = env.step(agent_actions)
 render_state = env.render()
-obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
+
+if not isinstance(obs, dict):
+    obs = obs.reshape(-1).astype(np.float32)
+elif isinstance(obs, dict) and isinstance([*obs.values()][0], dict):
+    obs = {k: {kk: vv.reshape(-1).astype(np.float32) for kk, vv in v.items()} for k, v in obs.items()}
+elif isinstance(obs, dict):
+    obs = {k: v.reshape(-1).astype(np.float32) for k, v in obs.items()}
+else:
+    raise ValueError(f"obs is not a valid type, got {type(obs)} but need array, dict, or dict of dicts.")
+
+if isinstance(rewards, (float, int)):
+    rewards = {"human": rewards}
+
+if not isinstance(obs, dict):
+    obs = {"human": obs}
+
+if not isinstance(terminateds, dict):
+    terminateds = {"human": terminateds}
+
+if not isinstance(truncateds, dict):
+    truncateds = {"human": truncateds}
+
 obs, rewards, terminateds, truncateds, infos, render_state
         `);
         // const endTime = performance.now();
@@ -151,8 +239,51 @@ obs, rewards, terminateds, truncateds, infos, render_state
 
         this.step_num = this.step_num + 1;
 
+        // Check if render_state is an RGB array (has shape and dtype properties)
+        // Check if render_state is an RGB array (has shape and dtype properties)
+        let game_image_base64 = null;
+        if (Array.isArray(render_state) && Array.isArray(render_state[0])) {
+            // Assuming render_state is an array of arrays with [row][column][RGB values]
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            const height = render_state.length;
+            const width = render_state[0].length;
+
+            // Set canvas dimensions
+            canvas.width = width;
+            canvas.height = height;
+
+            // Create ImageData object
+            const imageData = context.createImageData(width, height);
+            const data = imageData.data;
+
+            // Populate the ImageData with pixel values from render_state
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const pixelIndex = (y * width + x) * 4; // RGBA values in ImageData
+                    const [r, g, b] = render_state[y][x];
+
+                    data[pixelIndex] = r;     // Red
+                    data[pixelIndex + 1] = g; // Green
+                    data[pixelIndex + 2] = b; // Blue
+                    data[pixelIndex + 3] = 255; // Alpha (fully opaque)
+                }
+            }
+
+            // Put the image data on the canvas
+            context.putImageData(imageData, 0, 0);
+
+            // Convert canvas to Base64 image
+            game_image_base64 = canvas.toDataURL('image/png'); // You can change 'image/png' to 'image/jpeg' if needed
+        }
+
+        
+
         render_state = {
-            "game_state_objects": render_state.map(item => convertUndefinedToNull(item))
+            "game_state_objects": game_image_base64 ? null : render_state.map(item => convertUndefinedToNull(item)),
+            "game_image_base64": game_image_base64,
+            "step": this.step_num,
         };
 
         ui_utils.updateHUDText(this.getHUDText());

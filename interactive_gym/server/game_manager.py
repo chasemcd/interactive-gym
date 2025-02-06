@@ -1,22 +1,16 @@
 from __future__ import annotations
 from typing import Any
 
-import atexit
 import base64
 import itertools
 import logging
-import os
 import random
-import secrets
-import threading
 import time
 import uuid
 
 import eventlet
 import flask
 import flask_socketio
-import redis
-from eventlet import queue
 
 from interactive_gym.utils.typing import SubjectID, GameID, RoomID
 
@@ -134,9 +128,16 @@ class GameManager:
         if game_id in self.waiting_games:
             self.waiting_games.remove(game_id)
 
-        del self.games[game_id]
-        del self.reset_events[game_id]
-        del self.waitroom_timeouts[game_id]
+        if game_id in self.games:
+            del self.games[game_id]
+        if game_id in self.reset_events:
+            del self.reset_events[game_id]
+        if game_id in self.waitroom_timeouts:
+            del self.waitroom_timeouts[game_id]
+        if game_id in self.active_games:
+            self.active_games.remove(game_id)
+        if game_id in self.waiting_games:
+            self.waiting_games.remove(game_id)
 
         self.sio.close_room(game_id)
 
@@ -167,10 +168,14 @@ class GameManager:
             flask_socketio.join_room(game.game_id)
 
             available_human_agent_ids = game.get_available_human_agent_ids()
-            game.add_player(
-                random.choice(available_human_agent_ids), subject_id
-            )
-
+            if not available_human_agent_ids:
+                logger.warning(
+                    f"No available human agent IDs for game {game.game_id}. Adding as a spectator."
+                )
+            else:
+                game.add_player(
+                    random.choice(available_human_agent_ids), subject_id
+                )
             if self.scene.game_page_html_fn is not None:
                 self.sio.emit(
                     "update_game_page_text",
@@ -328,11 +333,11 @@ class GameManager:
         del self.subject_games[subject_id]
         del self.subject_rooms[subject_id]
 
-        # with app.app_context():
-        self.sio.leave_room(game_id)
+        # Use flask_socketio.leave_room instead of self.sio.leave_room
+        flask_socketio.leave_room(game_id)
 
         # If the game is now empty, remove it
-        if not game.remote_game.cur_num_human_players():
+        if not game.cur_num_human_players():
             self._remove_game(game_id)
 
     def start_game(self, game: remote_game.RemoteGameV2):
@@ -374,18 +379,21 @@ class GameManager:
             with game.lock:
                 if self.scene.callback is not None:
                     self.scene.callback.on_game_tick_start(game)
+
                 game.tick()
 
                 if self.scene.callback is not None:
                     self.scene.callback.on_game_tick_end(game)
 
             self.render_server_game(game)
+
             if (
                 self.scene.input_mode
                 == configuration_constants.InputModes.PressedKeys
             ):
                 self.sio.emit("request_pressed_keys", {})
-            self.sio.sleep(1 / game.config.fps)
+
+            self.sio.sleep(1 / game.scene.fps)
 
             if (
                 game.status == remote_game.GameStatus.Reset
@@ -400,7 +408,7 @@ class GameManager:
                     "game_reset",
                     {
                         "timeout": self.scene.reset_timeout,
-                        "config": self.scene.to_dict(serializable=True),
+                        "config": self.scene.scene_metadata,
                         "room": game.game_id,
                     },
                     room=game.game_id,
@@ -424,23 +432,23 @@ class GameManager:
 
                 self.render_server_game(game)
 
-                self.sio.sleep(1 / game.config.fps)
+                self.sio.sleep(1 / game.scene.fps)
 
-            with game.lock:
-                logger.info(
-                    f"Game loop ended for {game.game_id}, ending and cleaning up."
-                )
-                if game.status != remote_game.GameStatus.Inactive:
-                    game.tear_down()
+        with game.lock:
+            logger.info(
+                f"Game loop ended for {game.game_id}, ending and cleaning up."
+            )
+            if game.status != remote_game.GameStatus.Inactive:
+                game.tear_down()
 
-                if self.scene.callback is not None:
-                    self.scene.callback.on_game_end(game)
-                self.sio.emit(
-                    "end_game",
-                    {},
-                    room=game.game_id,
-                )
-                self.cleanup_game(game)
+            if self.scene.callback is not None:
+                self.scene.callback.on_game_end(game)
+            self.sio.emit(
+                "end_game",
+                {},
+                room=game.game_id,
+            )
+            self.cleanup_game(game.game_id)
 
     def trigger_reset(self, subject_id: SubjectID):
         game = self.get_subject_game(subject_id)
@@ -560,9 +568,12 @@ class GameManager:
             assert (
                 game.env.render_mode == "rgb_array"
             ), "Env must be using render mode `rgb_array`!"
+
             game_image = game.env.render()
-            _, encoded_image = cv2.imencode(".png", game_image)
-            encoded_image = base64.b64encode(encoded_image).decode()
+            _, encoded_image = cv2.imencode(
+                ".jpg", game_image, [cv2.IMWRITE_JPEG_QUALITY, 75]
+            )
+            # encoded_image = base64.b64encode(encoded_image).decode()
 
         hud_text = (
             self.scene.hud_text_fn(game)
@@ -577,7 +588,7 @@ class GameManager:
             "environment_state",
             {
                 "game_state_objects": state,
-                "game_image_base64": encoded_image,
+                "game_image_binary": encoded_image.tobytes(),
                 "step": game.tick_num,
                 "hud_text": hud_text,
             },

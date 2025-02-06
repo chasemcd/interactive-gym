@@ -20,6 +20,10 @@ export function addStateToBuffer(state_data) {
     stateBuffer.push(state_data);
 }
 
+function clearStateBuffer() {
+    stateBuffer = [];
+}
+
 // Contains an array for each bot that we'll shift to get the most recent action
 // Bots are queried asynchronously!
 let botActionBuffers = {};
@@ -35,7 +39,7 @@ export function addHumanKeyPressToBuffer(action) {
     humanKeyPressBuffer.push(action);
 }
 
-var pressedKeys = {};
+export var pressedKeys = {};
 export function updatePressedKeys(updatedPressedKeys) {
     pressedKeys = updatedPressedKeys;
 }
@@ -187,6 +191,7 @@ class GraphicsManager {
 }
 
 
+
 class GymScene extends Phaser.Scene {
 
     constructor(config) {
@@ -202,6 +207,10 @@ class GymScene extends Phaser.Scene {
         this.scene_metadata = config.scene_metadata;
         this.pyodide_remote_game = config.pyodide_remote_game;
         this.isProcessingPyodide = false;
+        this.stateImageSprite = null;
+        if (this.pyodide_remote_game) {
+            this.pyodide_remote_game.reinitialize_environment(this.pyodide_remote_game.config);
+        }
     }
     preload () {
 
@@ -240,6 +249,7 @@ class GymScene extends Phaser.Scene {
         this.canvas.id = "phaser-canvas";
         this.height = this.canvas.height;
         this.width = this.canvas.width;
+        this.stateImageSprite = this.add.image(0, 0, "curStateImage").setOrigin(0, 0);
 
         // Check if the background is just a color, if so fill
         if (this._checkIfHex(this.background)) {
@@ -259,28 +269,32 @@ class GymScene extends Phaser.Scene {
 
     update() {
 
-        if (this.pyodide_remote_game !== undefined && this.pyodide_remote_game.state === "done") {
+        if (this.pyodide_remote_game && this.pyodide_remote_game.state === "done") {
             this.removeAllObjects();
             return;
         };
 
-        if (this.pyodide_remote_game !== undefined && !this.isProcessingPyodide) {
+        if (this.pyodide_remote_game && !this.isProcessingPyodide && this.pyodide_remote_game.pyodideReady) {
             this.processPyodideGame();
         }
         
         this.processRendering();
     };
 
+
+
     async processPyodideGame() {
         this.isProcessingPyodide = true;
-        if (this.pyodide_remote_game !== undefined) {
+        if (this.pyodide_remote_game && this.pyodide_remote_game.pyodideReady) {
             let rewards, terminateds, truncateds, infos, render_state;
             if (this.pyodide_remote_game.shouldReset) {
+                currentObservations = {};
+                clearStateBuffer();
                 this.removeAllObjects();
                 [currentObservations, infos, render_state] = await this.pyodide_remote_game.reset();
                 remoteGameLogger.logData(
                     {
-                        observations: currentObservations, 
+                        observations: currentObservations,
                         infos: infos, 
                         episode_num: this.pyodide_remote_game.num_episodes, 
                         t: this.pyodide_remote_game.step_num
@@ -317,11 +331,12 @@ class GymScene extends Phaser.Scene {
         );
 
         // Get the human action and populate the actions dictionary with corresponding agent id key
-        actions[human_policy_agent_id] = this.getHumanAction();
-        
+        if (human_policy_agent_id !== undefined) {
+            actions[human_policy_agent_id] = this.getHumanAction();
+        }
+
         // Loop over the policy mapping and populate the actions dictionary with bot actions
-        for (let agentID in Object.keys(this.scene_metadata.policy_mapping)) {
-            // Skip if the agent is the human
+        for (let [agentID, policy] of Object.entries(this.scene_metadata.policy_mapping)) {
             if (agentID == human_policy_agent_id) {
                 continue;
             }
@@ -335,12 +350,12 @@ class GymScene extends Phaser.Scene {
         let policy_mapping = this.scene_metadata.policy_mapping;
         
         // If the bot is action on this step (according to frame skip), calculate an action.
-        if (this.pyodide_remote_game.step_num % this.scene_metadata.frame_skip == 0) {
+        if (this.pyodide_remote_game && this.pyodide_remote_game.step_num % this.scene_metadata.frame_skip == 0) {
             let policyID = policy_mapping[agentID];
             // Check if the policy mapping ends with .onnx to indicate an ONNX model
             if (policyID.endsWith(".onnx")) {
                 // Cast the agent ID to an integer
-                let observation = currentObservations.get(parseInt(agentID));
+                let observation = currentObservations.get(isNaN(agentID) ? agentID : parseInt(agentID));
                 this.queryBotPolicy(agentID, policyID, observation);
             } else if (policyID === "random") {
                 // If the policy is random, return a random action
@@ -393,10 +408,10 @@ class GymScene extends Phaser.Scene {
             }
         } else if (this.scene_metadata.input_mode === "pressed_keys") {
             // If pressed_keys, we get the (potentially composite) action from the currently pressed keys
-            if (pressedKeys.length == 0) {
+            if (pressedKeys == undefined || pressedKeys.length == 0 || Object.keys(pressedKeys).length === 0) {
                 // if no keys are pressed, we'll use the default action
                 human_action = this.scene_metadata.default_action;
-            } else if (pressedKeys.length == 1) {
+            } else if (Object.keys(pressedKeys).length === 1) {
                 human_action = this.scene_metadata.action_mapping[Object.keys(pressedKeys)[0]];
                 if (human_action == undefined) {
                     human_action = this.scene_metadata.default_action;
@@ -404,6 +419,9 @@ class GymScene extends Phaser.Scene {
             } else {
                 // multiple keys are pressed so check for a composite action
                 human_action = this.scene_metadata.action_mapping[this.generateCompositeAction()[0]];
+                if (human_action == undefined) {
+                    human_action = this.scene_metadata.default_action;
+                }
             }
         }
 
@@ -412,30 +430,46 @@ class GymScene extends Phaser.Scene {
 
     generateCompositeAction() {
         // TODO: Set this in the config so we don't recalculate every time
+        let compPressedKeys = undefined;
         const maxCompositeActionSize = Math.max(
             ...Object.keys(this.scene_metadata.action_mapping)
-                .filter(key => Array.isArray(key))
-                .map(key => key.length),
+                .filter(key => typeof key === 'string' && key.includes(','))
+                .map(key => key.split(',').length),
             0
         );
     
         if (maxCompositeActionSize > 1) {
-            const compositeActions = Object.keys(this.scene_metadata)
-                .filter(key => Array.isArray(key))
-                .map(key => key.sort());
-    
-            const combinations = combinationsOf(pressedKeys, maxCompositeActionSize);
-    
+            const compositeActions = Object.keys(this.scene_metadata.action_mapping)
+            .filter(key => typeof key === 'string' && key.includes(','))
+
+            let curKeys = Object.keys(pressedKeys);
+            let combinations = [];
+            for (let k = 2; k <= maxCompositeActionSize; k++) {
+                combinations = combinations.concat(combinationsOf(curKeys, k));
+            }
+            
             for (const combination of combinations) {
-                const sortedCombination = combination.sort();
-                if (compositeActions.some(action => arraysEqual(action, sortedCombination))) {
-                    pressedKeys = [sortedCombination];
+                const sortedCombination = combination.sort().join(',');
+                if (compositeActions.includes(sortedCombination)) {
+                    compPressedKeys = [sortedCombination];
                     break;
                 }
             }
+        } 
+        
+        // If we don't get a composite action, check if any single-keys within the composite work
+        if (compPressedKeys == undefined) {
+            // For single key actions, find the first pressed key that has a valid mapping
+            const validKeys = Object.keys(pressedKeys).filter(key => 
+                key in this.scene_metadata.action_mapping
+            );
+            if (validKeys.length > 0) {
+                compPressedKeys = [validKeys[0]];
+            } else {
+                compPressedKeys = [undefined];
+            }
         }
-    
-        return pressedKeys;
+        return compPressedKeys;
     }
 
     processRendering() {
@@ -459,43 +493,107 @@ class GymScene extends Phaser.Scene {
         }
 
         let game_state_objects = this.state.game_state_objects;
-        let game_state_image = this.state.game_image_base64;
+        let game_state_image = this.state.game_image_binary;
 
         // If we don't have any object contexts, we render the image from `env.render()`
         // NOTE: This approach is very inefficient and not good practice! It's oriented
         //  to testing or local experiments.
         if (game_state_objects == null && !(game_state_image == null)) {
 
-            // Remove the current image
-            let oldImage;
+            const blob = new Blob([game_state_image], { type: 'image/jpeg' });
+            const url = URL.createObjectURL(blob);
 
-            if (this.temp_object_map.hasOwnProperty("curStateImage")) {
-                oldImage = this.temp_object_map['curStateImage'];
-            }
+            // // This will trigger when the new texture is added
+            // this.textures.once('addtexture', function () {
 
-            // This will trigger when the new texture is added
-            this.textures.once('addtexture', function () {
+            //     this.stateImageSprite.setTexture("curStateImage");
+            //     console.log("set texture curstateImage");
 
-                // Place the updated image and store so we can remove later
-                this.temp_object_map['curStateImage'] = this.add.image(
-                    0,
-                    0,
-                    `curStateImage_${this.state.step}`
-                );
-                this.temp_object_map['curStateImage'].setOrigin(0, 0);
+            // }, this);
 
-                // Remove the old image
-                if (!(oldImage == null)) {
-                    oldImage.destroy();
+            // this.textures.addImage("curStateImage", url, () => {
+            //     URL.revokeObjectURL(url);
+            //     if (this.stateImageSprite) {
+            //         this.stateImageSprite.setTexture("curStateImage");
+            //     }
+            //     console.log("set texture curstateImage in addBase64");
+            //  });        
+            
+                // Create an image element to load Blob URL
+            const img = new Image();
+            img.crossOrigin = "anonymous"; // Prevent CORS issues
+            img.src = url;
+
+            img.onload = () => {
+                console.log("Image loaded successfully:", img.width, img.height);
+
+                // Create a temporary canvas to ensure it's WebGL-compatible
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                // Set canvas dimensions to match the image
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                // ✅ **Do NOT remove the old texture immediately!**
+                // ✅ **Ensure old texture is removed first**
+                if (this.textures.exists("curStateImage")) {
+                    this.textures.remove("curStateImage");
                 }
 
-            }, this);
+                // ✅ **Now safely add the new texture**
+                this.textures.addImage("curStateImage", canvas);
 
-            // Load the new image
-            var base64String = 'data:image/png;base64,' + this.state.game_image_base64; // Replace with your actual Base64 string
+                if (this.stateImageSprite) {
+                    this.stateImageSprite.setTexture("curStateImage");
+                } else {
+                    this.stateImageSprite = this.add.image(0, 0, "curStateImage").setOrigin(0, 0);
+                }
 
-            // Success here will trigger the `addtexture` callback
-            this.textures.addBase64(`curStateImage_${this.state.step}`, base64String);
+                // Cleanup URL to prevent memory leaks
+                URL.revokeObjectURL(url);
+
+            };
+
+            img.onerror = (err) => {
+                console.error("Failed to load image:", err);
+            };
+
+            // // Remove the current image
+            // let oldImage;
+
+            // if (this.temp_object_map.hasOwnProperty("curStateImage")) {
+            //     oldImage = this.temp_object_map['curStateImage'];
+            // }
+
+            // // This will trigger when the new texture is added
+            // this.textures.once('addtexture', function () {
+
+            //     // Place the updated image and store so we can remove later
+            //     this.temp_object_map['curStateImage'] = this.add.image(
+            //         0,
+            //         0,
+            //         `curStateImage_${this.state.step}`
+            //     );
+            //     this.temp_object_map['curStateImage'].setOrigin(0, 0);
+
+            //     // Remove the old image
+            //     if (!(oldImage == null)) {
+            //         oldImage.destroy();
+            //     }
+
+            // }, this);
+
+            // // Load the new image
+            // var base64String = this.state.game_image_base64.startsWith('data:image/png;base64,') ? 
+            //     this.state.game_image_binary : 
+            //     'data:image/png;base64,' + this.state.game_image_binary;
+
+            // // Success here will trigger the `addtexture` callback
+            // this.textures.addBase64(`curStateImage_${this.state.step}`, base64String);
+
+
 
 
         } else if (!(game_state_objects == null)) {
@@ -804,7 +902,7 @@ class GymScene extends Phaser.Scene {
 
 function combinationsOf(arr, k) {
     if (k === 0) return [[]];
-    if (arr.length === 0) return [];
+    if (arr.length === 0) return [[]];
 
     const [head, ...tail] = arr;
     const withoutHead = combinationsOf(tail, k);

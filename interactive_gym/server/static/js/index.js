@@ -1,11 +1,8 @@
-import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData} from './phaser_gym_graphics.js';
+import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData, pressedKeys} from './phaser_gym_graphics.js';
 import {RemoteGame} from './pyodide_remote_game.js';
 import * as ui_utils from './ui_utils.js';
 
 var socket = io();
-var start_pressed = false;
-
-
 
 var latencyMeasurements = [];
 var curLatency;
@@ -84,7 +81,7 @@ function pyodideReadyIfUsing() {
         return true;
     }
 
-    console.log(pyodideRemoteGame.pyodideReady)
+    console.log("Pyodide Ready:",pyodideRemoteGame.pyodideReady)
     return pyodideRemoteGame.pyodideReady;
 }
 
@@ -93,7 +90,6 @@ $(function() {
     $('#startButton').click( () => {
         $("#startButton").hide();
         $("#startButton").attr("disabled", true);
-        start_pressed = true;
         console.log("joining game in session", window.sessionId)
         socket.emit("join_game", {session_id: window.sessionId});
 
@@ -272,6 +268,14 @@ socket.on("game_reset", function(data) {
 
     let scene_metadata = data.scene_metadata
 
+    if (!scene_metadata) {
+        scene_metadata = data.config;
+    }
+
+    if (!scene_metadata) {
+        console.log("scene_metadata is undefined on game reset!")
+        return;
+    }   
 
     // Initialize game
     let graphics_config = {
@@ -290,7 +294,7 @@ socket.on("game_reset", function(data) {
         'scene_metadata': scene_metadata,
     };
 
-    input_mode = scene_metadata.input_mode;
+    let input_mode = scene_metadata.input_mode;
 
     startResetCountdown(data.timeout, function() {
         // This function will be called after the countdown
@@ -397,7 +401,8 @@ socket.on('update_game_page_text', function(data) {
 // var pressedKeys = {};
 
 socket.on('request_pressed_keys', function(data) {
-    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(ui_utils.pressedKeys), session_id: window.sessionId});
+    console.log("request_pressed_keys", ui_utils.pressedKeys, pressedKeys, window.sessionId)
+    socket.emit('send_pressed_keys', {'pressed_keys': Object.keys(pressedKeys), session_id: window.sessionId});
 });
 
 
@@ -406,29 +411,18 @@ socket.on('request_pressed_keys', function(data) {
 
 //  UPDATED
 
-// var canAdvance = true;
-// refreshCanAdvance = setInterval(() => {
-//     canAdvance = document.getElemendById("canContinue");
-//     // if (canContinue == true) {
-//     //          $("#advanceButton").attr("disabled", false);
-//     //     } else {
-//     //         canContinue.onchange = function() {
-//     //             if (canContinue.value == "true") {
-//     //                 $("#continueButton").attr("disabled", false);
-//     //             } else {
-//     //                 $("#continueButton").attr("disabled", true);
-//     //             }
-//     //         }
-//     //     }
-// } , 100);
-
-
-
 var currentSceneMetadata = {};
-
 
 socket.on("activate_scene", function(data) {
     console.log("Activating scene", data.scene_id)
+    // Retrieve interactiveGymGlobals from the global scope
+    console.log("interactiveGymGlobals", interactiveGymGlobals)
+    if (typeof interactiveGymGlobals !== 'undefined') {
+        // Add interactiveGymGlobals to data.globals
+        console.log("interactiveGymGlobals", interactiveGymGlobals)
+        data.globals = data.globals || {};
+        Object.assign(data.globals, interactiveGymGlobals);
+    }
     activateScene(data);
 });
 
@@ -436,12 +430,11 @@ socket.on("activate_scene", function(data) {
 socket.on("terminate_scene", function(data) {
     if (data.element_ids && data.element_ids.length > 0) {
         let retrievedData = getData(data.element_ids);
-        socket.emit("static_scene_data_emission", {data: retrievedData, scene_id: data.scene_id, session_id: window.sessionId});
+        socket.emit("static_scene_data_emission", {data: retrievedData, scene_id: data.scene_id, session_id: window.sessionId, interactiveGymGlobals: window.interactiveGymGlobals});
     }
     
     terminateScene(data);
     console.log("Terminating scene", data.scene_id);
-    // Add any cleanup logic here if needed
 });
 
 
@@ -489,8 +482,19 @@ function getData(elementIds) {
 
 
 function activateScene(data) {
+    window.scrollTo(0, 0);
+
+    // Add interactiveGymGlobals to the data object
+    if (typeof window.interactiveGymGlobals !== 'undefined') {
+        data.interactiveGymGlobals = window.interactiveGymGlobals;
+    } else {
+        console.warn('interactiveGymGlobals is not defined in the window object');
+        data.interactiveGymGlobals = {};
+    }
+
     console.log(data);
     currentSceneMetadata = data;
+
     if (data.scene_type == "EndScene" || data.scene_type == "CompletionCodeScene") {
         startEndScene(data);
     } else if (data.scene_type == "GymScene") {
@@ -556,6 +560,16 @@ function startEndScene(data) {
 function startGymScene(data) {
     enableStartRefreshInterval();
 
+    // Initialize or increment the gym scene counter
+    if (typeof window.interactiveGymGlobals === 'undefined') {
+        window.interactiveGymGlobals = {};
+    }
+    if (typeof window.interactiveGymGlobals.gymSceneCounter === 'undefined') {
+        window.interactiveGymGlobals.gymSceneCounter = 1;
+    } else {
+        window.interactiveGymGlobals.gymSceneCounter++;
+    }
+
     // First, check if we need to initialize Pyodide
     if (data.run_through_pyodide) {
         initializePyodideRemoteGame(data);
@@ -609,9 +623,8 @@ function terminateGymScene(data) {
     graphics_end();
 
     let remoteGameData = getRemoteGameData();
-    console.log("emitting data", remoteGameData)
     const binaryData = msgpack.encode(remoteGameData);
-    socket.emit("emit_remote_game_data", {data: binaryData, scene_id: data.scene_id, session_id: window.sessionId});
+    socket.emit("emit_remote_game_data", {data: binaryData, scene_id: data.scene_id, session_id: window.sessionId, interactiveGymGlobals: window.interactiveGymGlobals});
 
     $("#sceneHeader").show();
     $("#sceneHeader").html("");
@@ -648,13 +661,13 @@ $(function() {
 
 async function initializePyodideRemoteGame(data) {
     // Only initialize a new RemoteGame if we don't already have one
-    // if (pyodideRemoteGame === null) {
-    //     pyodideRemoteGame = new RemoteGame(data);
-    // } else {
-    //     console.log("Not initializing a new RemoteGame because one already exists");
-    //     pyodideRemoteGame.reinitialize_environment(data);
-    // }
-    pyodideRemoteGame = new RemoteGame(data);
+    if (pyodideRemoteGame === null || data.restart_pyodide === true) {
+        pyodideRemoteGame = new RemoteGame(data);
+    } else {
+        console.log("Not initializing a new RemoteGame because one already exists");
+        await pyodideRemoteGame.reinitialize_environment(data);
+    }
+    // pyodideRemoteGame = new RemoteGame(data);
 };
 
 var checkPyodideDone;
@@ -738,3 +751,7 @@ function enableStartRefreshInterval() {
 function redirect_subject(url) {
     window.location.href = url;
 };
+
+
+
+const startButton = window.document.getElementById('startButton');

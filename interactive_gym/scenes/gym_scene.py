@@ -114,7 +114,9 @@ class GymScene(scene.Scene):
         # pyodide
         self.run_through_pyodide: bool = False
         self.environment_initialization_code: str = ""
+        self.on_game_step_code: str = ""
         self.packages_to_install: list[str] = []
+        self.restart_pyodide: bool = False
 
     def environment(
         self,
@@ -300,15 +302,17 @@ class GymScene(scene.Scene):
         :rtype: GymScene
         """
         if action_mapping is not NotProvided:
-            # ensure the composite action tuples are sorted
-            sorted_tuple_action_map = {}
+            # ensure the composite action tuples are sorted and
+            # formatted as strings to work with serialization
+            converted_action_mapping = {}
             for k, v in action_mapping.items():
                 if isinstance(k, tuple):
                     self.game_has_composite_actions = True
-                    sorted_tuple_action_map[tuple(sorted(k))] = v
+                    converted_action_mapping[",".join(list(sorted(k)))] = v
                 else:
-                    sorted_tuple_action_map[k] = v
-            self.action_mapping = action_mapping
+                    converted_action_mapping[k] = v
+            print(converted_action_mapping)
+            self.action_mapping = converted_action_mapping
 
         if action_population_method is not NotProvided:
             self.action_population_method = action_population_method
@@ -382,7 +386,7 @@ class GymScene(scene.Scene):
 
         if scene_body_filepath is not NotProvided:
             assert (
-                self.scene_body is None and scene_body is NotProvided
+                scene_body is NotProvided
             ), "Cannot set both filepath and html_body."
 
             with open(scene_body_filepath, "r", encoding="utf-8") as f:
@@ -396,8 +400,7 @@ class GymScene(scene.Scene):
 
         if in_game_scene_body_filepath is not NotProvided:
             assert (
-                self.in_game_scene_body is NotProvided
-                and in_game_scene_body is NotProvided
+                in_game_scene_body is NotProvided
             ), "Cannot set both filepath and html_body."
 
             with open(in_game_scene_body_filepath, "r", encoding="utf-8") as f:
@@ -416,7 +419,9 @@ class GymScene(scene.Scene):
         run_through_pyodide: bool = NotProvided,
         environment_initialization_code: str = NotProvided,
         environment_initialization_code_filepath: str = NotProvided,
+        on_game_step_code: str = NotProvided,
         packages_to_install: list[str] = NotProvided,
+        restart_pyodide: bool = NotProvided,
     ):
         """Configure Pyodide-related settings for the GymScene.
 
@@ -431,6 +436,8 @@ class GymScene(scene.Scene):
         :type environment_initialization_code_filepath: str, optional
         :param packages_to_install: List of Python packages to install in the Pyodide environment, defaults to NotProvided
         :type packages_to_install: list[str], optional
+        :param restart_pyodide: Whether to restart the Pyodide environment, defaults to NotProvided
+        :type restart_pyodide: bool, optional
         :return: The GymScene instance (self)
         :rtype: GymScene
         """
@@ -454,6 +461,12 @@ class GymScene(scene.Scene):
 
         if packages_to_install is not NotProvided:
             self.packages_to_install = packages_to_install
+
+        if restart_pyodide is not NotProvided:
+            self.restart_pyodide = restart_pyodide
+
+        if on_game_step_code is not NotProvided:
+            self.on_game_step_code = on_game_step_code
 
         return self
 
