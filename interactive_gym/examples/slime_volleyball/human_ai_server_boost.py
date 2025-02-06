@@ -131,14 +131,6 @@ slime_scene = (
         <br><br>
         """,
     )
-    .pyodide(
-        run_through_pyodide=False,
-        environment_initialization_code_filepath="interactive_gym/examples/slime_volleyball/slimevb_boost_env.py",
-        packages_to_install=[
-            "slimevb==0.1.0",
-            "opencv-python",
-        ],
-    )
 )
 
 
