@@ -494,10 +494,11 @@ def data_emission(data):
 
     df["timestamp"] = pd.to_datetime("now")
 
-    df.to_csv(filename, index=False)
+    if CONFIG.save_experiment_data:
+        df.to_csv(filename, index=False)
 
-    with open(globals_filename, "w") as f:
-        json.dump(data["interactiveGymGlobals"], f)
+        with open(globals_filename, "w") as f:
+            json.dump(data["interactiveGymGlobals"], f)
 
 
 @socketio.on("emit_remote_game_data")
@@ -536,9 +537,11 @@ def receive_remote_game_data(data):
 
     # Save as CSV
     logger.info(f"Saving {filename}")
-    df.to_csv(filename, index=False)
-    with open(globals_filename, "w") as f:
-        json.dump(data["interactiveGymGlobals"], f)
+
+    if CONFIG.save_experiment_data:
+        df.to_csv(filename, index=False)
+        with open(globals_filename, "w") as f:
+            json.dump(data["interactiveGymGlobals"], f)
 
     # Also get the current scene for this participant and save the metadata
     # TODO(chase): this has issues where the data may not be received before the
