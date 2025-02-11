@@ -19,6 +19,7 @@ class Circle:
         return dataclasses.asdict(self)
 
 
+# TODO: Validate this inheritance, does this correctly inherit from the MPE Tag parallel class?
 class MPETagIG(simple_tag_v3.parallel_env):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
