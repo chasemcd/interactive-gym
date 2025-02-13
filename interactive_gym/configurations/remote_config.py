@@ -6,10 +6,9 @@ import typing
 
 from interactive_gym.configurations import configuration_constants
 
-# from server import callback
-
 
 class RemoteConfig:
+
     def __init__(self):
         self.env_creator: typing.Callable | None = None
         self.env_name: str | None = None

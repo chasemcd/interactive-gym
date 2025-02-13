@@ -1,7 +1,7 @@
 from slime_volleyball import slimevolley_boost_env
-from slime_volleyball.core import constants
+from slime_volleyball.core import constants as slimevb_constants
 import math
-import typing
+from interactive_gym.configurations.object_contexts import Line, Circle, Polygon
 
 import dataclasses
 
@@ -10,148 +10,11 @@ Y_OFFSET = 0.018
 
 
 def to_x(x):
-    return x / constants.REF_W + 0.5
+    return x / slimevb_constants.REF_W + 0.5
 
 
 def to_y(y):
-    return 1 - y / constants.REF_W
-
-
-@dataclasses.dataclass
-class Line:
-    """
-    Context for a line object to render it.
-
-    :param uuid: Unique identifier for the line
-    :type uuid: str
-    :param color: Color of the line
-    :type color: str
-    :param width: Width of the line
-    :type width: int
-    :param points: List of points defining the line
-    :type points: list[tuple[float, float]]
-
-    .. testcode::
-
-        line = Line(
-            uuid="line1",
-            color="#FF0000",
-            width=2,
-            points=[(0, 0), (100, 100), (200, 0)],
-            fill_below=True,
-            depth=1
-        )
-
-    """
-
-    uuid: str
-    color: str
-    width: int
-    points: list[tuple[float, float]]
-    object_type: str = "line"
-    fill_below: bool = False
-    fill_above: bool = False
-    depth: int = -1
-    permanent: bool = False
-
-    def as_dict(self) -> dict[str, typing.Any]:
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
-class Circle:
-    """
-    Context for a circle object to render it.
-
-    :param uuid: Unique identifier for the circle
-    :type uuid: str
-    :param color: Color of the circle
-    :type color: str
-    :param x: X-coordinate of the circle's center
-    :type x: float
-    :param y: Y-coordinate of the circle's center
-    :type y: float
-    :param radius: Radius of the circle
-    :type radius: int
-    :param alpha: Alpha value for the circle's transparency
-    :type alpha: float
-    :param object_type: Type of the object
-    :type object_type: str
-    :param depth: Rendering depth of the circle. Higher values are rendered on top
-    :type depth: int
-    :param permanent: Whether the circle should persist across steps.
-
-    .. testcode::
-
-        circle = Circle(
-            uuid="circle1",
-            color="#00FF00",
-            x=150.0,
-            y=150.0,
-            radius=50,
-            alpha=0.8,
-            depth=2,
-            permanent=True
-        )
-    """
-
-    uuid: str
-    color: str
-    x: float
-    y: float
-    radius: int
-    alpha: float = 1
-    object_type: str = "circle"
-    depth: int = -1
-    permanent: bool = False
-
-    def as_dict(self) -> dict[str, typing.Any]:
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
-class Polygon:
-    """
-    Context for a polygon object to render it.
-
-    :param uuid: Unique identifier for the polygon
-    :type uuid: str
-    :param color: Color of the polygon
-    :type color: str
-    :param points: List of points defining the polygon
-    :type points: list[tuple[float, float]]
-    :param alpha: Alpha value for the polygon's transparency
-    :type alpha: float
-    :param object_type: Type of the object
-    :type object_type: str
-    :param depth: Rendering depth of the polygon. Higher values are rendered on top
-    :type depth: int
-    :param permanent: Whether the polygon should persist across steps.
-    :type permanent: bool
-
-    .. testcode::
-
-        polygon = Polygon(
-            uuid="polygon1",
-            color="#0000FF",
-            points=[(0, 0), (100, 0), (100, 100), (0, 100)],
-            alpha=0.5,
-            depth=3,
-            permanent=False
-        )
-
-    """
-
-    uuid: str
-    color: str
-    points: list[tuple[float, float]]
-    alpha: float = 1
-    object_type: str = "polygon"
-    depth: int = -1
-    permanent: bool = False
-
-    def as_dict(self) -> dict[str, typing.Any]:
-        return dataclasses.asdict(self)
+    return 1 - y / slimevb_constants.REF_W
 
 
 def slime_volleyball_env_to_rendering(
@@ -174,7 +37,7 @@ def slime_volleyball_env_to_rendering(
                     to_y(env.game.fence.y - env.game.fence.h / 2),
                 ),
             ],
-            width=env.game.fence.w * 600 / constants.REF_W,
+            width=env.game.fence.w * 600 / slimevb_constants.REF_W,
             permanent=True,
         )
         render_objects.append(fence)
@@ -184,7 +47,7 @@ def slime_volleyball_env_to_rendering(
             color="#000000",
             x=to_x(env.game.fence_stub.x),
             y=to_y(env.game.fence_stub.y),
-            radius=env.game.fence_stub.r * 600 / constants.REF_W,
+            radius=env.game.fence_stub.r * 600 / slimevb_constants.REF_W,
             permanent=True,
         )
         render_objects.append(fence_stub)
@@ -196,18 +59,18 @@ def slime_volleyball_env_to_rendering(
                 (
                     0,
                     1
-                    - env.game.ground.y / constants.REF_W
-                    - constants.REF_U / constants.REF_W / 2,
+                    - env.game.ground.y / slimevb_constants.REF_W
+                    - slimevb_constants.REF_U / slimevb_constants.REF_W / 2,
                 ),
                 (
                     1,
                     1
-                    - env.game.ground.y / constants.REF_W
-                    - constants.REF_U / constants.REF_W / 2,
+                    - env.game.ground.y / slimevb_constants.REF_W
+                    - slimevb_constants.REF_U / slimevb_constants.REF_W / 2,
                 ),
             ],
             fill_below=True,
-            width=env.game.ground.w / constants.REF_W,
+            width=env.game.ground.w / slimevb_constants.REF_W,
             depth=-1,
             permanent=True,
         )
@@ -241,9 +104,9 @@ def slime_volleyball_env_to_rendering(
     ball = Circle(
         uuid="ball",
         color="#000000" if not terminateds["__all__"] else "#AAFF00",
-        x=env.game.ball.x / constants.REF_W + 0.5,
-        y=1 - env.game.ball.y / constants.REF_W,
-        radius=env.game.ball.r * 600 / constants.REF_W,
+        x=env.game.ball.x / slimevb_constants.REF_W + 0.5,
+        y=1 - env.game.ball.y / slimevb_constants.REF_W,
+        radius=env.game.ball.r * 600 / slimevb_constants.REF_W,
     )
     render_objects.append(ball)
 
@@ -292,17 +155,6 @@ def generate_slime_agent_objects(
                 depth=-2,
             )
         )
-    # objects.append(
-    #     Sprite(
-    #         uuid=f"{identifier}_body_sprite",
-    #         image_name="slime_blue.png" if "right" in identifier else "slime_red.png",
-    #         x=to_x(x - radius),
-    #         y=to_y(y) - 30 / config.game_height,
-    #         height=30,
-    #         width=36,
-    #         depth=0,
-    #     )
-    # )
 
     # Eyes that track the ball!
     angle = math.pi * 60 / 180
@@ -344,16 +196,6 @@ class SlimeVBEnvIG(slimevolley_boost_env.SlimeVolleyBoostEnv):
     def render(self):
         assert self.render_mode == "interactive-gym"
         return slime_volleyball_env_to_rendering(self)
-
-    # def reset(self):
-    #     obs, infos = super().reset()
-    #     obs = {k: v["obs"] for k, v in obs.items()}
-    #     return obs, infos
-
-    # def step(self, actions):
-    #     obs, rews, terminateds, truncateds, infos = super().step(actions)
-    #     obs = {k: v["obs"] for k, v in obs.items()}
-    #     return obs, rews, terminateds, truncateds, infos
 
 
 env = SlimeVBEnvIG(
