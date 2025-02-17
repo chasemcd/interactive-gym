@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     experiment_config = (
         experiment_config.ExperimentConfig()
-        .experiment(stager=stager, experiment_id="slime_vb_demo")
+        .experiment(stager=stager, experiment_id="footsies_test")
         .hosting(port=5702, host="0.0.0.0")
     )
 
