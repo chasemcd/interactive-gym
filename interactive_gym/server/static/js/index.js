@@ -499,6 +499,8 @@ function activateScene(data) {
         startEndScene(data);
     } else if (data.scene_type == "GymScene") {
         startGymScene(data);
+    } else if (data.scene_type == "UnityScene") {
+        startUnityScene(data);
     } else {
         // Treat all other scenes as static scenes
         startStaticScene(data);
@@ -520,9 +522,6 @@ function startStaticScene(data) {
     $("#sceneHeader").html(data.scene_header);
     $("#sceneSubHeader").html(data.scene_subheader);
     $("#sceneBody").html(data.scene_body);
-
-
-
 };
 
 function startEndScene(data) {
@@ -592,11 +591,76 @@ function startGymScene(data) {
 };
 
 
+function startUnityScene(data) {
+    // In the Static and Start scenes, we only show
+    // the advanceButton, sceneHeader, and sceneBody
+    $("#sceneHeader").show();
+    $("#sceneSubHeader").show();
+
+    $("#sceneBody").show();
+
+    // Clear previous game data, if any
+
+
+    // Insert Unity WebGL container and loader elements
+    $("#gameContainer").html(`
+        <div id="unityContainer" style="width: ${data.width}px; height: ${data.height}px; position: relative;">
+            <canvas id="unityCanvas" width="${data.width}" height="${data.height}" style="background: black;"></canvas>
+            <div id="loadingBar" style="position: absolute; left: 0; right: 0; bottom: 10px; text-align: center;">
+                <progress id="progress" value="0" max="100"></progress>
+                <p id="loadingText">Loading...</p>
+            </div>
+        </div>
+    `);
+
+    $("#gameContainer").show()
+
+    // Dynamically load Unity's JavaScript loader if not already loaded
+    if (!window.UnityLoader) {
+        let script = document.createElement("script");
+        script.src = `{{ url_for('static', filename='web_gl/${data.build_name}/Build/${data.build_name}.loader.js') }}`;
+        script.onload = function() {
+            instantiateUnity();
+        };
+        document.body.appendChild(script);
+    } else {
+        instantiateUnity();
+    }
+
+
+    $("#advanceButton").attr("disabled", false);
+    $("#advanceButton").show();
+
+    $("#sceneHeader").html(data.scene_header);
+    $("#sceneSubHeader").html(data.scene_subheader);
+    $("#sceneBody").html(data.scene_body);
+};
+
+
+function terminateUnityScene(data) {
+    // In the Static and Start scenes, we only show
+    // the advanceButton, sceneHeader, and sceneBody
+    $("#sceneHeader").show();
+    $("#sceneSubHeader").show();
+
+    $("#sceneBody").show();
+
+    $("#advanceButton").attr("disabled", false);
+    $("#advanceButton").show();
+
+    $("#sceneHeader").html(data.scene_header);
+    $("#sceneSubHeader").html(data.scene_subheader);
+    $("#sceneBody").html(data.scene_body);
+};
+
+
 function terminateScene(data) {
     if (data.scene_type == "EndScene") {
         terminateEndScene(data);
     } else if (data.scene_type == "GymScene") {
         terminateGymScene(data);
+    } else if (data.scene_type == "UnityScene") {
+        terminateUnityScene(data);
     } else {
         // (data.scene_type == "StaticScene" || data.scene_type == "StartScene" || data.scene_type == "EndScene")
         // Treat all other scenes as static scenes
