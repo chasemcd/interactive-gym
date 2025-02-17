@@ -1,4 +1,4 @@
-function startUnityScene(data) {
+export function startUnityScene(data) {
     $("#sceneHeader").show();
     $("#sceneSubHeader").show();
     $("#sceneBody").show();
@@ -17,7 +17,7 @@ function startUnityScene(data) {
     $("#sceneBody").html(data.scene_body);
 }
 
-function terminateUnityScene(data) {
+export function terminateUnityScene(data) {
     // In the Static and Start scenes, we only show
     // the advanceButton, sceneHeader, and sceneBody
     $("#sceneHeader").show();
