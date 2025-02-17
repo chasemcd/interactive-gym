@@ -313,7 +313,6 @@ class GymScene(scene.Scene):
                     converted_action_mapping[",".join(list(sorted(k)))] = v
                 else:
                     converted_action_mapping[k] = v
-            print(converted_action_mapping)
             self.action_mapping = converted_action_mapping
 
         if action_population_method is not NotProvided:
