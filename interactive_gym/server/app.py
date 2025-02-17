@@ -468,6 +468,10 @@ def on_exit():
 @socketio.on("static_scene_data_emission")
 def data_emission(data):
     """Save the static scene data to a csv file."""
+
+    if not CONFIG.save_experiment_data:
+        return
+
     subject_id = get_subject_id_from_session_id(flask.request.sid)
     # Save to a csv in data/{scene_id}/{subject_id}.csv
     # Save the static scene data to a csv file.
@@ -503,6 +507,10 @@ def data_emission(data):
 
 @socketio.on("emit_remote_game_data")
 def receive_remote_game_data(data):
+
+    if not CONFIG.save_experiment_data:
+        return
+
     subject_id = get_subject_id_from_session_id(flask.request.sid)
 
     # Decode the msgpack data
@@ -561,15 +569,6 @@ def receive_remote_game_data(data):
     # # save the metadata to a json file
     # with open(f"data/{data['scene_id']}/{subject_id}_metadata.json", "w") as f:
     #     json.dump(current_scene_metadata, f)
-
-
-# def periodic_log() -> None:
-#     """Log information at specified 30s interval"""
-#     while True:
-#         logger.info(
-#             f"{time.ctime(time.time())}, there are {len(ACTIVE_GAMES)} active games, {len(WAITING_GAMES)} waiting games, {len(GAMES)} total games, and {len(SUBJECTS)} participants."
-#         )
-#         eventlet.sleep(30)
 
 
 def run(config):

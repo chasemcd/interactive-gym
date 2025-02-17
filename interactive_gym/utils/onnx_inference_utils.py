@@ -42,16 +42,6 @@ def onnx_model_inference_fn(
         observation = np.hstack(list(observation.values())).reshape((1, -1))
 
     # TODO(chase): add compatibility with recurrent networks, must pass state in and seq lens
-
-
-def onnx_model_inference_fn(
-    observation: dict[str, np.ndarray] | np.ndarray, onnx_model_path: str
-):
-    # if it's a dictionary observation, the onnx model expects a flattened input array
-    if isinstance(observation, dict):
-        observation = np.hstack(list(observation.values())).reshape((1, -1))
-
-    # TODO(chase): add compatibility with recurrent networks, must pass state in and seq lens
     model_outputs = inference_onnx_model(
         {
             "obs": observation.astype(np.float32),

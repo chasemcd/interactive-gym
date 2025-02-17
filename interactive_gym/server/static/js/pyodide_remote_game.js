@@ -174,8 +174,8 @@ obs, infos, render_state
 
 
         render_state = {
-            "game_state_objects": game_image_base64 ? null : render_state.map(item => convertUndefinedToNull(item)),
-            "game_image_base64": game_image_base64,
+            "game_state_objects": game_image_binary ? null : render_state.map(item => convertUndefinedToNull(item)),
+            "game_image_base64": game_image_binary,
             "step": this.step_num,
         };
 

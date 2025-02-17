@@ -53,6 +53,8 @@ class GymScene(scene.Scene):
         animation_configs (list): Configurations for animations.
     """
 
+    DEFAULT_IG_PACKAGE = "interactive-gym==0.0.7"
+
     def __init__(
         self,
     ):
@@ -115,7 +117,7 @@ class GymScene(scene.Scene):
         self.run_through_pyodide: bool = False
         self.environment_initialization_code: str = ""
         self.on_game_step_code: str = ""
-        self.packages_to_install: list[str] = []
+        self.packages_to_install: list[str] = [GymScene.DEFAULT_IG_PACKAGE]
         self.restart_pyodide: bool = False
 
     def environment(
@@ -311,7 +313,6 @@ class GymScene(scene.Scene):
                     converted_action_mapping[",".join(list(sorted(k)))] = v
                 else:
                     converted_action_mapping[k] = v
-            print(converted_action_mapping)
             self.action_mapping = converted_action_mapping
 
         if action_population_method is not NotProvided:
@@ -461,6 +462,8 @@ class GymScene(scene.Scene):
 
         if packages_to_install is not NotProvided:
             self.packages_to_install = packages_to_install
+            if not any("interactive-gym" in pkg for pkg in packages_to_install):
+                self.packages_to_install.append(self.DEFAULT_IG_PACKAGE)
 
         if restart_pyodide is not NotProvided:
             self.restart_pyodide = restart_pyodide

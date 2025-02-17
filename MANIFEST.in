@@ -1,0 +1,6 @@
+include README.rst
+include LICENSE
+include MANIFEST.in
+include interactive_gym/**/*.py
+recursive-include mypackage *
+recursive-include tests *
