@@ -219,3 +219,21 @@ class RandomizeOrder(SceneWrapper):
         random.shuffle(self.scenes)
 
         return super().unpack()
+
+
+class RepeatScene(SceneWrapper):
+    def __init__(
+        self,
+        scenes: Scene | SceneWrapper | list[Scene],
+        n: int | None = None,
+        **kwargs,
+    ):
+        super().__init__(scenes, **kwargs)
+        self.n = n
+
+    def build(self) -> SceneWrapper:
+        """
+        Randomize the order before building the SceneWrapper.
+        """
+        self.scenes = self.scenes * self.n
+        return super().build()

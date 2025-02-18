@@ -39,7 +39,8 @@ end_scene = (
         experiment_config={},
     )
     .display(
-        scene_header="Thank you for playing! If you have any questions, please contact us: chasemcd@andrew.cmu.edu.",
+        scene_header="Thank you for playing!",
+        scene_subheader="If you have any questions, please contact us: chasemcd@andrew.cmu.edu.",
     )
 )
 
@@ -60,9 +61,11 @@ stager = stager.Stager(
         control_scene,
         # scenes.tutorial_gym_scene,
         # controllable_scenes.tutorial_with_bot_scene,
-        controllable_scenes.control_tutorial_scene,
+        # controllable_scenes.control_tutorial_scene,
         # controllable_scenes.end_tutorial_static_scene,
-        controllable_scenes.SCENES_BY_LAYOUT["cramped_room"],
+        scene.RepeatScene(
+            [controllable_scenes.SCENES_BY_LAYOUT["cramped_room"]], n=3
+        ),
         end_scene,
     ]
 )
