@@ -23,7 +23,7 @@ start_scene = (
     .scene(
         scene_id="overcooked_start_scene",
         experiment_config={},
-        should_export_metadata=True,
+        should_export_metadata=False,
     )
     .display(
         scene_header="Welcome",
@@ -32,10 +32,10 @@ start_scene = (
 )
 
 end_scene = (
-    static_scene.CompletionCodeScene()
+    static_scene.EndScene()
     .scene(
-        scene_id="end_completion_code_scene",
-        should_export_metadata=True,
+        scene_id="end_scene_demo",
+        should_export_metadata=False,
         experiment_config={},
     )
     .display(
@@ -58,7 +58,7 @@ control_scene = (
 choice_scene = controllable_scenes.make_choice_scene(
     layout_name="cramped_room"
 ).user_experience(
-    scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/choice_cramped_room.html",
+    scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/demo_choice_cramped_room.html",
 )
 
 
@@ -71,7 +71,7 @@ stager = stager.Stager(
         # controllable_scenes.control_tutorial_scene,
         # controllable_scenes.end_tutorial_static_scene,
         scene.RepeatScene(
-            [controllable_scenes.make_choice_scene(layout_name="cramped_room")],
+            [choice_scene],
             n=3,
         ),
         end_scene,
