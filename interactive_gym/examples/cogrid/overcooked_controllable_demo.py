@@ -55,6 +55,13 @@ control_scene = (
 )
 
 
+choice_scene = controllable_scenes.make_choice_scene(
+    layout_name="cramped_room"
+).user_experience(
+    scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/choice_cramped_room.html",
+)
+
+
 stager = stager.Stager(
     scenes=[
         start_scene,
@@ -64,7 +71,8 @@ stager = stager.Stager(
         # controllable_scenes.control_tutorial_scene,
         # controllable_scenes.end_tutorial_static_scene,
         scene.RepeatScene(
-            [controllable_scenes.SCENES_BY_LAYOUT["cramped_room"]], n=3
+            [controllable_scenes.make_choice_scene(layout_name="cramped_room")],
+            n=3,
         ),
         end_scene,
     ]
