@@ -8,7 +8,7 @@ setuptools.setup(
     author_email="chasemcd@andrew.cmu.edu",
     packages=setuptools.find_packages(),
     install_requires=[
-        "gymnasium",
+        "gymnasium==1.0.0",
         "numpy",
     ],
 )
