@@ -45,9 +45,9 @@ footsies_scene = (
     unity_scene.UnityScene()
     .scene(scene_id="footsies_scene_0", experiment_config={})
     .webgl(
-        build_name="footsies_webgl",
-        height=600,
-        width=960,
+        build_name="footsies_webgl_74685aa",
+        height=1080 / 3,
+        width=1960 / 3,
     )
 )
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     experiment_config = (
         experiment_config.ExperimentConfig()
         .experiment(stager=stager, experiment_id="footsies_test")
-        .hosting(port=5702, host="0.0.0.0")
+        .hosting(port=5704, host="0.0.0.0")
     )
 
     app.run(experiment_config)
