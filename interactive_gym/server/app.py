@@ -124,8 +124,9 @@ socketio = flask_socketio.SocketIO(
     cors_allowed_origins="*",
     # logger=app.config["DEBUG"],
     message_queue=message_queue,
+    logger=True,
+    engineio_logger=True,
 )
-
 
 #######################
 # Flask Configuration #
