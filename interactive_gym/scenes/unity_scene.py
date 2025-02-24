@@ -35,7 +35,7 @@ class UnityScene(scene.Scene):
         self.allow_continue_on: list[str] = []
 
         # The number of episodes to run
-        self.num_episodes: int | None = None
+        self.num_episodes: int | None = 3
 
         # The number of episodes completed
         self.episodes_completed: int = 0
