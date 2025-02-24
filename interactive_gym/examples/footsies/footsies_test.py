@@ -45,7 +45,7 @@ footsies_scene = (
     unity_scene.UnityScene()
     .scene(scene_id="footsies_scene_0", experiment_config={})
     .webgl(
-        build_name="footsies_webgl_74685aa",
+        build_name="footsies_webgl_w4",
         height=1080 / 3,
         width=1960 / 3,
     )

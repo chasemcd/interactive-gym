@@ -9,8 +9,8 @@ export function startUnityScene(data) {
     $("#gameContainer").show();
 
 
-    $("#advanceButton").attr("disabled", false);
-    $("#advanceButton").show();
+    $("#advanceButton").attr("disabled", true);
+    $("#advanceButton").hide();
 
     $("#sceneHeader").html(data.scene_header);
     $("#sceneSubHeader").html(data.scene_subheader);
@@ -37,14 +37,14 @@ export function terminateUnityScene(data) {
 
 function startUnityGame(config, elementId) {
     // Add CSS if it hasn't been added yet
-    if (!document.getElementById('unity-custom-styles')) {
-        const styleLink = document.createElement('link');
-        styleLink.id = 'unity-custom-styles';
-        styleLink.rel = 'stylesheet';
-        styleLink.type = 'text/css';
-        styleLink.href = `static/web_gl/${config.build_name}/TemplateData/style.css`;
-        document.head.appendChild(styleLink);
-    }
+    // if (!document.getElementById('unity-custom-styles')) {
+    //     const styleLink = document.createElement('link');
+    //     styleLink.id = 'unity-custom-styles';
+    //     styleLink.rel = 'stylesheet';
+    //     styleLink.type = 'text/css';
+    //     styleLink.href = `static/web_gl/${config.build_name}/TemplateData/style.css`;
+    //     document.head.appendChild(styleLink);
+    // }
 
     $(`#${elementId}`).empty()
     
@@ -135,4 +135,21 @@ function startUnityGame(config, elementId) {
     };
 
     document.body.appendChild(script);
+}
+
+
+function EmitUnityEpisodeResults(json) {
+  if (socket && socket.connected) {
+      socket.emit('unityEpisodeEnd', JSON.parse(json));
+  } else {
+      console.warn('Socket.IO is not connected. Cannot emit round results.');
+  }
+}
+
+function UnityConnectSocketIO() {
+  if (socket) {
+      console.log('Socket.IO is already connected!');
+  } else {
+      console.error('Socket.IO connection is not established.');
+  }
 }

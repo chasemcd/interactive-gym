@@ -24,6 +24,7 @@ from interactive_gym.configurations import remote_config
 from interactive_gym.server import utils
 from interactive_gym.scenes import stager
 from interactive_gym.server import game_manager as gm
+from interactive_gym.scenes import unity_scene
 
 try:
     import redis
@@ -434,6 +435,20 @@ def pong(data):
     #     hidden_status=document_in_focus,
     #     ping=ping_ms,
     # )
+
+
+@socketio.on("unityEpisodeEnd")
+def on_unity_episode_end(data):
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+    participant_stager = STAGERS.get(subject_id, None)
+    current_scene = participant_stager.current_scene
+
+    if not isinstance(current_scene, unity_scene.UnityScene):
+        return
+
+    current_scene.on_unity_episode_end(
+        data, sio=socketio, room=flask.request.sid
+    )
 
 
 @socketio.on("request_redirect")

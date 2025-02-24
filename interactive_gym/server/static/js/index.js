@@ -3,7 +3,9 @@ import {RemoteGame} from './pyodide_remote_game.js';
 import * as ui_utils from './ui_utils.js';
 import {startUnityScene, terminateUnityScene} from './unity_utils.js';
 
-var socket = io();
+
+window.socket = io();
+var socket = window.socket;
 
 var latencyMeasurements = [];
 var curLatency;
@@ -759,3 +761,14 @@ function redirect_subject(url) {
 
 
 const startButton = window.document.getElementById('startButton');
+
+socket.on("unity_episode_end", function(data) {
+    // Clear the Unity game container
+    $("#gameContainer").hide();
+    $("#gameContainer").html("");
+
+    // Make advance button available
+    $("#advanceButton").show();
+    $("#advanceButton").attr("disabled", false);
+})
+

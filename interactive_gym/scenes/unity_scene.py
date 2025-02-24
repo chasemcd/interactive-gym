@@ -34,6 +34,12 @@ class UnityScene(scene.Scene):
         # The condition(s) under which the user can continue on to the next scene
         self.allow_continue_on: list[str] = []
 
+        # The number of episodes to run
+        self.num_episodes: int | None = None
+
+        # The number of episodes completed
+        self.episodes_completed: int = 0
+
     def display(
         self,
         scene_header: str = NotProvided,
@@ -119,3 +125,32 @@ class UnityScene(scene.Scene):
             )
 
         return self
+
+    def game(self, num_episodes: int = NotProvided):
+        """
+        Specify the number of episodes to run.
+        """
+        if num_episodes is not NotProvided:
+            self.num_episodes = num_episodes
+
+        return self
+
+    def on_unity_episode_end(self, data, sio, room):
+        """
+        This method is called when the Unity episode ends.
+        """
+        self.episodes_completed += 1
+
+        if (
+            self.num_episodes is not None
+            and self.episodes_completed >= self.num_episodes
+        ):
+            sio.emit(
+                "unity_episode_end",
+                {
+                    "all_episodes_done": self.episodes_completed
+                    >= self.num_episodes,
+                    **self.scene_metadata,
+                },
+                room=room,
+            )
