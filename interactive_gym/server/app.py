@@ -123,9 +123,8 @@ except Exception as e:
 socketio = flask_socketio.SocketIO(
     app,
     cors_allowed_origins="*",
-    # logger=app.config["DEBUG"],
+    logger=app.config["DEBUG"],
     message_queue=message_queue,
-    logger=False,
     # engineio_logger=False,
 )
 
