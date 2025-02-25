@@ -10,6 +10,7 @@ from interactive_gym.configurations import remote_config
 from interactive_gym.scenes import utils as scene_utils
 from interactive_gym.configurations import configuration_constants
 from interactive_gym.scenes.utils import NotProvided
+import flask_socketio
 
 
 class UnityScene(scene.Scene):
@@ -35,7 +36,7 @@ class UnityScene(scene.Scene):
         self.allow_continue_on: list[str] = []
 
         # The number of episodes to run
-        self.num_episodes: int | None = 3
+        self.num_episodes: int | None = 1
 
         # The number of episodes completed
         self.episodes_completed: int = 0
@@ -135,22 +136,21 @@ class UnityScene(scene.Scene):
 
         return self
 
-    def on_unity_episode_end(self, data, sio, room):
+    def on_unity_episode_end(
+        self, data: dict, sio: flask_socketio.SocketIO, room: str
+    ):
         """
         This method is called when the Unity episode ends.
         """
         self.episodes_completed += 1
 
-        if (
-            self.num_episodes is not None
-            and self.episodes_completed >= self.num_episodes
-        ):
-            sio.emit(
-                "unity_episode_end",
-                {
-                    "all_episodes_done": self.episodes_completed
-                    >= self.num_episodes,
-                    **self.scene_metadata,
-                },
-                room=room,
-            )
+        sio.emit(
+            "unity_episode_end",
+            {
+                "all_episodes_done": self.episodes_completed
+                >= self.num_episodes,
+                **data,
+                **self.scene_metadata,
+            },
+            room=room,
+        )

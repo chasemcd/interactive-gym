@@ -1,7 +1,7 @@
-import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData, pressedKeys} from './phaser_gym_graphics.js';
+
 import {RemoteGame} from './pyodide_remote_game.js';
 import * as ui_utils from './ui_utils.js';
-import {startUnityScene, terminateUnityScene} from './unity_utils.js';
+import {startUnityScene, terminateUnityScene, shutdownUnityGame} from './unity_utils.js';
 
 
 window.socket = io();
@@ -763,12 +763,30 @@ function redirect_subject(url) {
 const startButton = window.document.getElementById('startButton');
 
 socket.on("unity_episode_end", function(data) {
-    // Clear the Unity game container
-    $("#gameContainer").hide();
-    $("#gameContainer").html("");
+    if (data.all_episodes_done) {
+        // Clear the Unity game container
+        $("#gameContainer").hide();
+        shutdownUnityGame();
+        $("#gameContainer").html("");
 
-    // Make advance button available
-    $("#advanceButton").show();
-    $("#advanceButton").attr("disabled", false);
-})
+        $("#sceneSubHeader").hide();
+        $("#sceneBody").show();
+
+        // Start countdown for 3 seconds before advancing
+        let timer = 3;
+        $("#resetGame").show();
+        $("#resetGame").text(`Continuing in ${timer} seconds...`);
+
+        let interval = setInterval(function() {
+            timer--;
+            if (timer <= 0) {
+                clearInterval(interval);
+                $("#resetGame").hide();
+                socket.emit("advance_scene", {session_id: window.sessionId});
+            } else {
+                $("#resetGame").text(`Continuing in ${timer} seconds...`);
+            }
+        }, 1000);
+    }
+});
 
