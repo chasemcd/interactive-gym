@@ -73,7 +73,6 @@ footsies_initial_scene = (
         </div>
         """
         + CONTROLS_SUBHEADER,
-        scene_body="<p><i>If the game does not appear, please wait a moment while it loads...</i></p>",
     )
     .scene(scene_id="footsies_initial_eval_0", experiment_config={})
     .webgl(
