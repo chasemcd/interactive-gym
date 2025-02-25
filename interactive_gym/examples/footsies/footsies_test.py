@@ -59,7 +59,7 @@ CONTROLS_SUBHEADER = """
 """
 
 
-EPISODES_SCALE_DOWN = 5
+EPISODES_SCALE_DOWN = 1
 
 footsies_initial_scene = (
     unity_scene.UnityScene()
