@@ -49,7 +49,6 @@ function startUnityGame(config, elementId) {
       <div id="unity-footer">
         <div id="unity-webgl-logo"></div>
         <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">${config.build_name}</div>
       </div>
     </div>`);
 

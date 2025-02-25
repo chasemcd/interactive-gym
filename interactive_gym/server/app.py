@@ -446,8 +446,23 @@ def on_unity_episode_end(data):
         return
 
     current_scene.on_unity_episode_end(
-        data, sio=socketio, room=flask.request.sid
+        data,
+        sio=socketio,
+        room=flask.request.sid,
     )
+
+    # (Potentially) save the data
+    scene_id = current_scene.scene_id
+    cur_episode = current_scene.episodes_completed
+    wrapped_data = {}
+    wrapped_data["scene_id"] = f"{scene_id}_{cur_episode}"
+    wrapped_data["data"] = data
+
+    # TODO(chase): Make sure the globals are propagated here
+    # so we don't have to fill it.
+    wrapped_data["interactiveGymGlobals"] = {}
+
+    data_emission(wrapped_data)
 
 
 @socketio.on("request_redirect")
