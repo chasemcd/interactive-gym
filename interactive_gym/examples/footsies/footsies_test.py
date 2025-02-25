@@ -48,13 +48,14 @@ footsies_tutorial_scene = (
 )
 
 CONTROLS_SUBHEADER = """ 
-        <center>
-        <p>Click "vs cpu" to begin!</p>
-        <p>
-        Move left and right with <img src="static/assets/keys/icons8-a-key-50.png" alt="A key" height="24" width="24" style="vertical-align:middle;"> and <img src="static/assets/keys/icons8-d-key-50.png" alt="A key" height="24" width="24" style="vertical-align:middle;">
-        and use the space bar <img src="static/assets/keys/icons8-space-key-50.png" alt="A key" height="24" width="24" style="vertical-align:middle;"> to attack!
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px; color: #FFD700;">
+        <p style="margin: 10px;">
+        MOVE WITH <img src="static/assets/keys/icons8-a-key-50.png" alt="A key" height="24" width="24" style="vertical-align:middle;"> AND <img src="static/assets/keys/icons8-d-key-50.png" alt="D key" height="24" width="24" style="vertical-align:middle;">
         </p>
-        </center>
+        <p style="margin: 5px;">
+        ATTACK WITH <img src="static/assets/keys/icons8-space-key-50.png" alt="Space key" height="24" width="24" style="vertical-align:middle;">
+        </p>
+        </div>
 """
 
 
@@ -64,7 +65,13 @@ footsies_initial_scene = (
     unity_scene.UnityScene()
     .display(
         scene_header="Footsies",
-        scene_subheader="<center><p>You'll first play 5 rounds against an initial AI opponent.</p></center>"
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #FFD700; text-shadow: 2px 2px #000; margin: 5px;">INITIAL CHALLENGE</p>
+            <p style="color: #FFF; margin: 5px;">FACE OFF AGAINST YOUR FIRST OPPONENT</p>
+            <p style="color: #00FF00; margin: 5px;">5 ROUNDS</p>
+        </div>
+        """
         + CONTROLS_SUBHEADER,
     )
     .scene(scene_id="footsies_initial_eval_0", experiment_config={})
@@ -80,7 +87,13 @@ footsies_training_scene = (
     unity_scene.UnityScene()
     .display(
         scene_header="Footsies",
-        scene_subheader="<center><p>Here you'll practice for 25 rounds against an AI training partner.</p></center>"
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #FFD700; text-shadow: 2px 2px #000; margin: 5px;">TRAINING ROUNDS</p>
+            <p style="color: #FFF; margin: 5px;">HONE YOUR SKILLS WITH AN AI PARTNER</p>
+            <p style="color: #00FF00; margin: 5px;">25 ROUNDS</p>
+        </div>
+        """
         + CONTROLS_SUBHEADER,
     )
     .scene(scene_id="footsies_training_0", experiment_config={})
@@ -100,6 +113,7 @@ footsies_survey_scene = (
             "My partner was fun to play against.",
             "My partner was...",
         ],
+        pre_scale_header="",
         scale_labels=[
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
@@ -116,7 +130,14 @@ footsies_test_scene = (
     unity_scene.UnityScene()
     .display(
         scene_header="Footsies",
-        scene_subheader="<center><p>Earn your bonus by beating the AI in 10 final rounds! You'll earn $0.50 for each win.</p></center>"
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #FFD700; text-shadow: 2px 2px #000; margin: 5px;">FINAL CHALLENGE</p>
+            <p style="color: #FFF; margin: 5px;">PROVE YOUR WORTH!</p>
+            <p style="color: #00FF00; margin: 5px;">WIN $0.50 FOR EACH VICTORY</p>
+            <p style="color: #FF4500; margin: 5px;">10 ROUNDS</p>
+        </div>
+        """
         + CONTROLS_SUBHEADER,
     )
     .scene(scene_id="footsies_scene_0", experiment_config={})
