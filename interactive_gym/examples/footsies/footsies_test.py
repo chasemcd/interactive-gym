@@ -48,12 +48,12 @@ footsies_tutorial_scene = (
 )
 
 CONTROLS_SUBHEADER = """ 
-        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px; color: #FFD700;">
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px; color: #000;">
         <p style="margin: 10px;">
         MOVE WITH <img src="static/assets/keys/icons8-a-key-50.png" alt="A key" height="24" width="24" style="vertical-align:middle;"> AND <img src="static/assets/keys/icons8-d-key-50.png" alt="D key" height="24" width="24" style="vertical-align:middle;">
         </p>
         <p style="margin: 5px;">
-        ATTACK WITH <img src="static/assets/keys/icons8-space-key-50.png" alt="Space key" height="24" width="24" style="vertical-align:middle;">
+        ATTACK WITH THE SPACE BAR <img src="static/assets/keys/icons8-space-key-50.png" alt="Space key" height="24" width="24" style="vertical-align:middle;">
         </p>
         </div>
 """
@@ -67,9 +67,7 @@ footsies_initial_scene = (
         scene_header="Footsies",
         scene_subheader="""
         <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
-            <p style="color: #FFD700; text-shadow: 2px 2px #000; margin: 5px;">INITIAL CHALLENGE</p>
-            <p style="color: #FFF; margin: 5px;">FACE OFF AGAINST YOUR FIRST OPPONENT</p>
-            <p style="color: #00FF00; margin: 5px;">5 ROUNDS</p>
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">INITIAL CHALLENGE</p>
         </div>
         """
         + CONTROLS_SUBHEADER,
@@ -89,9 +87,9 @@ footsies_training_scene = (
         scene_header="Footsies",
         scene_subheader="""
         <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
-            <p style="color: #FFD700; text-shadow: 2px 2px #000; margin: 5px;">TRAINING ROUNDS</p>
-            <p style="color: #FFF; margin: 5px;">HONE YOUR SKILLS WITH AN AI PARTNER</p>
-            <p style="color: #00FF00; margin: 5px;">25 ROUNDS</p>
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
+            <p style="color: #000; margin: 5px;">HONE YOUR SKILLS WITH AN AI PARTNER</p>
+            <p style="color: #FF0000; margin: 5px;">25 ROUNDS</p>
         </div>
         """
         + CONTROLS_SUBHEADER,
@@ -132,10 +130,10 @@ footsies_test_scene = (
         scene_header="Footsies",
         scene_subheader="""
         <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
-            <p style="color: #FFD700; text-shadow: 2px 2px #000; margin: 5px;">FINAL CHALLENGE</p>
-            <p style="color: #FFF; margin: 5px;">PROVE YOUR WORTH!</p>
-            <p style="color: #00FF00; margin: 5px;">WIN $0.50 FOR EACH VICTORY</p>
-            <p style="color: #FF4500; margin: 5px;">10 ROUNDS</p>
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">FINAL CHALLENGE</p>
+            <p style="color: #000; margin: 5px;">PROVE YOUR WORTH!</p>
+            <p style="color: #000; margin: 5px;">WIN $0.50 FOR EACH VICTORY</p>
+            <p style="color: #FF0000; margin: 5px;">10 ROUNDS</p>
         </div>
         """
         + CONTROLS_SUBHEADER,
