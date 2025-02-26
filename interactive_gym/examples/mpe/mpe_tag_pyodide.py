@@ -39,9 +39,9 @@ POLICY_MAPPING = {
 # TODO: What are the actual values? Check these to make sure they are correct!
 NOOP = 0
 LEFT = 1
-UP = 2
-RIGHT = 3
-DOWN = 4
+RIGHT = 2
+DOWN = 3
+UP = 4
 
 # Map the actions to the arrow keys. The keys are Javascript key press events (all others ignored)
 ACTION_MAPPING = {
@@ -63,7 +63,7 @@ start_scene = (
     .display(
         scene_header="Welcome",
         scene_body=(
-            "Welcome to the Slime Volleyball experiment! This is a demonstration of "
+            "Welcome to the simple tag experiment! This is a demonstration of "
             "how to set up a basic experiment with a human and AI interacting together.",
         ),
     )
@@ -120,14 +120,14 @@ stager = stager.Stager(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--port", type=int, default=5702, help="Port number to listen on"
+        "--port", type=int, default=5703, help="Port number to listen on"
     )
     args = parser.parse_args()
 
     experiment_config = (
         experiment_config.ExperimentConfig()
-        .experiment(stager=stager, experiment_id="slime_vb_demo")
-        .hosting(port=5702, host="0.0.0.0")
+        .experiment(stager=stager, experiment_id="mpe_tag_example")
+        .hosting(port=5703, host="0.0.0.0")
     )
 
     app.run(experiment_config)
