@@ -74,7 +74,7 @@ footsies_initial_scene = (
     )
     .scene(scene_id="footsies_initial_eval_0", experiment_config={})
     .webgl(
-        build_name="footsies_webgl_0224",
+        build_name="footsies_webgl_a613788",
         height=1080 / 3,
         width=1960 / 3,
     )
@@ -96,7 +96,7 @@ footsies_training_scene = (
     )
     .scene(scene_id="footsies_training_0", experiment_config={})
     .webgl(
-        build_name="footsies_webgl_0224",
+        build_name="footsies_webgl_a613788",
         height=1080 / 3,
         width=1960 / 3,
     )
@@ -140,7 +140,7 @@ footsies_test_scene = (
     )
     .scene(scene_id="footsies_scene_0", experiment_config={})
     .webgl(
-        build_name="footsies_webgl_0224",
+        build_name="footsies_webgl_a613788",
         height=1080 / 3,
         width=1960 / 3,
     )
