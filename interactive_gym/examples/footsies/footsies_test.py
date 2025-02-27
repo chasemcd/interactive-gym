@@ -144,16 +144,16 @@ footsies_test_scene = (
         height=1080 / 3,
         width=1960 / 3,
     )
-    .game(num_episodes=10 // EPISODES_SCALE_DOWN)
+    .game(num_episodes=20 // EPISODES_SCALE_DOWN)
 )
 
 stager = stager.Stager(
     scenes=[
         start_scene,
         footsies_tutorial_scene,
-        footsies_initial_scene,
-        footsies_training_scene,
-        footsies_survey_scene,
+        # footsies_initial_scene,
+        # footsies_training_scene,
+        # footsies_survey_scene,
         footsies_test_scene,
         oc_scenes.end_scene,
     ]
