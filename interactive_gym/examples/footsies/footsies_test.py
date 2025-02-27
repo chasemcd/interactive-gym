@@ -131,9 +131,6 @@ footsies_test_scene = (
         scene_subheader="""
         <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
             <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">FINAL CHALLENGE</p>
-            <p style="color: #000; margin: 5px;">PROVE YOUR WORTH!</p>
-            <p style="color: #000; margin: 5px;">WIN $0.50 FOR EACH VICTORY</p>
-            <p style="color: #FF0000; margin: 5px;">10 ROUNDS</p>
         </div>
         """
         + CONTROLS_SUBHEADER,
