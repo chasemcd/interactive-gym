@@ -41,6 +41,10 @@ class UnityScene(scene.Scene):
         # The number of episodes completed
         self.episodes_completed: int = 0
 
+        # If we track score, we'll use it and display it in the HUD
+        self.score_fn: Callable[[], float] | None = None
+        self.score: float | None = None
+
     def display(
         self,
         scene_header: str = NotProvided,
@@ -127,12 +131,20 @@ class UnityScene(scene.Scene):
 
         return self
 
-    def game(self, num_episodes: int = NotProvided):
+    def game(
+        self,
+        num_episodes: int = NotProvided,
+        score_fn: Callable[[], float] = NotProvided,
+    ):
         """
         Specify the number of episodes to run.
         """
         if num_episodes is not NotProvided:
             self.num_episodes = num_episodes
+
+        if score_fn is not NotProvided:
+            self.score_fn = score_fn
+            self.score = 0.0
 
         return self
 
@@ -151,6 +163,25 @@ class UnityScene(scene.Scene):
                 >= self.num_episodes,
                 **data,
                 **self.scene_metadata,
+            },
+            room=room,
+        )
+
+        if self.score_fn is None:
+            return
+
+        print("Score updating!", self.score)
+        score_this_round = self.score_fn(data)
+        if self.score is None:
+            self.score = score_this_round
+        else:
+            self.score += score_this_round
+
+        sio.emit(
+            "update_unity_score",
+            {
+                "score": self.score,
+                "num_episodes": self.num_episodes,
             },
             room=room,
         )

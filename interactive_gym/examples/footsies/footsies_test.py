@@ -38,6 +38,28 @@ start_scene = (
     )
 )
 
+
+footsies_initial_survey_scene = (
+    static_scene.ScalesAndTextBox(
+        scale_questions=[
+            "I play video games frequently.",
+            "I have experience playing fighting games (Street Fighter, Tekken, etc.).",
+            "I know the fundamental strategies of fighting games.",
+        ],
+        pre_scale_header="",
+        scale_labels=[
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+        ],
+        text_box_header="Please leave any additional comments about your experience with fighting games. Write N/A if you do not have anything to add.",
+        scale_size=7,
+    )
+    .scene(scene_id="footsies_initial_survey_0", experiment_config={})
+    .display(scene_subheader="Initial Survey")
+)
+
+
 footsies_tutorial_scene = (
     static_scene.StaticScene()
     .scene("footsies_tutorial_scene")
@@ -78,7 +100,10 @@ footsies_initial_scene = (
         height=1080 / 3,
         width=1960 / 3,
     )
-    .game(num_episodes=5 // EPISODES_SCALE_DOWN)
+    .game(
+        num_episodes=5 // EPISODES_SCALE_DOWN,
+        score_fn=lambda data: int(data["winner"] == "P1"),
+    )
 )
 
 footsies_training_scene = (
@@ -100,29 +125,36 @@ footsies_training_scene = (
         height=1080 / 3,
         width=1960 / 3,
     )
-    .game(num_episodes=25 // EPISODES_SCALE_DOWN)
+    .game(
+        num_episodes=25 // EPISODES_SCALE_DOWN,
+        score_fn=lambda data: int(data["winner"] == "P1"),
+    )
 )
 
 
-footsies_survey_scene = (
+footsies_training_survey_scene = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
-            "My partner was effective in helping me learn.",
-            "My partner was fun to play against.",
-            "My partner was...",
+            "My skills improved over the course of playing with my training partner.",
+            "My training partner was effective in helping me learn a good strategy.",
+            "My training partner was fun to play against.",
+            "My training partner was frustrating to play against."
+            "My training partner felt...",
         ],
         pre_scale_header="",
         scale_labels=[
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Too Easy to Beat", "Evenly Matched", "Too Hard to Beat"],
         ],
-        text_box_header="Please describe any additional reasoning for your selections. This might include specific actions or behaviors. You may write N/A if you do not have any anything to add.",
+        text_box_header="Please describe the general strategy you've learned from your training partner. What is your approach to winning? What would have made the CPU a better training partner?",
+        scale_size=7,
     )
     .scene(scene_id="footsies_survey_0", experiment_config={})
-    .display(scene_subheader="Feedback About Your AI Training Partner")
+    .display(scene_subheader="Feedback About Your CPU Training Partner")
 )
-
 
 footsies_test_scene = (
     unity_scene.UnityScene()
@@ -141,18 +173,57 @@ footsies_test_scene = (
         height=1080 / 3,
         width=1960 / 3,
     )
-    .game(num_episodes=20 // EPISODES_SCALE_DOWN)
+    .game(
+        num_episodes=20 // EPISODES_SCALE_DOWN,
+        score_fn=lambda data: int(data["winner"] == "P1"),
+    )
 )
+
+
+footsies_end_survey_scene = (
+    static_scene.ScalesAndTextBox(
+        scale_questions=[
+            "The strategy I learned from my training partner was effective against the final challenge opponents.",
+            "The final challenge opponents were fun to play against.",
+            "The final challenge opponents felt...",
+        ],
+        pre_scale_header="",
+        scale_labels=[
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Too Easy to Beat", "Evenly Matched", "Too Hard to Beat"],
+        ],
+        text_box_header="Please describe any additional reasoning for your selections or thoughts on the study. You may write N/A if you do not have any anything to add.",
+        scale_size=7,
+    )
+    .scene(scene_id="footsies_survey_0", experiment_config={})
+    .display(scene_subheader="Feedback About Your CPU Training Partner")
+)
+
+
+footsies_end_scene = (
+    static_scene.CompletionCodeScene()
+    .scene(
+        scene_id="footsies_end_completion_code_scene",
+        should_export_metadata=True,
+        experiment_config={},
+    )
+    .display(
+        scene_header="Thank you for participating!",
+    )
+)
+
 
 stager = stager.Stager(
     scenes=[
         start_scene,
         footsies_tutorial_scene,
-        # footsies_initial_scene,
-        # footsies_training_scene,
-        # footsies_survey_scene,
+        footsies_initial_scene,
+        footsies_training_scene,
+        footsies_training_survey_scene,
         footsies_test_scene,
-        oc_scenes.end_scene,
+        footsies_end_survey_scene,
+        footsies_end_scene,
     ]
 )
 

@@ -2,6 +2,7 @@ export function startUnityScene(data) {
     $("#sceneHeader").show();
     $("#sceneSubHeader").show();
     $("#sceneBody").show();
+    $("#hudText").show();
 
     // Insert Unity WebGL container and loader elements
     startUnityGame(data, "gameContainer");
@@ -27,6 +28,37 @@ export function startUnityScene(data) {
     } else {
         $("#sceneBody").hide();
     }
+
+
+    // Initialize or increment the gym scene counter
+    if (typeof window.interactiveGymGlobals === 'undefined') {
+        window.interactiveGymGlobals = {};
+    }
+
+    window.interactiveGymGlobals.unityEpisodeCounter = 0;
+    window.interactiveGymGlobals.unityScore = null;
+    if (data.score !== null) {
+        window.interactiveGymGlobals.unityScore = 0;
+    }
+    console.log(window.interactiveGymGlobals.unityScore);
+    // Update HUD text to show round progress
+    // if (data.num_episodes && data.num_episodes > 1) {
+    //     const roundText = `Round ${window.interactiveGymGlobals.unityEpisodeCounter + 1}/${data.num_episodes}`;
+    //     $("#hudText").html(roundText);
+    // }
+
+    let hudText = '';
+    if (data.num_episodes && data.num_episodes > 1) {
+        hudText += `Round ${window.interactiveGymGlobals.unityEpisodeCounter + 1}/${data.num_episodes}`;
+    }
+    
+    if (window.interactiveGymGlobals.unityScore !== null) {
+        if (hudText) hudText += ' | ';
+        hudText += `Score: ${window.interactiveGymGlobals.unityScore}`;
+    }
+
+    $("#hudText").html(hudText);
+
 }
 
 
