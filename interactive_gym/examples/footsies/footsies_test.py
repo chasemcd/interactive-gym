@@ -138,12 +138,10 @@ footsies_training_survey_scene = (
             "My skills improved over the course of playing with my training partner.",
             "My training partner was effective in helping me learn a good strategy.",
             "My training partner was fun to play against.",
-            "My training partner was frustrating to play against."
             "My training partner felt...",
         ],
         pre_scale_header="",
         scale_labels=[
-            ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
