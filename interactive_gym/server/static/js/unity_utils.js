@@ -108,7 +108,7 @@ function startUnityGame(config, elementId) {
         productName: config.build_name,
         productVersion: "1.0",
     };
-
+    
     loadingBar.style.display = "block";
 
     var script = document.createElement("script");
