@@ -273,7 +273,7 @@ base_controllable_ = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_controllable_environment_initialization.py",
-        packages_to_install=["numpy", "cogrid", "opencv-python"],
+        packages_to_install=["numpy", "cogrid==0.0.15", "opencv-python"],
     )
 )
 base_controllable_eval_ = (
