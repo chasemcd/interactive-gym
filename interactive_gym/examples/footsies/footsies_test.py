@@ -316,7 +316,7 @@ footsies_end_scene = (
 stager = stager.Stager(
     scenes=[
         start_scene,
-        # footsies_initial_survey_scene,
+        footsies_initial_survey_scene,
         footsies_tutorial_scene,
         footsies_initial_scene,
         footsies_training_scene,
