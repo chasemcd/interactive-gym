@@ -1,4 +1,3 @@
-
 import {RemoteGame} from './pyodide_remote_game.js';
 import * as ui_utils from './ui_utils.js';
 import {startUnityScene, terminateUnityScene, shutdownUnityGame} from './unity_utils.js';
@@ -763,7 +762,45 @@ function redirect_subject(url) {
 
 const startButton = window.document.getElementById('startButton');
 
+
+socket.on("update_unity_score", function(data) {
+    console.log("Updating Unity score", data.score);
+    window.interactiveGymGlobals.unityScore = data.score;
+
+
+    let hudText = '';
+    if (data.num_episodes && data.num_episodes > 1) {
+        hudText += `Round ${window.interactiveGymGlobals.unityEpisodeCounter + 1}/${data.num_episodes}`;
+    }
+    
+    if (window.interactiveGymGlobals.unityScore !== null) {
+        if (hudText) hudText += ' | ';
+        hudText += `Score: ${window.interactiveGymGlobals.unityScore}`;
+    }
+
+    $("#hudText").html(hudText);
+
+});
+
 socket.on("unity_episode_end", function(data) {
+
+    // Update the HUD text to show the round progress and score
+    window.interactiveGymGlobals.unityEpisodeCounter++;
+    
+    let hudText = '';
+    if (data.num_episodes && data.num_episodes > 1) {
+        hudText += `Round ${window.interactiveGymGlobals.unityEpisodeCounter + 1}/${data.num_episodes}`;
+    }
+    
+    if (window.interactiveGymGlobals.unityScore !== null) {
+        if (hudText) hudText += ' | ';
+        hudText += `Score: ${window.interactiveGymGlobals.unityScore}`;
+    }
+    
+    $("#hudText").html(hudText);
+
+
+
     if (data.all_episodes_done) {
         // Clear the Unity game container
         $("#gameContainer").hide();
@@ -772,6 +809,8 @@ socket.on("unity_episode_end", function(data) {
 
         $("#sceneSubHeader").hide();
         $("#sceneBody").show();
+
+        $("#hudText").hide();
 
         // Start countdown for 3 seconds before advancing
         let timer = 3;
@@ -788,6 +827,9 @@ socket.on("unity_episode_end", function(data) {
                 $("#resetGame").text(`Continuing in ${timer} seconds...`);
             }
         }, 1000);
+
     }
+    
+
 });
 
