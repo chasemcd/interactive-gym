@@ -808,3 +808,142 @@ class ScalesAndTextBox(StaticScene):
             element_ids.append(f"scale-{i}")
 
         return element_ids
+
+
+class MultipleChoice(StaticScene):
+    """A StaticScene subclass that displays multiple choice questions.
+
+    This class creates a static scene with multiple choice questions that can be either
+    radio buttons (single select) or checkboxes (multi select).
+    """
+
+    def __init__(
+        self,
+        pre_questions_header: str,
+        questions: list[str],
+        choices: list[list[str]],
+        multi_select: bool | list[bool] = False,
+        images: list[str | None] | None = None,
+    ):
+        super().__init__()
+        self.pre_questions_header = pre_questions_header
+        self.questions = questions
+        self.images = images or [None] * len(questions)
+
+        if isinstance(choices[0], list):
+            self.choices = choices
+        elif isinstance(choices[0], str):
+            self.choices = [choices] * len(questions)
+        else:
+            raise ValueError(
+                "choices must be a list of strings or a list of lists of strings"
+            )
+
+        if isinstance(multi_select, list):
+            self.multi_select = multi_select
+        else:
+            self.multi_select = [multi_select] * len(questions)
+
+        assert len(self.questions) == len(
+            self.choices
+        ), "Number of questions must match number of choice sets"
+        assert len(self.questions) == len(
+            self.multi_select
+        ), "Number of questions must match number of multi_select flags"
+        assert len(self.questions) == len(
+            self.images
+        ), "Number of questions must match number of images"
+
+        self.scene_body = self._create_html()
+        self.element_ids = self.get_data_element_ids()
+
+    def _create_html(self) -> str:
+        """
+        Creates HTML code to display multiple choice questions.
+        Questions can be either single-select (radio) or multi-select (checkbox).
+        The advance button is only enabled when all questions are answered.
+        """
+        html = (
+            f'<p style="text-align: center;">{self.pre_questions_header}</p>\n'
+        )
+
+        # Add multiple choice questions
+        html += '<div id="mc-questions-container" style="margin-top: 20px;">\n'
+        for i, (question, choices, is_multi, image) in enumerate(
+            zip(self.questions, self.choices, self.multi_select, self.images)
+        ):
+            input_type = "checkbox" if is_multi else "radio"
+            html += f"""
+            <div class="mc-question" style="margin-bottom: 25px; text-align: left;">
+                <div style="border: 1px solid #ccc; padding: 15px; margin: 0 auto; width: 80%; border-radius: 5px;">
+                    <p style="margin: 0 0 10px 0; font-weight: bold;">{question} <span style="color: red;">*</span></p>
+            """
+
+            # Add image if provided
+            if image:
+                html += f"""
+                    <div style="text-align: center; margin: 15px 0;">
+                        <img src="{image}" alt="Question {i+1} image" style="max-width: 100%; height: auto;">
+                    </div>
+                """
+
+            html += f"""
+                    <div class="input-group" id="mc-{i}-group" style="display: flex; flex-direction: column; gap: 8px;">
+            """
+
+            for j, choice in enumerate(choices):
+                html += f"""
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="{input_type}" name="mc-{i}" id="mc-{i}-{j}" value="{j}" class="mc-input"
+                                style="cursor: pointer; width: 16px; height: 16px;">
+                            <span style="flex: 1;">{choice}</span>
+                        </label>
+                """
+
+            html += """
+                    </div>
+                </div>
+            </div>
+            """
+        html += "</div>\n"
+
+        html += """
+        <script>
+        $("#advanceButton").attr("disabled", true);
+        $("#advanceButton").show();
+
+        function checkInputs() {
+            var allQuestionsAnswered = Array.from(document.querySelectorAll('.input-group')).every(group => {
+                var inputs = group.querySelectorAll('input');
+                var isCheckbox = inputs[0].type === 'checkbox';
+                if (isCheckbox) {
+                    // For checkboxes, at least one must be checked
+                    return Array.from(inputs).some(input => input.checked);
+                } else {
+                    // For radio buttons, exactly one must be checked
+                    return Array.from(inputs).some(input => input.checked);
+                }
+            });
+            document.getElementById('advanceButton').disabled = !allQuestionsAnswered;
+        }
+
+        document.querySelectorAll('.mc-input').forEach(function(input) {
+            input.addEventListener('change', checkInputs);
+        });
+        </script>
+        """
+
+        return html
+
+    def get_data_element_ids(self) -> list[str]:
+        """
+        Identifies and returns a list of element IDs that should be retrieved to store user input data.
+
+        For multi-select questions, all selected values will be returned as a comma-separated string.
+        For single-select questions, only the selected value will be returned.
+
+        Returns:
+            list[str]: A list of element IDs corresponding to user input data.
+        """
+        # Add names (not IDs) for all question groups
+        return [f"mc-{i}" for i in range(len(self.questions))]
