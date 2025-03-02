@@ -65,29 +65,88 @@ export function startUnityScene(data) {
 
 let unityInstance = null; // Store Unity instance globally
 
+// Store preload promises and instances for different builds
+const unityPreloads = new Map(); // Map of build_name -> { promise, instance }
+
+// Keep track of cached assets
+const unityCachedAssets = new Map(); // Map of build_name -> {data, framework, wasm}
+
+export function preloadUnityGame(config) {
+    console.log("Preloading Unity game assets", config);
+    const buildName = config.build_name;
+    
+    // Return existing cache if already downloaded
+    if (unityCachedAssets.has(buildName)) {
+        console.log(`Assets for ${buildName} already cached`);
+        return Promise.resolve(unityCachedAssets.get(buildName));
+    }
+
+    const buildUrl = `static/web_gl/${buildName}/Build`;
+    
+    // Create promises for all asset downloads
+    const assetPromises = {
+        loader: fetch(buildUrl + `/${buildName}.loader.js`).then(r => r.blob()),
+        data: fetch(buildUrl + `/${buildName}.data`).then(r => r.blob()),
+        framework: fetch(buildUrl + `/${buildName}.framework.js`).then(r => r.blob()),
+        wasm: fetch(buildUrl + `/${buildName}.wasm`).then(r => r.blob())
+    };
+
+    // Download all assets in parallel
+    return Promise.all(Object.values(assetPromises))
+        .then(([loaderBlob, dataBlob, frameworkBlob, wasmBlob]) => {
+            // Create object URLs for the assets
+            const cachedAssets = {
+                loaderUrl: URL.createObjectURL(loaderBlob),
+                dataUrl: URL.createObjectURL(dataBlob),
+                frameworkUrl: URL.createObjectURL(frameworkBlob),
+                codeUrl: URL.createObjectURL(wasmBlob),
+                buildName: buildName
+            };
+            
+            // Store in cache
+            unityCachedAssets.set(buildName, cachedAssets);
+            console.log(`Assets for ${buildName} cached successfully`);
+            
+            return cachedAssets;
+        })
+        .catch(error => {
+            console.error(`Failed to preload ${buildName}:`, error);
+            throw error;
+        });
+}
+
+// Modified startUnityGame to use cached assets
 function startUnityGame(config, elementId) {
-    $(`#${elementId}`).empty();
+    const buildName = config.build_name;
+    const cachedAssets = unityCachedAssets.get(buildName);
+    
+    if (!cachedAssets) {
+        console.warn(`No cached assets found for ${buildName}, falling back to direct loading`);
+        return startUnityGameDirect(config, elementId);
+    }
+
+    console.log(`Starting Unity game with cached assets: ${buildName}`);
     
     $(`#${elementId}`).html(`
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
-        </div>
-      </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-webgl-logo"></div>
-        <div id="unity-fullscreen-button"></div>
-      </div>
-    </div>`);
+        <div id="unity-container" class="unity-desktop">
+            <canvas id="unity-canvas" tabindex="-1"></canvas>
+            <div id="unity-loading-bar">
+                <div id="unity-logo"></div>
+                <div id="unity-progress-bar-empty">
+                    <div id="unity-progress-bar-full"></div>
+                </div>
+            </div>
+            <div id="unity-warning"> </div>
+            <div id="unity-footer">
+                <div id="unity-webgl-logo"></div>
+                <div id="unity-fullscreen-button"></div>
+            </div>
+        </div>`);
 
-    var canvas = document.querySelector("#unity-canvas");
-    var loadingBar = document.querySelector("#unity-loading-bar");
-    var progressBarFull = document.querySelector("#unity-progress-bar-full");
-    var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+    const canvas = document.querySelector("#unity-canvas");
+    const loadingBar = document.querySelector("#unity-loading-bar");
+    const progressBarFull = document.querySelector("#unity-progress-bar-full");
+    const fullscreenButton = document.querySelector("#unity-fullscreen-button");
 
     if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         canvas.className = "unity-mobile";
@@ -96,28 +155,25 @@ function startUnityGame(config, elementId) {
         canvas.style.height = `${config.height}px`;
     }
 
-    var buildUrl = `static/web_gl/${config.build_name}/Build`;
-    var loaderUrl = buildUrl + `/${config.build_name}.loader.js`;
-
-    var unityConfig = {
-        dataUrl: buildUrl + `/${config.build_name}.data`,
-        frameworkUrl: buildUrl + `/${config.build_name}.framework.js`,
-        codeUrl: buildUrl + `/${config.build_name}.wasm`,
+    const unityConfig = {
+        dataUrl: cachedAssets.dataUrl,
+        frameworkUrl: cachedAssets.frameworkUrl,
+        codeUrl: cachedAssets.codeUrl,
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
-        productName: config.build_name,
+        productName: buildName,
         productVersion: "1.0",
     };
     
     loadingBar.style.display = "block";
 
-    var script = document.createElement("script");
-    script.src = loaderUrl;
+    const script = document.createElement("script");
+    script.src = cachedAssets.loaderUrl;
     script.onload = () => {
         createUnityInstance(canvas, unityConfig, (progress) => {
             progressBarFull.style.width = 100 * progress + "%";
         }).then((instance) => {
-            unityInstance = instance; // Store Unity instance globally
+            unityInstance = instance;
             loadingBar.style.display = "none";
             fullscreenButton.onclick = () => {
                 unityInstance.SetFullscreen(1);
@@ -130,21 +186,22 @@ function startUnityGame(config, elementId) {
     document.body.appendChild(script);
 }
 
-export function shutdownUnityGame() {
-  if (unityInstance) {
-      try {
-          unityInstance.Quit().then(() => {
-              document.getElementById("unity-container")?.remove(); // Remove the Unity canvas container
-              unityInstance = null;
-              console.log("Unity WebGL instance destroyed.");
-          });
-      } catch (e) {
-          console.warn("Error shutting down Unity instance:", e);
-          // Fallback cleanup
-          document.getElementById("unity-container")?.remove();
-          unityInstance = null;
-      }
-  }
+export function shutdownUnityGame(buildName) {
+    const preloadData = unityPreloads.get(buildName);
+    if (preloadData?.instance) {
+        try {
+            preloadData.instance.Quit().then(() => {
+                document.getElementById(`unity-preload-${buildName}`)?.remove();
+                unityPreloads.delete(buildName);
+                console.log(`Unity WebGL instance for ${buildName} destroyed.`);
+            });
+        } catch (e) {
+            console.warn(`Error shutting down Unity instance for ${buildName}:`, e);
+            // Fallback cleanup
+            document.getElementById(`unity-preload-${buildName}`)?.remove();
+            unityPreloads.delete(buildName);
+        }
+    }
 }
 
 
@@ -181,3 +238,4 @@ function UnityConnectSocketIO() {
       console.error('Socket.IO connection is not established.');
   }
 }
+

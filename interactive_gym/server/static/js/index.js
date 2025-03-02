@@ -1,8 +1,7 @@
-import {RemoteGame} from './pyodide_remote_game.js';
-import * as ui_utils from './ui_utils.js';
-import {startUnityScene, terminateUnityScene, shutdownUnityGame} from './unity_utils.js';
-import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData, pressedKeys} from './phaser_gym_graphics.js';
 
+import * as ui_utils from './ui_utils.js';
+import {startUnityScene, terminateUnityScene, shutdownUnityGame, preloadUnityGame} from './unity_utils.js';
+import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData, pressedKeys} from './phaser_gym_graphics.js';
 
 window.socket = io();
 var socket = window.socket;
@@ -833,3 +832,9 @@ socket.on("unity_episode_end", function(data) {
 
 });
 
+socket.on('preload_unity_game', (config) => {
+    console.log(`Received preload request for Unity game: ${config.build_name}`);
+    preloadUnityGame(config).catch(error => 
+        console.error(`Failed to preload ${config.build_name}:`, error)
+    );
+});

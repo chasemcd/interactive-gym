@@ -99,6 +99,7 @@ footsies_initial_scene = (
         build_name="footsies_webgl_a613788",
         height=1080 / 3,
         width=1960 / 3,
+        preload_game=True,
     )
     .game(
         num_episodes=5 // EPISODES_SCALE_DOWN,
@@ -315,7 +316,7 @@ footsies_end_scene = (
 stager = stager.Stager(
     scenes=[
         start_scene,
-        footsies_initial_survey_scene,
+        # footsies_initial_survey_scene,
         footsies_tutorial_scene,
         footsies_initial_scene,
         footsies_training_scene,
