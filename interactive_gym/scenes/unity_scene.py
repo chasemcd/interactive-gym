@@ -45,6 +45,9 @@ class UnityScene(scene.Scene):
         self.score_fn: Callable[[], float] | None = None
         self.score: float | None = None
 
+        # If we preload the game, we'll send a message to the client to preload the game
+        self.preload_game: bool = False
+
     def display(
         self,
         scene_header: str = NotProvided,
@@ -98,6 +101,7 @@ class UnityScene(scene.Scene):
         height: int = NotProvided,
         width: int = NotProvided,
         allow_continue_on: str | list[str] = NotProvided,
+        preload_game: bool = NotProvided,
     ) -> UnityScene:
         """
         Specify the settings for the WebGL build.
@@ -128,6 +132,9 @@ class UnityScene(scene.Scene):
                 if isinstance(allow_continue_on, list)
                 else [allow_continue_on]
             )
+
+        if preload_game is not NotProvided:
+            self.preload_game = preload_game
 
         return self
 
@@ -170,7 +177,6 @@ class UnityScene(scene.Scene):
         if self.score_fn is None:
             return
 
-        print("Score updating!", self.score)
         score_this_round = self.score_fn(data)
         if self.score is None:
             self.score = score_this_round
@@ -185,3 +191,11 @@ class UnityScene(scene.Scene):
             },
             room=room,
         )
+
+    def on_connect(self, sio: flask_socketio.SocketIO, room: str | int):
+        """
+        A hook that is called when the client connects to the server.
+        """
+        if self.preload_game:
+            print("emitting preload_unity_game")
+            sio.emit("preload_unity_game", {**self.scene_metadata}, room=room)

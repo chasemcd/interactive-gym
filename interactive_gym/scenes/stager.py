@@ -54,6 +54,13 @@ class Stager:
 
         return participant_copy
 
+    def on_connect(self, sio: flask_socketio.SocketIO, room: str | int):
+        """
+        A hook that is called when the client's stager is built (they're connected to the server).
+        """
+        for scene in self.scenes:
+            scene.on_connect(sio, room)
+
     def get_current_scene(self) -> scene.Scene:
         return self.current_scene
 
@@ -72,6 +79,7 @@ class Stager:
             self.current_scene, static_scene.StartScene
         ), f"start() was called with a current_scene other than StartScene. Got {type(self.current_scene)}."
         self.current_scene.activate(sio, room)
+        self.on_connect(sio, room)
 
     def advance(self, sio: flask_socketio.SocketIO, room: str | int):
         """

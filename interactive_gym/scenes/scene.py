@@ -83,16 +83,11 @@ class Scene:
             "terminate_scene", {**self.scene_metadata}, room=self.room
         )
 
-    # @property
-    # def scene_metadata(self) -> dict:
-    #     """
-    #     Return the metadata for the current scene that will be passed through the Flask app.
-    #     """
-    #     return {
-    #         "scene_id": self.scene_id,
-    #         "scene_type": self.__class__.__name__,
-    #         "element_ids": self.element_ids,
-    #     }
+    def on_connect(self, sio: flask_socketio.SocketIO, room: str | int):
+        """
+        A hook that is called when the client connects to the server.
+        """
+        pass
 
     @property
     def scene_metadata(self) -> dict:
