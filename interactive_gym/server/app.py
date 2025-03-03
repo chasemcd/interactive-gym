@@ -438,6 +438,32 @@ def pong(data):
 
 @socketio.on("unityEpisodeEnd")
 def on_unity_episode_end(data):
+
+    # TODO(chase): remove this
+    import random
+
+    model = random.choice(
+        [
+            "4fs-16od-082992f-0.03to0.01-sp",
+            "4fs-16od-13c7f7b-0.05to0.01-sp-00",
+            "4fs-16od-13c7f7b-0.05to0.01-sp-03",
+        ]
+    )
+    frame_skip = random.choice([4, 8, 16, 32])
+    obs_delay = random.choice([16, 32])
+    inference_cadence = 4
+    socketio.emit(
+        "updateBotSettings",
+        {
+            "modelPath": model,
+            "frameSkip": frame_skip,
+            "inferenceCadence": inference_cadence,
+            "observationDelay": obs_delay,
+            "softmaxTemperature": 1.0,
+        },
+    )
+    print(data)
+    ###
     subject_id = get_subject_id_from_session_id(flask.request.sid)
     participant_stager = STAGERS.get(subject_id, None)
     current_scene = participant_stager.current_scene
@@ -607,6 +633,7 @@ def run(config):
     GENERIC_STAGER = config.stager
 
     atexit.register(on_exit)
+
     socketio.run(
         app,
         log_output=app.config["DEBUG"],
