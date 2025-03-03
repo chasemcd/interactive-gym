@@ -63,7 +63,7 @@ export function startUnityScene(data) {
 
 
 
-let unityInstance = null; // Store Unity instance globally
+window.unityInstance = null; // Store Unity instance globally
 
 // Store preload promises and instances for different builds
 const unityPreloads = new Map(); // Map of build_name -> { promise, instance }
@@ -173,10 +173,10 @@ function startUnityGame(config, elementId) {
         createUnityInstance(canvas, unityConfig, (progress) => {
             progressBarFull.style.width = 100 * progress + "%";
         }).then((instance) => {
-            unityInstance = instance;
+            window.unityInstance = instance;
             loadingBar.style.display = "none";
             fullscreenButton.onclick = () => {
-                unityInstance.SetFullscreen(1);
+                window.unityInstance.SetFullscreen(1);
             };
         }).catch((message) => {
             alert(message);
@@ -186,23 +186,22 @@ function startUnityGame(config, elementId) {
     document.body.appendChild(script);
 }
 
-export function shutdownUnityGame(buildName) {
-    const preloadData = unityPreloads.get(buildName);
-    if (preloadData?.instance) {
+export function shutdownUnityGame() {
+    if (unityInstance) {
         try {
-            preloadData.instance.Quit().then(() => {
-                document.getElementById(`unity-preload-${buildName}`)?.remove();
-                unityPreloads.delete(buildName);
-                console.log(`Unity WebGL instance for ${buildName} destroyed.`);
+            window.unityInstance.Quit().then(() => {
+                document.getElementById("unity-container")?.remove(); // Remove the Unity canvas container
+                window.unityInstance = null;
+                console.log("Unity WebGL instance destroyed.");
             });
         } catch (e) {
-            console.warn(`Error shutting down Unity instance for ${buildName}:`, e);
+            console.warn("Error shutting down Unity instance:", e);
             // Fallback cleanup
-            document.getElementById(`unity-preload-${buildName}`)?.remove();
-            unityPreloads.delete(buildName);
+            document.getElementById("unity-container")?.remove();
+            window.unityInstance = null;
         }
     }
-}
+  }
 
 
 export function terminateUnityScene(data) {
