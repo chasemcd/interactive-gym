@@ -114,7 +114,7 @@ footsies_training_scene = (
         scene_subheader="""
         <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
             <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
-            <p style="color: #000; margin: 5px;">HONE YOUR SKILLS WITH AN AI PARTNER</p>
+            <p style="color: #000; margin: 5px;">HONE YOUR SKILLS WITH A TRAINING PARTNER</p>
             <p style="color: #FF0000; margin: 5px;">25 ROUNDS</p>
         </div>
         """
