@@ -106,9 +106,29 @@ footsies_initial_scene = (
         preload_game=True,
     )
     .game(
-        num_episodes=5 // EPISODES_SCALE_DOWN,
+        num_episodes=10 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
+)
+
+
+footsies_end_survey_scene = (
+    static_scene.ScalesAndTextBox(
+        scale_questions=[
+            "The initial challenge CPU was enjoyable to play against.",
+            "The initial challenge CPU felt...",
+        ],
+        pre_scale_header="",
+        scale_labels=[
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Too Easy to Beat", "Evenly Matched", "Too Hard to Beat"],
+        ],
+        text_box_header="Please describe any additional reasoning for your selections. You may write N/A if you do not have any anything to add.",
+        scale_size=7,
+    )
+    .scene(scene_id="footsies_survey_0", experiment_config={})
+    .display(scene_subheader="Feedback About Your CPU Training Partner")
 )
 
 footsies_training_scene = (
@@ -119,7 +139,7 @@ footsies_training_scene = (
         <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
             <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
             <p style="color: #000; margin: 5px;">HONE YOUR SKILLS WITH A TRAINING PARTNER</p>
-            <p style="color: #FF0000; margin: 5px;">25 ROUNDS</p>
+            <p style="color: #FF0000; margin: 5px;">30 ROUNDS</p>
         </div>
         """
         + CONTROLS_SUBHEADER,
@@ -129,9 +149,10 @@ footsies_training_scene = (
         build_name=FOOTSIES_BUILD_NAME,
         height=1080 / 3,
         width=1960 / 3,
+        preload_game=True,
     )
     .game(
-        num_episodes=25 // EPISODES_SCALE_DOWN,
+        num_episodes=30 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
 )
@@ -141,7 +162,7 @@ footsies_training_survey_scene = (
         scale_questions=[
             "My skills improved over the course of playing with my training partner.",
             "My training partner was effective in helping me learn a good strategy.",
-            "My training partner was fun to play against.",
+            "My training partner was enjoyable to play against.",
             "My training partner felt...",
         ],
         pre_scale_header="",
@@ -270,14 +291,15 @@ footsies_test_scene = (
         """
         + CONTROLS_SUBHEADER,
     )
-    .scene(scene_id="footsies_scene_0", experiment_config={})
+    .scene(scene_id="footsies_test_scene_0", experiment_config={})
     .webgl(
         build_name=FOOTSIES_BUILD_NAME,
         height=1080 / 3,
         width=1960 / 3,
+        preload_game=True,
     )
     .game(
-        num_episodes=20 // EPISODES_SCALE_DOWN,
+        num_episodes=10 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
 )
@@ -287,8 +309,8 @@ footsies_end_survey_scene = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
             "The strategy I learned from my training partner was effective against the final challenge opponents.",
-            "The final challenge opponents were fun to play against.",
-            "The final challenge opponents felt...",
+            "The final challenge CPU was enjoyable to play against.",
+            "The final challenge CPU felt...",
         ],
         pre_scale_header="",
         scale_labels=[
@@ -343,7 +365,7 @@ if __name__ == "__main__":
     experiment_config = (
         experiment_config.ExperimentConfig()
         .experiment(stager=stager, experiment_id="footsies_test")
-        .hosting(port=5704, host="0.0.0.0")
+        .hosting(port=5702, host="0.0.0.0")
     )
 
     app.run(experiment_config)
