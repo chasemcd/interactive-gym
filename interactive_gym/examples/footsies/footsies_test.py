@@ -24,6 +24,10 @@ from interactive_gym.configurations import (
 )
 from interactive_gym.examples.footsies import footsies_scene
 
+
+FOOTSIES_BUILD_NAME = "footsies_webgl_c20e757"
+
+
 # Define the start scene, which is the landing page for participants.
 start_scene = (
     static_scene.StartScene()
@@ -96,7 +100,7 @@ footsies_initial_scene = (
     )
     .scene(scene_id="footsies_initial_eval_0", experiment_config={})
     .webgl(
-        build_name="footsies_webgl_a613788",
+        build_name=FOOTSIES_BUILD_NAME,
         height=1080 / 3,
         width=1960 / 3,
         preload_game=True,
@@ -122,7 +126,7 @@ footsies_training_scene = (
     )
     .scene(scene_id="footsies_training_0", experiment_config={})
     .webgl(
-        build_name="footsies_webgl_a613788",
+        build_name=FOOTSIES_BUILD_NAME,
         height=1080 / 3,
         width=1960 / 3,
     )
@@ -268,7 +272,7 @@ footsies_test_scene = (
     )
     .scene(scene_id="footsies_scene_0", experiment_config={})
     .webgl(
-        build_name="footsies_webgl_a613788",
+        build_name=FOOTSIES_BUILD_NAME,
         height=1080 / 3,
         width=1960 / 3,
     )
@@ -339,7 +343,7 @@ if __name__ == "__main__":
     experiment_config = (
         experiment_config.ExperimentConfig()
         .experiment(stager=stager, experiment_id="footsies_test")
-        .hosting(port=5702, host="0.0.0.0")
+        .hosting(port=5704, host="0.0.0.0")
     )
 
     app.run(experiment_config)
