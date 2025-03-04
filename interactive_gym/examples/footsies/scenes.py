@@ -120,7 +120,6 @@ footsies_initial_challenge_survey_scene = (
         pre_scale_header="",
         scale_labels=[
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
-            ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Too Easy to Beat", "Evenly Matched", "Too Hard to Beat"],
         ],
         text_box_header="Please describe any additional reasoning for your selections. You may write N/A if you do not have any anything to add.",
