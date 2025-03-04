@@ -1,0 +1,21 @@
+<center><p>
+    Use the slider to change the difficulty of your CPU training partner. Remember, your goal is to build up your skill as much as 
+    possible so that you can defeat the final challenge opponent to earn a bonus. 
+</p>
+
+<div class="difficulty-control" style="margin: 20px;">
+    <input type="range" id="difficultySlider" min="1" max="7" value="1" step="1" style="width: 200px;">
+    <label for="difficultySlider" id="difficultyLabel">Difficulty: Easiest</label>
+</div>
+
+<script>
+    const slider = document.getElementById('difficultySlider');
+    const label = document.getElementById('difficultyLabel');
+    const difficulties = ['Easiest', 'Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard', 'Hardest'];
+    
+    slider.addEventListener('input', function() {
+        const level = difficulties[this.value - 1];
+        label.textContent = `Difficulty: ${level}`;
+    });
+</script>
+</center>

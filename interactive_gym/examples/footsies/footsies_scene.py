@@ -37,7 +37,16 @@ class FootsiesScene(unity_scene.UnityScene):
             return
 
         opponent_config = self.opponent_sequence.pop(0)
-        sio.emit("updateBotSettings", opponent_config.model_path)
+        sio.emit(
+            "updateBotSettings",
+            {
+                "modelPath": opponent_config.model_path,
+                "frameSkip": opponent_config.frame_skip,
+                "inferenceCadence": opponent_config.inference_cadence,
+                "observationDelay": opponent_config.obs_delay,
+                "softmaxTemperature": opponent_config.softmax_temperature,
+            },
+        )
 
     def on_unity_episode_end(
         self, data: dict, sio: flask_socketio.SocketIO, room: str
@@ -70,7 +79,7 @@ class FootsiesDynamicDifficultyScene(FootsiesScene):
         self.cur_frame_skip: int = 12
         self.cur_obs_delay: int = 16
         self.cur_inference_cadence: int = 4
-        self.cur_softmax_temperature: float = 1.2
+        self.cur_softmax_temperature: float = 1.4
 
         self.min_frame_skip: int = 4
         self.max_frame_skip: int = 32
@@ -135,3 +144,10 @@ class FootsiesDynamicDifficultyScene(FootsiesScene):
             )
         )
         super().on_unity_episode_end(data, sio, room)
+
+
+class FootsiesControllableDifficultyScene(FootsiesScene):
+    def __init__(self):
+        super().__init__()
+
+        self.configuration_mapping: dict[int, OpponentConfig] = {}
