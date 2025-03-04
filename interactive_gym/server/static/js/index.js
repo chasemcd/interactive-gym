@@ -501,7 +501,7 @@ function activateScene(data) {
         startEndScene(data);
     } else if (data.scene_type == "GymScene") {
         startGymScene(data);
-    } else if (data.scene_type == "UnityScene") {
+    } else if (data.scene_type == "UnityScene" || data.is_unity_scene) {
         startUnityScene(data);
     } else {
         // Treat all other scenes as static scenes

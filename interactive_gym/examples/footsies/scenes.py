@@ -27,7 +27,6 @@ from interactive_gym.examples.footsies import footsies_scene
 
 FOOTSIES_BUILD_NAME = "footsies_webgl_c20e757"
 
-
 # Define the start scene, which is the landing page for participants.
 start_scene = (
     static_scene.StartScene()
@@ -88,7 +87,7 @@ CONTROLS_SUBHEADER = """
 EPISODES_SCALE_DOWN = 1
 
 footsies_initial_scene = (
-    unity_scene.UnityScene()
+    footsies_scene.FootsiesScene()
     .display(
         scene_header="Footsies",
         scene_subheader="""
@@ -112,7 +111,7 @@ footsies_initial_scene = (
 )
 
 
-footsies_end_survey_scene = (
+footsies_initial_challenge_survey_scene = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
             "The initial challenge CPU was enjoyable to play against.",
@@ -127,12 +126,12 @@ footsies_end_survey_scene = (
         text_box_header="Please describe any additional reasoning for your selections. You may write N/A if you do not have any anything to add.",
         scale_size=7,
     )
-    .scene(scene_id="footsies_survey_0", experiment_config={})
+    .scene(scene_id="footsies_initial_challenge_survey_0", experiment_config={})
     .display(scene_subheader="Feedback About Your CPU Training Partner")
 )
 
-footsies_training_scene = (
-    unity_scene.UnityScene()
+footsies_fixed_high_skill_scene = (
+    footsies_scene.FootsiesScene()
     .display(
         scene_header="Footsies",
         scene_subheader="""
@@ -156,6 +155,34 @@ footsies_training_scene = (
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
 )
+
+
+footsies_dynamic_difficulty_scene = (
+    footsies_scene.FootsiesDynamicDifficultyScene()
+    .display(
+        scene_header="Footsies",
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
+            <p style="color: #000; margin: 5px;">HONE YOUR SKILLS WITH A TRAINING PARTNER</p>
+            <p style="color: #FF0000; margin: 5px;">30 ROUNDS</p>
+        </div>
+        """
+        + CONTROLS_SUBHEADER,
+    )
+    .scene(scene_id="footsies_training_0", experiment_config={})
+    .webgl(
+        build_name=FOOTSIES_BUILD_NAME,
+        height=1080 / 3,
+        width=1960 / 3,
+        preload_game=True,
+    )
+    .game(
+        num_episodes=30 // EPISODES_SCALE_DOWN,
+        score_fn=lambda data: int(data["winner"] == "P1"),
+    )
+)
+
 
 footsies_training_survey_scene = (
     static_scene.ScalesAndTextBox(
@@ -337,35 +364,3 @@ footsies_end_scene = (
         scene_header="Thank you for participating!",
     )
 )
-
-
-stager = stager.Stager(
-    scenes=[
-        start_scene,
-        footsies_initial_survey_scene,
-        footsies_tutorial_scene,
-        footsies_initial_scene,
-        footsies_training_scene,
-        footsies_training_survey_scene,
-        footsies_mc_survey,
-        footsies_test_scene,
-        footsies_end_survey_scene,
-        footsies_end_scene,
-    ]
-)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--port", type=int, default=5702, help="Port number to listen on"
-    )
-    args = parser.parse_args()
-
-    experiment_config = (
-        experiment_config.ExperimentConfig()
-        .experiment(stager=stager, experiment_id="footsies_test")
-        .hosting(port=5702, host="0.0.0.0")
-    )
-
-    app.run(experiment_config)

@@ -48,6 +48,8 @@ class UnityScene(scene.Scene):
         # If we preload the game, we'll send a message to the client to preload the game
         self.preload_game: bool = False
 
+        self.is_unity_scene: bool = True
+
     def display(
         self,
         scene_header: str = NotProvided,
