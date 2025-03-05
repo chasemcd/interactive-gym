@@ -377,7 +377,7 @@ footsies_controllable_difficulty_scene = (
 footsies_controllable_difficulty_rounds = scene.SceneWrapper(
     [
         footsies_controllable_difficulty_scene_intro,
-        footsies_controllable_difficulty_scene_intro,
+        footsies_controllable_difficulty_scene,
     ]
 )
 
