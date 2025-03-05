@@ -3,6 +3,8 @@ import flask_socketio
 import dataclasses
 import random
 
+from interactive_gym.scenes.scene import Scene
+
 
 @dataclasses.dataclass
 class OpponentConfig:
@@ -26,9 +28,19 @@ class FootsiesScene(unity_scene.UnityScene):
         super().__init__()
         self.winners: list[str] = []
         self.opponent_sequence: list[OpponentConfig] = []
+        self.randomize_opponents: bool = False
 
-    def set_opponent_sequence(self, opponents: list[OpponentConfig]):
+    def build(self) -> list[Scene]:
+        if self.randomize_opponents:
+            random.shuffle(self.opponent_sequence)
+        return super().build()
+
+    def set_opponent_sequence(
+        self, opponents: list[OpponentConfig], randomize: bool = False
+    ):
         self.opponent_sequence = opponents
+        self.randomize_opponents = randomize
+        return self
 
     def on_unity_game_initialized(
         self, data: dict, sio: flask_socketio.SocketIO, room: str
@@ -82,7 +94,7 @@ class FootsiesDynamicDifficultyScene(FootsiesScene):
         self.cur_softmax_temperature: float = 1.4
 
         self.min_frame_skip: int = 4
-        self.max_frame_skip: int = 32
+        self.max_frame_skip: int = 24
         self.frame_skip_step: int = 2
         self.min_temperature: float = 1.0
         self.max_temperature: float = 1.7
@@ -141,6 +153,42 @@ class FootsiesDynamicDifficultyScene(FootsiesScene):
                 obs_delay=self.cur_obs_delay,
                 inference_cadence=self.cur_inference_cadence,
                 softmax_temperature=self.cur_softmax_temperature,
+            )
+        )
+        super().on_unity_episode_end(data, sio, room)
+
+
+class FootsiesRandomDifficultyScene(FootsiesScene):
+    def __init__(self):
+        super().__init__()
+        self.winners: list[str] = []
+        self.model_path: str = "4fs-16od-13c7f7b-0.05to0.01-sp-03"
+        self.fs_temp_options: list[tuple[int, float]] = [
+            (32, 1.7),  # Easiest
+            (24, 1.6),
+            (14, 1.5),
+            (12, 1.4),
+            (10, 1.3),
+            (8, 1.2),
+            (6, 1.1),
+            (4, 1.0),  # Hardest
+        ]
+        self.cur_obs_delay: int = 16
+        self.cur_inference_cadence: int = 4
+
+    def on_unity_episode_end(
+        self, data: dict, sio: flask_socketio.SocketIO, room: str
+    ):
+        sampled_options = random.choice(self.fs_temp_options)
+        frame_skip, softmax_temperature = sampled_options
+
+        self.opponent_sequence.append(
+            OpponentConfig(
+                model_path=self.model_path,
+                frame_skip=frame_skip,
+                obs_delay=self.cur_obs_delay,
+                inference_cadence=self.cur_inference_cadence,
+                softmax_temperature=softmax_temperature,
             )
         )
         super().on_unity_episode_end(data, sio, room)

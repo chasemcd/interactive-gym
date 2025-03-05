@@ -19,21 +19,24 @@ from interactive_gym.examples.footsies import scenes
 stager = stager.Stager(
     scenes=[
         scenes.start_scene,
-        # scenes.footsies_initial_survey_scene,
-        # scenes.footsies_tutorial_scene,
-        # scenes.footsies_initial_scene,
-        # scenes.footsies_initial_challenge_survey_scene,
+        scenes.footsies_initial_survey_scene,
+        scenes.footsies_tutorial_scene,
+        scenes.footsies_initial_challenge_intro,
+        scenes.footsies_initial_challenge_scene,
+        scenes.footsies_initial_challenge_survey_scene,
         scene.RandomizeOrder(
             [
-                # scenes.footsies_dynamic_difficulty_scene,
-                scenes.footsies_controllable_difficulty_scene,
-                # scenes.footsies_fixed_high_skill_scene,
+                scenes.footsies_dynamic_difficulty_rounds,
+                scenes.footsies_controllable_difficulty_rounds,
+                scenes.footsies_high_skill_rounds,
+                scenes.footsies_random_difficulty_rounds,
             ],
             keep_n=1,
         ),
         scenes.footsies_training_survey_scene,
         scenes.footsies_mc_survey,
-        scenes.footsies_test_scene,
+        scenes.footsies_final_challenge_intro,
+        scenes.footsies_final_challenge_scene,
         scenes.footsies_end_survey_scene,
         scenes.footsies_end_scene,
     ]

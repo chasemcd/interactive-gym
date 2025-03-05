@@ -5,7 +5,7 @@ import eventlet
 eventlet.monkey_patch()
 
 import argparse
-
+import copy
 from interactive_gym.server import app
 from interactive_gym.scenes import scene
 from interactive_gym.scenes import stager
@@ -86,7 +86,23 @@ CONTROLS_SUBHEADER = """
 
 EPISODES_SCALE_DOWN = 1
 
-footsies_initial_scene = (
+
+footsies_initial_challenge_intro = static_scene.StaticScene().display(
+    scene_header="Footsies",
+    scene_body="""
+    <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+        <p>
+        You'll now play 10 "initial challenge" rounds against a CPU opponent. This is your first opportunity to earn a bonus.
+        <br>
+        <br>
+        When the game loads on the next screen, click "vs CPU" to start.
+        </p>
+    </div>
+    """,
+)
+
+
+footsies_initial_challenge_scene = (
     footsies_scene.FootsiesScene()
     .display(
         scene_header="Footsies",
@@ -97,7 +113,7 @@ footsies_initial_scene = (
         """
         + CONTROLS_SUBHEADER,
     )
-    .scene(scene_id="footsies_initial_eval_0", experiment_config={})
+    .scene(scene_id="footsies_initial_scene", experiment_config={})
     .webgl(
         build_name=FOOTSIES_BUILD_NAME,
         height=1080 / 3,
@@ -108,8 +124,82 @@ footsies_initial_scene = (
         num_episodes=10 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
+    .set_opponent_sequence(
+        [
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-00",
+                frame_skip=4,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.0,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-01",
+                frame_skip=4,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.0,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-02",
+                frame_skip=4,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.0,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-02",
+                frame_skip=4,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.0,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-082992f-0.03to0.01-sp",
+                frame_skip=4,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.0,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-00",
+                frame_skip=12,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.4,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-01",
+                frame_skip=12,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.4,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-02",
+                frame_skip=12,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.4,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-02",
+                frame_skip=12,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.4,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-082992f-0.03to0.01-sp",
+                frame_skip=12,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.4,
+            ),
+        ],
+        randomize=True,
+    )
 )
-
 
 footsies_initial_challenge_survey_scene = (
     static_scene.ScalesAndTextBox(
@@ -129,7 +219,24 @@ footsies_initial_challenge_survey_scene = (
     .display(scene_subheader="Feedback About Your CPU Training Partner")
 )
 
-footsies_fixed_high_skill_scene = (
+
+footsies_training_scene_intro = static_scene.StaticScene().display(
+    scene_header="Footsies",
+    scene_body="""
+    <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+        <p>You'll now play 30 rounds against a CPU training partner. Remember, your goal is to build up your skill as much as 
+        possible to maximize your bonus in the final challenge rounds. 
+        
+        <br>
+        <br>
+        When the game loads on the next screen, click "vs CPU" to start.
+        
+        </p>
+    </div>
+    """,
+)
+
+footsies_fixed_high_skill_rounds = (
     footsies_scene.FootsiesScene()
     .display(
         scene_header="Footsies",
@@ -140,7 +247,7 @@ footsies_fixed_high_skill_scene = (
         """
         + CONTROLS_SUBHEADER,
     )
-    .scene(scene_id="footsies_training_0", experiment_config={})
+    .scene(scene_id="footsies_high_skill", experiment_config={})
     .webgl(
         build_name=FOOTSIES_BUILD_NAME,
         height=1080 / 3,
@@ -150,33 +257,22 @@ footsies_fixed_high_skill_scene = (
     .game(
         num_episodes=30 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
+    )
+    .set_opponent_sequence(
+        [
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=4,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.0,
+            )
+        ]
     )
 )
 
-
-footsies_controllable_difficulty_scene = (
-    footsies_scene.FootsiesControllableDifficultyScene()
-    .display(
-        scene_header="Footsies",
-        scene_subheader="""
-        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
-            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
-        </div>
-        """
-        + CONTROLS_SUBHEADER,
-        scene_body_filepath="interactive_gym/examples/footsies/static/controllable_difficulty.html",
-    )
-    .scene(scene_id="footsies_training_0", experiment_config={})
-    .webgl(
-        build_name=FOOTSIES_BUILD_NAME,
-        height=1080 / 3,
-        width=1960 / 3,
-        preload_game=True,
-    )
-    .game(
-        num_episodes=30 // EPISODES_SCALE_DOWN,
-        score_fn=lambda data: int(data["winner"] == "P1"),
-    )
+footsies_high_skill_rounds = scene.SceneWrapper(
+    [footsies_training_scene_intro, footsies_fixed_high_skill_rounds]
 )
 
 
@@ -191,7 +287,7 @@ footsies_dynamic_difficulty_scene = (
         """
         + CONTROLS_SUBHEADER,
     )
-    .scene(scene_id="footsies_training_0", experiment_config={})
+    .scene(scene_id="footsies_dynamic_difficulty", experiment_config={})
     .webgl(
         build_name=FOOTSIES_BUILD_NAME,
         height=1080 / 3,
@@ -202,6 +298,87 @@ footsies_dynamic_difficulty_scene = (
         num_episodes=30 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
+)
+
+footsies_dynamic_difficulty_rounds = scene.SceneWrapper(
+    [footsies_training_scene_intro, footsies_dynamic_difficulty_scene]
+)
+
+
+footsies_random_difficulty_scene = (
+    footsies_scene.FootsiesRandomDifficultyScene()
+    .display(
+        scene_header="Footsies",
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
+        </div>
+        """
+        + CONTROLS_SUBHEADER,
+    )
+    .scene(scene_id="footsies_random_difficulty", experiment_config={})
+    .webgl(
+        build_name=FOOTSIES_BUILD_NAME,
+        height=1080 / 3,
+        width=1960 / 3,
+        preload_game=True,
+    )
+    .game(
+        num_episodes=30 // EPISODES_SCALE_DOWN,
+        score_fn=lambda data: int(data["winner"] == "P1"),
+    )
+)
+
+footsies_random_difficulty_rounds = scene.SceneWrapper(
+    [footsies_training_scene_intro, footsies_random_difficulty_scene]
+)
+
+
+footsies_controllable_difficulty_scene_intro = static_scene.StaticScene().display(
+    scene_header="Footsies",
+    scene_body="""
+    <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+        <p>You'll now play 30 rounds against a CPU training partner. You will be able to control the difficulty by using the slider on the next page. Remember, your goal is to build up your skill as much as 
+        possible to maximize your bonus in the final challenge rounds. 
+        <br>
+        <br>
+        When the game loads on the next screen, click "vs CPU" to start.
+        </p>
+    </div>
+    """,
+)
+
+footsies_controllable_difficulty_scene = (
+    footsies_scene.FootsiesControllableDifficultyScene()
+    .display(
+        scene_header="Footsies",
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
+        </div>
+        """
+        + CONTROLS_SUBHEADER,
+        scene_body_filepath="interactive_gym/examples/footsies/static/controllable_difficulty.html",
+    )
+    .scene(scene_id="footsies_controllable_difficulty", experiment_config={})
+    .webgl(
+        build_name=FOOTSIES_BUILD_NAME,
+        height=1080 / 3,
+        width=1960 / 3,
+        preload_game=True,
+    )
+    .game(
+        num_episodes=30 // EPISODES_SCALE_DOWN,
+        score_fn=lambda data: int(data["winner"] == "P1"),
+    )
+)
+
+
+footsies_controllable_difficulty_rounds = scene.SceneWrapper(
+    [
+        footsies_controllable_difficulty_scene_intro,
+        footsies_controllable_difficulty_scene_intro,
+    ]
 )
 
 
@@ -258,6 +435,7 @@ footsies_mc_survey = static_scene.MultipleChoice(
             "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+            "None of the above",
         ],
         [
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
@@ -265,6 +443,7 @@ footsies_mc_survey = static_scene.MultipleChoice(
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+            "None of the above",
         ],
         [
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
@@ -273,6 +452,7 @@ footsies_mc_survey = static_scene.MultipleChoice(
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            "None of the above",
         ],
         [
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
@@ -281,6 +461,7 @@ footsies_mc_survey = static_scene.MultipleChoice(
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            "None of the above",
         ],
         [
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
@@ -289,6 +470,7 @@ footsies_mc_survey = static_scene.MultipleChoice(
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            "None of the above",
         ],
         [
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
@@ -297,6 +479,7 @@ footsies_mc_survey = static_scene.MultipleChoice(
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            "None of the above",
         ],
         [
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
@@ -305,6 +488,7 @@ footsies_mc_survey = static_scene.MultipleChoice(
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            "None of the above",
         ],
         [
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
@@ -313,6 +497,7 @@ footsies_mc_survey = static_scene.MultipleChoice(
             "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
             "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            "None of the above",
         ],
     ],
     images=[
@@ -328,29 +513,25 @@ footsies_mc_survey = static_scene.MultipleChoice(
     multi_select=True,
 ).display(scene_header="Training Survey 2/2")
 
-footsies_test_scene = (
-    unity_scene.UnityScene()
-    .display(
-        scene_header="Footsies",
-        scene_subheader="""
-        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
-            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">FINAL CHALLENGE</p>
-        </div>
-        """
-        + CONTROLS_SUBHEADER,
-    )
-    .scene(scene_id="footsies_test_scene_0", experiment_config={})
-    .webgl(
-        build_name=FOOTSIES_BUILD_NAME,
-        height=1080 / 3,
-        width=1960 / 3,
-        preload_game=True,
-    )
-    .game(
-        num_episodes=10 // EPISODES_SCALE_DOWN,
-        score_fn=lambda data: int(data["winner"] == "P1"),
-    )
+
+footsies_final_challenge_intro = static_scene.StaticScene().display(
+    scene_header="Footsies",
+    scene_body="""
+    <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+        <p>
+        You'll now play 10 "final challenge" rounds against a CPU opponent. This is your final opportunity to earn a bonus.
+        <br>
+        <br>
+        When the game loads on the next screen, click "vs CPU" to start.
+        </p>
+    </div>
+    """,
 )
+
+
+footsies_final_challenge_scene = copy.deepcopy(
+    footsies_initial_challenge_scene
+).scene(scene_id="footsies_final_challenge_scene", experiment_config={})
 
 
 footsies_end_survey_scene = (
