@@ -84,7 +84,7 @@ CONTROLS_SUBHEADER = """
 """
 
 
-EPISODES_SCALE_DOWN = 1
+EPISODES_SCALE_DOWN = 5
 
 
 footsies_initial_challenge_intro = static_scene.StaticScene().display(
