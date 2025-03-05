@@ -465,6 +465,22 @@ def on_unity_episode_end(data):
     data_emission(wrapped_data)
 
 
+@socketio.on("unityEpisodeStart")
+def on_unity_episode_start(data):
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+    participant_stager = STAGERS.get(subject_id, None)
+    current_scene = participant_stager.current_scene
+
+    if not isinstance(current_scene, unity_scene.UnityScene):
+        return
+
+    current_scene.on_unity_episode_start(
+        data,
+        sio=socketio,
+        room=flask.request.sid,
+    )
+
+
 @socketio.on("request_redirect")
 def on_request_redirect(data):
     waitroom_timeout = data.get("waitroom_timeout", False)
