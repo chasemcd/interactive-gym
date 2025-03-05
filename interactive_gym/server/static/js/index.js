@@ -1,4 +1,3 @@
-
 import * as ui_utils from './ui_utils.js';
 import {startUnityScene, terminateUnityScene, shutdownUnityGame, preloadUnityGame} from './unity_utils.js';
 import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData, pressedKeys} from './phaser_gym_graphics.js';
@@ -485,6 +484,11 @@ function getData(elementIds) {
 
 function activateScene(data) {
     window.scrollTo(0, 0);
+
+    // Add scene_id to debug container
+    $("#debugValue").show();
+    $("#debugValue").text(`scene: ${data.scene_id}`);
+    $("#debugContainer").show();
 
     // Add interactiveGymGlobals to the data object
     if (typeof window.interactiveGymGlobals !== 'undefined') {

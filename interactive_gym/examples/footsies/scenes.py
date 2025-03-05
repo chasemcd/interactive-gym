@@ -113,7 +113,7 @@ footsies_initial_challenge_scene = (
         """
         + CONTROLS_SUBHEADER,
     )
-    .scene(scene_id="footsies_initial_scene", experiment_config={})
+    .scene(scene_id="footsies_initial_challenge", experiment_config={})
     .webgl(
         build_name=FOOTSIES_BUILD_NAME,
         height=1080 / 3,
@@ -275,18 +275,20 @@ footsies_high_skill_rounds = scene.SceneWrapper(
     [footsies_training_scene_intro, footsies_fixed_high_skill_rounds]
 )
 
-footsies_fixed_empowerment_rounds = copy.deepcopy(
-    footsies_fixed_high_skill_rounds
-).set_opponent_sequence(
-    [
-        footsies_scene.OpponentConfig(
-            model_path="esr-0.5alpha-00",
-            frame_skip=4,
-            obs_delay=16,
-            inference_cadence=4,
-            softmax_temperature=1.0,
-        )
-    ]
+footsies_fixed_empowerment_rounds = (
+    copy.deepcopy(footsies_fixed_high_skill_rounds)
+    .scene(scene_id="footsies_fixed_empowerment", experiment_config={})
+    .set_opponent_sequence(
+        [
+            footsies_scene.OpponentConfig(
+                model_path="esr-0.5alpha-00",
+                frame_skip=4,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.0,
+            )
+        ]
+    )
 )
 
 footsies_empowerment_rounds = scene.SceneWrapper(
@@ -296,6 +298,7 @@ footsies_empowerment_rounds = scene.SceneWrapper(
 
 footsies_dynamic_empowerment_rounds = (
     footsies_scene.FootsiesDynamicEmpowermentScene()
+    .scene(scene_id="footsies_dynamic_empowerment", experiment_config={})
     .display(
         scene_header="Footsies",
         scene_subheader="""
