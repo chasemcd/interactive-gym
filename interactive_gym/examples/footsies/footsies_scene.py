@@ -150,4 +150,80 @@ class FootsiesControllableDifficultyScene(FootsiesScene):
     def __init__(self):
         super().__init__()
 
-        self.configuration_mapping: dict[int, OpponentConfig] = {}
+        self.configuration_mapping: dict[int, OpponentConfig] = {
+            0: OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=32,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.7,
+            ),
+            1: OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=24,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.6,
+            ),
+            2: OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            3: OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=12,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.4,
+            ),
+            4: OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=10,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.3,
+            ),
+            5: OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=8,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.2,
+            ),
+            6: OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=6,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.1,
+            ),
+            7: OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=4,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.0,
+            ),
+        }
+        self.opponent_sequence: list[OpponentConfig] = []
+
+    def on_client_callback(
+        self, data: dict, sio: flask_socketio.SocketIO, room: str
+    ):
+        print(f"Received client callback: {data}")
+        if data.get("type") == "updateFootsiesDifficulty":
+            opponent_config = self.configuration_mapping.get(data["difficulty"])
+
+            sio.emit(
+                "updateBotSettings",
+                {
+                    "modelPath": opponent_config.model_path,
+                    "frameSkip": opponent_config.frame_skip,
+                    "inferenceCadence": opponent_config.inference_cadence,
+                    "observationDelay": opponent_config.obs_delay,
+                    "softmaxTemperature": opponent_config.softmax_temperature,
+                },
+            )

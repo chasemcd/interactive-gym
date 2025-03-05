@@ -1,21 +1,91 @@
-<center><p>
-    Use the slider to change the difficulty of your CPU training partner. Remember, your goal is to build up your skill as much as 
-    possible so that you can defeat the final challenge opponent to earn a bonus. 
-</p>
+<center>
+<div class="retro-container">
+    <p class="retro-text">
+        Use the slider to change the difficulty of your CPU training partner. Remember, your goal is to build up your skill as much as 
+        possible so that you can defeat the final challenge opponent to earn a bonus. 
+    </p>
 
-<div class="difficulty-control" style="margin: 20px;">
-    <input type="range" id="difficultySlider" min="1" max="7" value="1" step="1" style="width: 200px;">
-    <label for="difficultySlider" id="difficultyLabel">Difficulty: Easiest</label>
+    <div class="difficulty-control">
+        <div class="slider-container">
+            <span class="difficulty-end-label">EASIEST</span>
+            <input type="range" id="difficultySlider" min="1" max="7" value="1" step="1">
+            <span class="difficulty-end-label">HARDEST</span>
+        </div>
+    </div>
 </div>
+
+<style>
+    .retro-container {
+        background-color: white;
+        border: 4px solid #333;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px auto;
+        max-width: 600px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .retro-text {
+        color: #333;
+        font-family: 'Press Start 2P', 'Courier New', monospace;
+        line-height: 1.5;
+        font-size: 12px;
+    }
+
+    .difficulty-control {
+        margin: 20px;
+        text-align: center;
+    }
+
+    .slider-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .difficulty-end-label {
+        color: #333;
+        font-family: 'Press Start 2P', 'Courier New', monospace;
+        font-size: 10px;
+    }
+
+    #difficultySlider {
+        width: 200px;
+        -webkit-appearance: none;
+        height: 15px;
+        background: #f0f0f0;
+        border: 2px solid #333;
+        border-radius: 10px;
+    }
+
+    #difficultySlider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 30px;
+        height: 30px;
+        background: #333;
+        border: 2px solid #000;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+
+    #difficultySlider::-moz-range-thumb {
+        width: 30px;
+        height: 30px;
+        background: #333;
+        border: 2px solid #000;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+</style>
 
 <script>
     const slider = document.getElementById('difficultySlider');
-    const label = document.getElementById('difficultyLabel');
-    const difficulties = ['Easiest', 'Very Easy', 'Easy', 'Medium', 'Hard', 'Very Hard', 'Hardest'];
     
-    slider.addEventListener('input', function() {
-        const level = difficulties[this.value - 1];
-        label.textContent = `Difficulty: ${level}`;
+    slider.addEventListener('change', function() {
+        console.log("Slider changed");
+        const difficulty = parseInt(this.value);
+        window.socket.emit('client_callback', {"type": "updateFootsiesDifficulty", "difficulty": difficulty});
     });
 </script>
 </center>

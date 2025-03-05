@@ -136,11 +136,35 @@ footsies_fixed_high_skill_scene = (
         scene_subheader="""
         <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
             <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
-            <p style="color: #000; margin: 5px;">HONE YOUR SKILLS WITH A TRAINING PARTNER</p>
-            <p style="color: #FF0000; margin: 5px;">30 ROUNDS</p>
         </div>
         """
         + CONTROLS_SUBHEADER,
+    )
+    .scene(scene_id="footsies_training_0", experiment_config={})
+    .webgl(
+        build_name=FOOTSIES_BUILD_NAME,
+        height=1080 / 3,
+        width=1960 / 3,
+        preload_game=True,
+    )
+    .game(
+        num_episodes=30 // EPISODES_SCALE_DOWN,
+        score_fn=lambda data: int(data["winner"] == "P1"),
+    )
+)
+
+
+footsies_controllable_difficulty_scene = (
+    footsies_scene.FootsiesControllableDifficultyScene()
+    .display(
+        scene_header="Footsies",
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
+        </div>
+        """
+        + CONTROLS_SUBHEADER,
+        scene_body_filepath="interactive_gym/examples/footsies/static/controllable_difficulty.html",
     )
     .scene(scene_id="footsies_training_0", experiment_config={})
     .webgl(
@@ -163,8 +187,6 @@ footsies_dynamic_difficulty_scene = (
         scene_subheader="""
         <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
             <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
-            <p style="color: #000; margin: 5px;">HONE YOUR SKILLS WITH A TRAINING PARTNER</p>
-            <p style="color: #FF0000; margin: 5px;">30 ROUNDS</p>
         </div>
         """
         + CONTROLS_SUBHEADER,

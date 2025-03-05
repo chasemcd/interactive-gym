@@ -109,6 +109,14 @@ class Scene:
         with open(f"data/{self.scene_id}/{subject_id}_metadata.json", "w") as f:
             json.dump(self.scene_metadata, f)
 
+    def on_client_callback(
+        self, data, sio: flask_socketio.SocketIO, room: str | int
+    ):
+        """
+        A hook that is called when the client sends a callback to the server.
+        """
+        pass
+
 
 def serialize_dict(data):
     """

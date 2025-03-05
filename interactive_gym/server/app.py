@@ -486,6 +486,21 @@ def on_request_redirect(data):
     )
 
 
+@socketio.on("client_callback")
+def on_client_callback(data):
+    print(f"Received client callback: {data}")
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+    participant_stager = STAGERS.get(subject_id, None)
+    if participant_stager is None:
+        logger.error(
+            f"Client callback requested for {subject_id} but they don't have a Stager."
+        )
+        return
+
+    current_scene = participant_stager.current_scene
+    current_scene.on_client_callback(data, sio=socketio, room=flask.request.sid)
+
+
 def on_exit():
     # Force-terminate all games on server termination
     for game_manager in GAME_MANAGERS.values():
