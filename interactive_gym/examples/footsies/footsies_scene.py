@@ -152,10 +152,10 @@ class FootsiesDynamicEmpowermentScene(FootsiesScene):
         super().__init__()
         self.winners: list[str] = []
         self.model_path: str = "4sf-16od-1c73fcc-0.03to0.01-500m-00"
-        self.cur_frame_skip: int = 12
+        self.cur_frame_skip: int = 4
         self.cur_obs_delay: int = 16
         self.cur_inference_cadence: int = 4
-        self.cur_softmax_temperature: float = 1.4
+        self.cur_softmax_temperature: float = 1.0
         self.cur_model_idx = 0
 
         self.model_paths: list[str] = [
@@ -163,12 +163,17 @@ class FootsiesDynamicEmpowermentScene(FootsiesScene):
             "esr-0.5alpha-00",
             "esr-0.25alpha-00",
             "4sf-16od-1c73fcc-0.03to0.01-500m-00",
+            "4sf-16od-1c73fcc-0.03to0.01-500m-00",
         ]
 
         self.opponent_sequence: list[OpponentConfig] = [
             OpponentConfig(
                 model_path=self.model_paths[self.cur_model_idx],
-                frame_skip=self.cur_frame_skip,
+                frame_skip=(
+                    8
+                    if self.cur_model_idx == len(self.model_paths) - 2
+                    else self.cur_frame_skip
+                ),
                 obs_delay=self.cur_obs_delay,
                 inference_cadence=self.cur_inference_cadence,
                 softmax_temperature=self.cur_softmax_temperature,
@@ -211,7 +216,11 @@ class FootsiesDynamicEmpowermentScene(FootsiesScene):
         self.opponent_sequence.append(
             OpponentConfig(
                 model_path=self.model_paths[self.cur_model_idx],
-                frame_skip=self.cur_frame_skip,
+                frame_skip=(
+                    8
+                    if self.cur_model_idx == len(self.model_paths) - 2
+                    else self.cur_frame_skip
+                ),
                 obs_delay=self.cur_obs_delay,
                 inference_cadence=self.cur_inference_cadence,
                 softmax_temperature=self.cur_softmax_temperature,
