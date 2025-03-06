@@ -21,9 +21,9 @@ stager = stager.Stager(
         scenes.start_scene,
         scenes.footsies_initial_survey_scene,
         scenes.footsies_tutorial_scene,
-        # scenes.footsies_initial_challenge_intro,
-        # scenes.footsies_initial_challenge_scene,
-        # scenes.footsies_initial_challenge_survey_scene,
+        scenes.footsies_initial_challenge_intro,
+        scenes.footsies_initial_challenge_scene,
+        scenes.footsies_initial_challenge_survey_scene,
         scene.RandomizeOrder(
             [
                 scenes.footsies_dynamic_difficulty_rounds,
@@ -33,7 +33,7 @@ stager = stager.Stager(
                 scenes.footsies_dynamic_empowerment_rounds,
                 scenes.footsies_empowerment_rounds,
             ],
-            keep_n=6,
+            # keep_n=1,
         ),
         scenes.footsies_training_survey_scene,
         scenes.footsies_mc_survey,
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     experiment_config = (
         experiment_config.ExperimentConfig()
         .experiment(stager=stager, experiment_id="footsies_test")
-        .hosting(port=5704, host="0.0.0.0")
+        .hosting(port=5702, host="0.0.0.0")
     )
 
     app.run(experiment_config)
