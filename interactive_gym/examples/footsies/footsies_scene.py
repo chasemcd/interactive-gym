@@ -262,7 +262,7 @@ class FootsiesRandomDifficultyScene(FootsiesScene):
                 softmax_temperature=softmax_temperature,
             )
         )
-        super().on_unity_episode_end(data, sio, room)
+        super().on_unity_episode_start(data, sio, room)
 
 
 class FootsiesControllableDifficultyScene(FootsiesScene):

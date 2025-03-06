@@ -45,6 +45,8 @@ stager = stager.Stager(
 )
 
 
+# THE CONTROLLABLE DIFFICULTY GAME ISN"T PROPERLY SHUTTING DOWN
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(

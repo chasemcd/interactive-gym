@@ -811,7 +811,7 @@ socket.on("unity_episode_end", function(data) {
         $("#gameContainer").html("");
 
         $("#sceneSubHeader").hide();
-        $("#sceneBody").show();
+        $("#sceneBody").hide();
 
         $("#hudText").hide();
 
