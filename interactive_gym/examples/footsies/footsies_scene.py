@@ -327,12 +327,15 @@ class FootsiesControllableDifficultyScene(FootsiesScene):
                 softmax_temperature=1.0,
             ),
         }
-        self.opponent_sequence: list[OpponentConfig] = []
+
+        # Initialize with the easiest opponent
+        self.opponent_sequence: list[OpponentConfig] = [
+            self.configuration_mapping[0]
+        ]
 
     def on_client_callback(
         self, data: dict, sio: flask_socketio.SocketIO, room: str
     ):
-        print(f"Received client callback: {data}")
         if data.get("type") == "updateFootsiesDifficulty":
             opponent_config = self.configuration_mapping.get(data["difficulty"])
             self.opponent_sequence = [opponent_config]
