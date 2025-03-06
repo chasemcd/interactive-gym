@@ -157,6 +157,14 @@ class UnityScene(scene.Scene):
 
         return self
 
+    def on_unity_episode_start(
+        self, data: dict, sio: flask_socketio.SocketIO, room: str
+    ):
+        """
+        This method is called when the Unity episode starts.
+        """
+        pass
+
     def on_unity_episode_end(
         self, data: dict, sio: flask_socketio.SocketIO, room: str
     ):
