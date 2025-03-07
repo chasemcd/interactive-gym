@@ -356,7 +356,7 @@ footsies_fixed_low_skill_rounds = (
 )
 
 footsies_low_skill_rounds = scene.SceneWrapper(
-    [footsies_training_scene_intro, footsies_fixed_high_skill_rounds]
+    [footsies_training_scene_intro, footsies_fixed_low_skill_rounds]
 )
 
 
