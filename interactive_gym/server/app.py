@@ -438,7 +438,6 @@ def pong(data):
 
 @socketio.on("unityEpisodeEnd")
 def on_unity_episode_end(data):
-    print(data)
     subject_id = get_subject_id_from_session_id(flask.request.sid)
     participant_stager = STAGERS.get(subject_id, None)
     current_scene = participant_stager.current_scene
