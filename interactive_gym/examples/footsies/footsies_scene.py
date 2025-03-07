@@ -160,6 +160,7 @@ class FootsiesDynamicEmpowermentScene(FootsiesScene):
 
         self.model_paths: list[str] = [
             "esr-1.0alpha-00",
+            "esr-0.75alpha-00",
             "esr-0.5alpha-00",
             "esr-0.25alpha-00",
             "4sf-16od-1c73fcc-0.03to0.01-500m-00",
