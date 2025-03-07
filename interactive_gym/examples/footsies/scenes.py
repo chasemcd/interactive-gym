@@ -266,7 +266,7 @@ footsies_training_scene_intro = (
         scene_header="Footsies",
         scene_body="""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
-        <p>You'll now play 30 rounds against a CPU training partner. Remember, your goal is to build up your skill as much as 
+        <p>You'll now play 45 rounds against a CPU training partner. Remember, your goal is to build up your skill as much as 
         possible to maximize your bonus in the final challenge rounds. <span style="color: red;">You will not earn a bonus for winning in these rounds</span>. 
         
         <br>
@@ -299,7 +299,7 @@ footsies_fixed_high_skill_rounds = (
         preload_game=True,
     )
     .game(
-        num_episodes=30 // EPISODES_SCALE_DOWN,
+        num_episodes=45 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
     .set_opponent_sequence(
