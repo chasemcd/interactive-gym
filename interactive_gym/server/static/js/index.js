@@ -486,9 +486,9 @@ function activateScene(data) {
     window.scrollTo(0, 0);
 
     // Add scene_id to debug container
-    $("#debugValue").show();
-    $("#debugValue").text(`scene: ${data.scene_id}`);
-    $("#debugContainer").show();
+    // $("#debugValue").show();
+    // $("#debugValue").text(`scene: ${data.scene_id}`);
+    // $("#debugContainer").show();
 
     // Add interactiveGymGlobals to the data object
     if (typeof window.interactiveGymGlobals !== 'undefined') {
