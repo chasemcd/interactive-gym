@@ -95,7 +95,7 @@ footsies_initial_challenge_intro = (
         scene_body=f"""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
         <p>
-        You'll now play 10 "initial challenge" rounds against a CPU opponent. This is your first opportunity to earn a bonus and <span style="color: red;">you'll earn {BONUS_PER_WIN} for each win</span>.
+        You'll now play 15 "initial challenge" rounds against a CPU opponent. This is your first opportunity to earn a bonus and <span style="color: red;">you'll earn ${BONUS_PER_WIN:.2f} for each win</span>.
         <br>
         <br>
         When the game loads on the next screen, click "vs CPU" to start.
@@ -360,7 +360,7 @@ footsies_dynamic_empowerment_rounds = (
         preload_game=True,
     )
     .game(
-        num_episodes=30 // EPISODES_SCALE_DOWN,
+        num_episodes=45 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
 )
@@ -388,7 +388,7 @@ footsies_dynamic_difficulty_scene = (
         preload_game=True,
     )
     .game(
-        num_episodes=30 // EPISODES_SCALE_DOWN,
+        num_episodes=45 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
 )
@@ -417,7 +417,7 @@ footsies_random_difficulty_scene = (
         preload_game=True,
     )
     .game(
-        num_episodes=30 // EPISODES_SCALE_DOWN,
+        num_episodes=45 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
 )
@@ -461,7 +461,7 @@ footsies_controllable_difficulty_scene = (
         preload_game=True,
     )
     .game(
-        num_episodes=30 // EPISODES_SCALE_DOWN,
+        num_episodes=45 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
 )
@@ -613,7 +613,7 @@ footsies_final_challenge_intro = (
         scene_body=f"""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
         <p>
-        You'll now play 20 "final challenge" rounds against a CPU opponent. This is your final opportunity to earn a bonus and <span style="color: red;">you'll earn {BONUS_PER_WIN} for each win</span>.
+        You'll now play 15 "final challenge" rounds against a CPU opponent. This is your final opportunity to earn a bonus and <span style="color: red;">you'll earn ${BONUS_PER_WIN:.2f} for each win</span>.
         <br>
         <br>
         When the game loads on the next screen, click "vs CPU" to start.
