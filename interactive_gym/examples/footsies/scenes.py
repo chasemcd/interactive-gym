@@ -26,6 +26,7 @@ from interactive_gym.examples.footsies import footsies_scene
 
 
 FOOTSIES_BUILD_NAME = "footsies_webgl_62ba90b"
+BONUS_PER_WIN = 0.20
 
 # Define the start scene, which is the landing page for participants.
 start_scene = (
@@ -87,18 +88,22 @@ CONTROLS_SUBHEADER = """
 EPISODES_SCALE_DOWN = 1
 
 
-footsies_initial_challenge_intro = static_scene.StaticScene().display(
-    scene_header="Footsies",
-    scene_body="""
+footsies_initial_challenge_intro = (
+    static_scene.StaticScene()
+    .display(
+        scene_header="Footsies",
+        scene_body=f"""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
         <p>
-        You'll now play 10 "initial challenge" rounds against a CPU opponent. This is your first opportunity to earn a bonus.
+        You'll now play 10 "initial challenge" rounds against a CPU opponent. This is your first opportunity to earn a bonus and <span style="color: red;">you'll earn {BONUS_PER_WIN} for each win</span>.
         <br>
         <br>
         When the game loads on the next screen, click "vs CPU" to start.
         </p>
     </div>
     """,
+    )
+    .scene(scene_id="footsies_initial_challenge_intro", experiment_config={})
 )
 
 
@@ -121,7 +126,7 @@ footsies_initial_challenge_scene = (
         preload_game=True,
     )
     .game(
-        num_episodes=10 // EPISODES_SCALE_DOWN,
+        num_episodes=15 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
     .set_opponent_sequence(
@@ -196,6 +201,41 @@ footsies_initial_challenge_scene = (
                 inference_cadence=4,
                 softmax_temperature=1.4,
             ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-00",
+                frame_skip=8,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.2,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-01",
+                frame_skip=8,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.2,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-02",
+                frame_skip=8,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.2,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=8,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.2,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-082992f-0.03to0.01-sp",
+                frame_skip=8,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.2,
+            ),
         ],
         randomize=True,
     )
@@ -204,7 +244,7 @@ footsies_initial_challenge_scene = (
 footsies_initial_challenge_survey_scene = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
-            "The initial challenge CPU was enjoyable to play against.",
+            "I enjoyed playing against the initial challenge opponent.",
             "The initial challenge CPU felt...",
         ],
         pre_scale_header="",
@@ -220,12 +260,14 @@ footsies_initial_challenge_survey_scene = (
 )
 
 
-footsies_training_scene_intro = static_scene.StaticScene().display(
-    scene_header="Footsies",
-    scene_body="""
+footsies_training_scene_intro = (
+    static_scene.StaticScene()
+    .display(
+        scene_header="Footsies",
+        scene_body="""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
         <p>You'll now play 30 rounds against a CPU training partner. Remember, your goal is to build up your skill as much as 
-        possible to maximize your bonus in the final challenge rounds. 
+        possible to maximize your bonus in the final challenge rounds. <span style="color: red;">You will not earn a bonus for winning in these rounds</span>. 
         
         <br>
         <br>
@@ -234,6 +276,8 @@ footsies_training_scene_intro = static_scene.StaticScene().display(
         </p>
     </div>
     """,
+    )
+    .scene(scene_id="footsies_training_scene_intro", experiment_config={})
 )
 
 footsies_fixed_high_skill_rounds = (
@@ -261,7 +305,7 @@ footsies_fixed_high_skill_rounds = (
     .set_opponent_sequence(
         [
             footsies_scene.OpponentConfig(
-                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
                 frame_skip=4,
                 obs_delay=16,
                 inference_cadence=4,
@@ -387,8 +431,8 @@ footsies_controllable_difficulty_scene_intro = static_scene.StaticScene().displa
     scene_header="Footsies",
     scene_body="""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
-        <p>You'll now play 30 rounds against a CPU training partner. You will be able to control the difficulty by using the slider on the next page. Remember, your goal is to build up your skill as much as 
-        possible to maximize your bonus in the final challenge rounds. 
+        <p>You'll now play 45 rounds against a CPU training partner. You will be able to control the difficulty by using the slider on the next page. Remember, your goal is to build up your skill as much as 
+        possible to maximize your bonus in the final challenge rounds. You will not earn a bonus for winning in these rounds. 
         <br>
         <br>
         When the game loads on the next screen, click "vs CPU" to start.
@@ -435,8 +479,10 @@ footsies_training_survey_scene = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
             "My skills improved over the course of playing with my training partner.",
-            "My training partner was effective in helping me learn a good strategy.",
-            "My training partner was enjoyable to play against.",
+            "My training partner was effective in helping me improve my skills.",
+            "I learned new strategies from my training partner.",
+            "I enjoyed playing against my training partner.",
+            "I was motivated to beat my training partner.",
             "My training partner felt...",
         ],
         pre_scale_header="",
@@ -444,20 +490,23 @@ footsies_training_survey_scene = (
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
+            ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Too Easy to Beat", "Evenly Matched", "Too Hard to Beat"],
         ],
-        text_box_header="Please describe the general strategy you've learned from your training partner. What is your approach to winning? What would have made the CPU a better training partner?",
+        text_box_header="Please describe the general strategy you've learned from your training partner. What is your approach to winning?",
         scale_size=7,
     )
-    .scene(scene_id="footsies_survey_0", experiment_config={})
+    .scene(scene_id="footsies_training_survey", experiment_config={})
     .display(
         scene_subheader="Feedback About Your CPU Training Partner",
         scene_header="Training Survey 1/2",
     )
 )
 
-footsies_mc_survey = static_scene.MultipleChoice(
-    pre_questions_header="""
+footsies_mc_survey = (
+    static_scene.MultipleChoice(
+        pre_questions_header="""
     In this survey, we'll ask about what you learned about the game. Specifically in how controls result in particular actions in the game. Please select all that apply for each option. 
     You will earn an aditional bonus of $0.10 for each question that you answer correctly.
     <br>
@@ -467,114 +516,112 @@ footsies_mc_survey = static_scene.MultipleChoice(
     means pressing the "D" key followed by the space bar. On the other hand, <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> means
     pressing the "D" key and the space bar at the same time. 
     """,
-    questions=[
-        "What key press(es) result in this movement?",
-        "What key press(es) result in this movement?",
-        "What key press(es) result in this attack?",
-        "What key press(es) result in this attack?",
-        "What key press(es) result in this attack?",
-        "What key press(es) result in this attack?",
-        "What key press(es) result in this attack?",
-        "What key press(es) result in this attack?",
-    ],
-    choices=[
-        [
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
-            "None of the above",
+        questions=[
+            "What key press(es) result in this movement?",
+            "What key press(es) result in this movement?",
+            "What key press(es) result in this attack?",
+            "What key press(es) result in this attack?",
+            "What key press(es) result in this attack?",
+            "What key press(es) result in this attack?",
+            "What key press(es) result in this attack?",
+            "What key press(es) result in this attack?",
         ],
-        [
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
-            "None of the above",
+        choices=[
+            [
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+            ],
+            [
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> -> <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+            ],
+            [
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            ],
+            [
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            ],
+            [
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            ],
+            [
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            ],
+            [
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            ],
+            [
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+                "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
+            ],
         ],
-        [
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "None of the above",
+        images=[
+            "static/assets/footsies/gifs/backward_dash.gif",
+            "static/assets/footsies/gifs/forward_dash.gif",
+            "static/assets/footsies/gifs/kick_ko.gif",
+            "static/assets/footsies/gifs/kick_no_ko.gif",
+            "static/assets/footsies/gifs/knee_no_ko.gif",
+            "static/assets/footsies/gifs/low_kick.gif",
+            "static/assets/footsies/gifs/uppercut_miss.gif",
+            "static/assets/footsies/gifs/uppercut.gif",
         ],
-        [
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "None of the above",
-        ],
-        [
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "None of the above",
-        ],
-        [
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "None of the above",
-        ],
-        [
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "None of the above",
-        ],
-        [
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released)",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'> (Held then released) + <img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-d-key-50.png' alt='D key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "<img src='static/assets/keys/icons8-a-key-50.png' alt='A key' height='24' width='24' style='vertical-align:middle;'> + <img src='static/assets/keys/icons8-space-key-50.png' alt='Space key' height='24' width='24' style='vertical-align:middle;'>",
-            "None of the above",
-        ],
-    ],
-    images=[
-        "static/assets/footsies/gifs/backward_dash.gif",
-        "static/assets/footsies/gifs/forward_dash.gif",
-        "static/assets/footsies/gifs/kick_ko.gif",
-        "static/assets/footsies/gifs/kick_no_ko.gif",
-        "static/assets/footsies/gifs/knee_no_ko.gif",
-        "static/assets/footsies/gifs/low_kick.gif",
-        "static/assets/footsies/gifs/uppercut_miss.gif",
-        "static/assets/footsies/gifs/uppercut.gif",
-    ],
-    multi_select=True,
-).display(scene_header="Training Survey 2/2")
+        multi_select=True,
+    )
+    .display(scene_header="Training Survey 2/2")
+    .scene(scene_id="footsies_mc_survey", experiment_config={})
+)
 
-
-footsies_final_challenge_intro = static_scene.StaticScene().display(
-    scene_header="Footsies",
-    scene_body="""
+footsies_final_challenge_intro = (
+    static_scene.StaticScene()
+    .display(
+        scene_header="Footsies",
+        scene_body=f"""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
         <p>
-        You'll now play 10 "final challenge" rounds against a CPU opponent. This is your final opportunity to earn a bonus.
+        You'll now play 20 "final challenge" rounds against a CPU opponent. This is your final opportunity to earn a bonus and <span style="color: red;">you'll earn {BONUS_PER_WIN} for each win</span>.
         <br>
         <br>
         When the game loads on the next screen, click "vs CPU" to start.
         </p>
     </div>
     """,
+    )
+    .scene(scene_id="footsies_final_challenge_intro", experiment_config={})
 )
 
 
@@ -587,8 +634,8 @@ footsies_end_survey_scene = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
             "The strategy I learned from my training partner was effective against the final challenge opponents.",
-            "The final challenge CPU was enjoyable to play against.",
-            "The final challenge CPU felt...",
+            "I enjoyed playing against the final challenge opponent.",
+            "The final challenge opponent felt...",
         ],
         pre_scale_header="",
         scale_labels=[
@@ -599,10 +646,9 @@ footsies_end_survey_scene = (
         text_box_header="Please describe any additional reasoning for your selections or thoughts on the study. You may write N/A if you do not have any anything to add.",
         scale_size=7,
     )
-    .scene(scene_id="footsies_survey_0", experiment_config={})
-    .display(scene_subheader="Feedback About Your CPU Training Partner")
+    .scene(scene_id="footsies_final_challenge_survey", experiment_config={})
+    .display(scene_subheader="Feedback About Your Final Challenge Opponent")
 )
-
 
 footsies_end_scene = (
     static_scene.CompletionCodeScene()
