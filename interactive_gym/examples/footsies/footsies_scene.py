@@ -271,13 +271,6 @@ class FootsiesControllableDifficultyScene(FootsiesScene):
         super().__init__()
 
         self.configuration_mapping: dict[int, OpponentConfig] = {
-            0: OpponentConfig(
-                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
-                frame_skip=32,
-                obs_delay=16,
-                inference_cadence=4,
-                softmax_temperature=1.7,
-            ),
             1: OpponentConfig(
                 model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
                 frame_skip=24,
@@ -331,7 +324,7 @@ class FootsiesControllableDifficultyScene(FootsiesScene):
 
         # Initialize with the easiest opponent
         self.opponent_sequence: list[OpponentConfig] = [
-            self.configuration_mapping[0]
+            self.configuration_mapping[1]
         ]
 
     def on_client_callback(

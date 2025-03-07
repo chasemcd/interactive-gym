@@ -319,6 +319,47 @@ footsies_high_skill_rounds = scene.SceneWrapper(
     [footsies_training_scene_intro, footsies_fixed_high_skill_rounds]
 )
 
+
+footsies_fixed_low_skill_rounds = (
+    footsies_scene.FootsiesScene()
+    .display(
+        scene_header="Footsies",
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">TRAINING ROUNDS</p>
+        </div>
+        """
+        + CONTROLS_SUBHEADER,
+    )
+    .scene(scene_id="footsies_low_skill", experiment_config={})
+    .webgl(
+        build_name=FOOTSIES_BUILD_NAME,
+        height=1080 / 3,
+        width=1960 / 3,
+        preload_game=True,
+    )
+    .game(
+        num_episodes=45 // EPISODES_SCALE_DOWN,
+        score_fn=lambda data: int(data["winner"] == "P1"),
+    )
+    .set_opponent_sequence(
+        [
+            footsies_scene.OpponentConfig(
+                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
+                frame_skip=24,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.6,
+            ),
+        ]
+    )
+)
+
+footsies_low_skill_rounds = scene.SceneWrapper(
+    [footsies_training_scene_intro, footsies_fixed_high_skill_rounds]
+)
+
+
 footsies_fixed_empowerment_rounds = (
     copy.deepcopy(footsies_fixed_high_skill_rounds)
     .scene(scene_id="footsies_fixed_empowerment", experiment_config={})
