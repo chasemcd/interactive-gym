@@ -894,7 +894,7 @@ class MultipleChoice(StaticScene):
             for j, choice in enumerate(choices):
                 html += f"""
                         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="{input_type}" name="mc-{i}" id="mc-{i}-{j}" value="{j}" class="mc-input"
+                            <input type="{input_type}" name="mc-{i}" id="mc-{i}-{j}" value="{choice}" class="mc-input"
                                 style="cursor: pointer; width: 16px; height: 16px;">
                             <span style="flex: 1;">{choice}</span>
                         </label>
@@ -912,19 +912,43 @@ class MultipleChoice(StaticScene):
         $("#advanceButton").attr("disabled", true);
         $("#advanceButton").show();
 
+        function updateFormData() {
+            $('.input-group').each(function(index) {
+                var groupName = 'mc-' + index;
+                var $inputs = $(this).find('input');
+                var selectedIndices = [];
+                
+                $inputs.each(function(optionIndex) {
+                    if (this.checked) {
+                        selectedIndices.push(optionIndex);
+                    }
+                });
+                
+                // Create or update a hidden input to store the selected indices
+                var hiddenInput = document.getElementById(groupName);
+                if (!hiddenInput) {
+                    hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.id = groupName;
+                    document.body.appendChild(hiddenInput);
+                }
+                // Format as a proper list [0,1,2] instead of a string "0,1,2"
+                hiddenInput.value = '[' + selectedIndices.join(',') + ']';
+            });
+        }
+
         function checkInputs() {
             var allQuestionsAnswered = Array.from(document.querySelectorAll('.input-group')).every(group => {
                 var inputs = group.querySelectorAll('input');
                 var isCheckbox = inputs[0].type === 'checkbox';
                 if (isCheckbox) {
-                    // For checkboxes, at least one must be checked
                     return Array.from(inputs).some(input => input.checked);
                 } else {
-                    // For radio buttons, exactly one must be checked
                     return Array.from(inputs).some(input => input.checked);
                 }
             });
             document.getElementById('advanceButton').disabled = !allQuestionsAnswered;
+            updateFormData();  // Update the form data whenever inputs change
         }
 
         document.querySelectorAll('.mc-input').forEach(function(input) {
