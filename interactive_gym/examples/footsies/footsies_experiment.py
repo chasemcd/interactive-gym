@@ -33,7 +33,7 @@ stager = stager.Stager(
                 scenes.footsies_dynamic_empowerment_rounds,
                 scenes.footsies_empowerment_rounds,
             ],
-            # keep_n=1,
+            keep_n=1,
         ),
         scenes.footsies_training_survey_scene,
         scenes.footsies_mc_survey,
