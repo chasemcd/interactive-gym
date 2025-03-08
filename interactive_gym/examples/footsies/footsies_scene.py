@@ -61,6 +61,7 @@ class FootsiesScene(unity_scene.UnityScene):
                 "observationDelay": opponent_config.obs_delay,
                 "softmaxTemperature": opponent_config.softmax_temperature,
             },
+            room=room,
         )
 
 
@@ -343,4 +344,5 @@ class FootsiesControllableDifficultyScene(FootsiesScene):
                     "observationDelay": opponent_config.obs_delay,
                     "softmaxTemperature": opponent_config.softmax_temperature,
                 },
+                room=room,
             )

@@ -207,5 +207,4 @@ class UnityScene(scene.Scene):
         A hook that is called when the client connects to the server.
         """
         if self.preload_game:
-            print("emitting preload_unity_game")
             sio.emit("preload_unity_game", {**self.scene_metadata}, room=room)
