@@ -15,19 +15,26 @@ class OpponentConfig:
     softmax_temperature: float = 1.0
 
 
+DIFFICULTY_LEVEL_OPPONENTS = [
+    OpponentConfig(
+        model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
+        frame_skip=24 - i * 2,
+        obs_delay=16,
+        inference_cadence=4,
+        softmax_temperature=2.0 - i * 0.1,
+    )
+    for i in range(11)
+]
+
+
 class FootsiesScene(unity_scene.UnityScene):
     def __init__(self):
         super().__init__()
         self.winners: list[str] = []
-        self.opponent_sequence: list[OpponentConfig] = [
-            OpponentConfig(
-                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
-                frame_skip=4,
-                obs_delay=16,
-                inference_cadence=4,
-                softmax_temperature=1.0,
-            )
-        ]
+        self.opponent_sequence: list[OpponentConfig] = (
+            DIFFICULTY_LEVEL_OPPONENTS[-1:]
+        )
+
         self.randomize_opponents: bool = False
 
     def build(self) -> list[Scene]:
@@ -69,42 +76,11 @@ class FootsiesDynamicDifficultyScene(FootsiesScene):
     def __init__(self):
         super().__init__()
         self.winners: list[str] = []
-        self.model_path: str = "4sf-16od-1c73fcc-0.03to0.01-500m-00"
-        self.cur_frame_skip: int = 12
-        self.cur_obs_delay: int = 16
-        self.cur_inference_cadence: int = 4
-        self.cur_softmax_temperature: float = 1.4
-
-        self.min_frame_skip: int = 4
-        self.max_frame_skip: int = 24
-        self.frame_skip_step: int = 2
-        self.min_temperature: float = 1.0
-        self.max_temperature: float = 1.7
-        self.temperature_step: float = 0.1
+        self.cur_difficulty_index: int = 5  # start at medium difficulty
 
         self.opponent_sequence: list[OpponentConfig] = [
-            OpponentConfig(
-                model_path=self.model_path,
-                frame_skip=self.cur_frame_skip,
-                obs_delay=self.cur_obs_delay,
-                inference_cadence=self.cur_inference_cadence,
-                softmax_temperature=self.cur_softmax_temperature,
-            )
+            DIFFICULTY_LEVEL_OPPONENTS[self.cur_difficulty_index]
         ]
-
-    def set_initial_settings(
-        self,
-        model_path: str,
-        frame_skip: int = 4,
-        obs_delay: int = 16,
-        inference_cadence: int = 4,
-        softmax_temperature: float = 1.0,
-    ):
-        self.model_path = model_path
-        self.cur_frame_skip = frame_skip
-        self.cur_obs_delay = obs_delay
-        self.cur_inference_cadence = inference_cadence
-        self.cur_softmax_temperature = softmax_temperature
 
     def on_unity_episode_end(
         self, data: dict, sio: flask_socketio.SocketIO, room: str
@@ -116,35 +92,22 @@ class FootsiesDynamicDifficultyScene(FootsiesScene):
 
             # If P1 (human) won twice in a row, make the opponent harder.
             if all(w == "P1" for w in self.winners[-2:]):
-                self.cur_frame_skip = max(
-                    self.min_frame_skip,
-                    self.cur_frame_skip - self.frame_skip_step,
-                )
-                self.cur_softmax_temperature = min(
-                    self.max_temperature,
-                    self.cur_softmax_temperature - self.temperature_step,
+                self.cur_difficulty_index = min(
+                    len(DIFFICULTY_LEVEL_OPPONENTS) - 1,
+                    self.cur_difficulty_index + 1,
                 )
 
             # If P2 (bot) won twice in a row, make the opponent easier.
             elif all(w == "P2" for w in self.winners[-2:]):
-                self.cur_frame_skip = min(
-                    self.max_frame_skip,
-                    self.cur_frame_skip + self.frame_skip_step,
-                )
-                self.cur_softmax_temperature = max(
-                    self.min_temperature,
-                    self.cur_softmax_temperature + self.temperature_step,
+                self.cur_difficulty_index = max(
+                    0,
+                    self.cur_difficulty_index - 1,
                 )
 
-        self.opponent_sequence.append(
-            OpponentConfig(
-                model_path=self.model_path,
-                frame_skip=self.cur_frame_skip,
-                obs_delay=self.cur_obs_delay,
-                inference_cadence=self.cur_inference_cadence,
-                softmax_temperature=self.cur_softmax_temperature,
+            self.opponent_sequence.append(
+                DIFFICULTY_LEVEL_OPPONENTS[self.cur_difficulty_index]
             )
-        )
+
         super().on_unity_episode_end(data, sio, room)
 
 
@@ -164,18 +127,14 @@ class FootsiesDynamicEmpowermentScene(FootsiesScene):
             "esr-0.75alpha-00",
             "esr-0.5alpha-00",
             "esr-0.25alpha-00",
-            "4sf-16od-1c73fcc-0.03to0.01-500m-00",
+            # "esr-0.1alpha-00",
             "4sf-16od-1c73fcc-0.03to0.01-500m-00",
         ]
 
         self.opponent_sequence: list[OpponentConfig] = [
             OpponentConfig(
                 model_path=self.model_paths[self.cur_model_idx],
-                frame_skip=(
-                    8
-                    if self.cur_model_idx == len(self.model_paths) - 2
-                    else self.cur_frame_skip
-                ),
+                frame_skip=self.cur_frame_skip,
                 obs_delay=self.cur_obs_delay,
                 inference_cadence=self.cur_inference_cadence,
                 softmax_temperature=self.cur_softmax_temperature,
@@ -252,18 +211,8 @@ class FootsiesRandomDifficultyScene(FootsiesScene):
     def on_unity_episode_start(
         self, data: dict, sio: flask_socketio.SocketIO, room: str
     ):
-        sampled_options = random.choice(self.fs_temp_options)
-        frame_skip, softmax_temperature = sampled_options
-
-        self.opponent_sequence.append(
-            OpponentConfig(
-                model_path=self.model_path,
-                frame_skip=frame_skip,
-                obs_delay=self.cur_obs_delay,
-                inference_cadence=self.cur_inference_cadence,
-                softmax_temperature=softmax_temperature,
-            )
-        )
+        sampled_difficulty = random.choice(DIFFICULTY_LEVEL_OPPONENTS)
+        self.opponent_sequence.append(sampled_difficulty)
         super().on_unity_episode_start(data, sio, room)
 
 
@@ -271,68 +220,17 @@ class FootsiesControllableDifficultyScene(FootsiesScene):
     def __init__(self):
         super().__init__()
 
-        self.configuration_mapping: dict[int, OpponentConfig] = {
-            1: OpponentConfig(
-                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
-                frame_skip=24,
-                obs_delay=16,
-                inference_cadence=4,
-                softmax_temperature=1.6,
-            ),
-            2: OpponentConfig(
-                model_path="44sf-16od-1c73fcc-0.03to0.01-500m-00",
-                frame_skip=14,
-                obs_delay=16,
-                inference_cadence=4,
-                softmax_temperature=1.5,
-            ),
-            3: OpponentConfig(
-                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
-                frame_skip=12,
-                obs_delay=16,
-                inference_cadence=4,
-                softmax_temperature=1.4,
-            ),
-            4: OpponentConfig(
-                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
-                frame_skip=10,
-                obs_delay=16,
-                inference_cadence=4,
-                softmax_temperature=1.3,
-            ),
-            5: OpponentConfig(
-                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
-                frame_skip=8,
-                obs_delay=16,
-                inference_cadence=4,
-                softmax_temperature=1.2,
-            ),
-            6: OpponentConfig(
-                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
-                frame_skip=6,
-                obs_delay=16,
-                inference_cadence=4,
-                softmax_temperature=1.1,
-            ),
-            7: OpponentConfig(
-                model_path="4sf-16od-1c73fcc-0.03to0.01-500m-00",
-                frame_skip=4,
-                obs_delay=16,
-                inference_cadence=4,
-                softmax_temperature=1.0,
-            ),
-        }
-
         # Initialize with the easiest opponent
         self.opponent_sequence: list[OpponentConfig] = [
-            self.configuration_mapping[1]
+            DIFFICULTY_LEVEL_OPPONENTS[0]
         ]
 
     def on_client_callback(
         self, data: dict, sio: flask_socketio.SocketIO, room: str
     ):
         if data.get("type") == "updateFootsiesDifficulty":
-            opponent_config = self.configuration_mapping.get(data["difficulty"])
+            difficulty_idx = data["difficulty"] - 1
+            opponent_config = DIFFICULTY_LEVEL_OPPONENTS[difficulty_idx]
             self.opponent_sequence = [opponent_config]
 
             sio.emit(
