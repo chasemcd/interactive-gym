@@ -25,8 +25,8 @@ from interactive_gym.configurations import (
 from interactive_gym.examples.footsies import footsies_scene
 
 
-FOOTSIES_BUILD_NAME = "footsies_webgl_7abb15f"
-BONUS_PER_WIN = 0.20
+FOOTSIES_BUILD_NAME = "footsies_webgl_ff9e3d3"
+BONUS_PER_WIN = 0.30
 
 # Define the start scene, which is the landing page for participants.
 start_scene = (
@@ -95,7 +95,7 @@ footsies_initial_challenge_intro = (
         scene_body=f"""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
         <p>
-        You'll now play 15 "initial challenge" rounds against a CPU opponent. This is your first opportunity to earn a bonus and <span style="color: red;">you'll earn ${BONUS_PER_WIN:.2f} for each win</span>.
+        You'll now play 10 "initial challenge" rounds against a CPU opponent. This is your first opportunity to earn a bonus and <span style="color: red;">you'll earn ${BONUS_PER_WIN:.2f} for each win</span>.
         <br>
         <br>
         When the game loads on the next screen, click "vs CPU" to start.
@@ -126,7 +126,7 @@ footsies_initial_challenge_scene = (
         preload_game=True,
     )
     .game(
-        num_episodes=15 // EPISODES_SCALE_DOWN,
+        num_episodes=10 // EPISODES_SCALE_DOWN,
         score_fn=lambda data: int(data["winner"] == "P1"),
     )
     .set_opponent_sequence(
@@ -473,7 +473,7 @@ footsies_controllable_difficulty_scene_intro = static_scene.StaticScene().displa
     scene_body="""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
         <p>You'll now play 45 rounds against a CPU training partner. You will be able to control the difficulty by using the slider on the next page. Remember, your goal is to build up your skill as much as 
-        possible to maximize your bonus in the final challenge rounds. You will not earn a bonus for winning in these rounds. 
+        possible to maximize your bonus in the final challenge rounds. <span style="color: red;">You will not earn a bonus for winning in these rounds</span> 
         <br>
         <br>
         When the game loads on the next screen, click "vs CPU" to start.
@@ -520,7 +520,6 @@ footsies_training_survey_scene = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
             "My skills improved over the course of playing with my training partner.",
-            "My training partner was effective in helping me improve my skills.",
             "I learned new strategies from my training partner.",
             "I enjoyed playing against my training partner.",
             "I was motivated to beat my training partner.",
@@ -528,7 +527,6 @@ footsies_training_survey_scene = (
         ],
         pre_scale_header="",
         scale_labels=[
-            ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
             ["Strongly Disagree", "Neutral", "Strongle Agree"],
@@ -654,7 +652,7 @@ footsies_final_challenge_intro = (
         scene_body=f"""
     <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
         <p>
-        You'll now play 15 "final challenge" rounds against a CPU opponent. This is your final opportunity to earn a bonus and <span style="color: red;">you'll earn ${BONUS_PER_WIN:.2f} for each win</span>.
+        You'll now play 10 "final challenge" rounds against a CPU opponent. This is your final opportunity to earn a bonus and <span style="color: red;">you'll earn ${BONUS_PER_WIN:.2f} for each win</span>.
         <br>
         <br>
         When the game loads on the next screen, click "vs CPU" to start.

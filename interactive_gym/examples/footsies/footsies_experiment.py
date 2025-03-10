@@ -27,7 +27,7 @@ stager = stager.Stager(
         scene.RandomizeOrder(
             [
                 # scenes.footsies_dynamic_difficulty_rounds,
-                # scenes.footsies_controllable_difficulty_rounds,
+                scenes.footsies_controllable_difficulty_rounds,
                 scenes.footsies_high_skill_rounds,
                 # scenes.footsies_low_skill_rounds,
                 # scenes.footsies_random_difficulty_rounds,
