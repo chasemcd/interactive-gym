@@ -187,22 +187,61 @@ function startUnityGame(config, elementId) {
 }
 
 export function shutdownUnityGame() {
-    if (unityInstance) {
+    if (window.unityInstance) {
         try {
-            window.unityInstance.Quit().then(() => {
-                document.getElementById("unity-container")?.remove(); // Remove the Unity canvas container
-                window.unityInstance = null;
-                console.log("Unity WebGL instance destroyed.");
-            });
+            // First remove any event listeners and disable the fullscreen button
+            const fullscreenButton = document.querySelector("#unity-fullscreen-button");
+            if (fullscreenButton) {
+                fullscreenButton.onclick = null;
+            }
+
+            // Attempt to quit the Unity instance with a timeout
+            const quitPromise = window.unityInstance.Quit();
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Unity quit timeout')), 5000));
+
+            Promise.race([quitPromise, timeoutPromise])
+                .then(() => {
+                    cleanupUnityResources();
+                })
+                .catch((e) => {
+                    console.warn("Error or timeout shutting down Unity instance:", e);
+                    cleanupUnityResources();
+                });
         } catch (e) {
-            console.warn("Error shutting down Unity instance:", e);
-            // Fallback cleanup
-            document.getElementById("unity-container")?.remove();
-            window.unityInstance = null;
+            console.warn("Error during Unity shutdown:", e);
+            cleanupUnityResources();
         }
     }
-  }
+}
 
+function cleanupUnityResources() {
+    // Clean up DOM elements
+    // document.getElementById("unity-container")?.remove();
+    
+    // // Clean up cached assets
+    // unityCachedAssets.forEach((assets, buildName) => {
+    //     try {
+    //         URL.revokeObjectURL(assets.loaderUrl);
+    //         URL.revokeObjectURL(assets.dataUrl);
+    //         URL.revokeObjectURL(assets.frameworkUrl);
+    //         URL.revokeObjectURL(assets.codeUrl);
+    //     } catch (e) {
+    //         console.warn(`Failed to revoke URLs for ${buildName}:`, e);
+    //     }
+    // });
+    // unityCachedAssets.clear();
+    
+    // Clear the Unity instance
+    window.unityInstance = null;
+    
+    // Force garbage collection if possible
+    if (window.gc) {
+        window.gc();
+    }
+    
+    console.log("Unity WebGL cleanup completed");
+}
 
 export function terminateUnityScene(data) {
   // In the Static and Start scenes, we only show
