@@ -346,7 +346,7 @@ footsies_empowerment_rounds = scene.SceneWrapper(
 )
 
 
-footsies_dynamic_empowerment_rounds = (
+footsies_dynamic_empowerment_scene = (
     footsies_scene.FootsiesDynamicEmpowermentScene()
     .scene(scene_id="footsies_dynamic_empowerment", experiment_config={})
     .display(
@@ -371,8 +371,8 @@ footsies_dynamic_empowerment_rounds = (
     )
 )
 
-footsies_dynamic_empowerment = scene.SceneWrapper(
-    [footsies_training_scene_intro, footsies_dynamic_empowerment_rounds]
+footsies_dynamic_empowerment_rounds = scene.SceneWrapper(
+    [footsies_training_scene_intro, footsies_dynamic_empowerment_scene]
 )
 
 footsies_dynamic_difficulty_scene = (
