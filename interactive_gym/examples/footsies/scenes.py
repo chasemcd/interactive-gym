@@ -25,7 +25,7 @@ from interactive_gym.configurations import (
 from interactive_gym.examples.footsies import footsies_scene
 
 
-FOOTSIES_BUILD_NAME = "footsies_webgl_ff9e3d3"
+FOOTSIES_BUILD_NAME = "footsies_webgl_47f26fc"
 BONUS_PER_WIN = 0.30
 
 # Define the start scene, which is the landing page for participants.

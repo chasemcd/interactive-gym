@@ -215,23 +215,7 @@ export function shutdownUnityGame() {
     }
 }
 
-function cleanupUnityResources() {
-    // Clean up DOM elements
-    // document.getElementById("unity-container")?.remove();
-    
-    // // Clean up cached assets
-    // unityCachedAssets.forEach((assets, buildName) => {
-    //     try {
-    //         URL.revokeObjectURL(assets.loaderUrl);
-    //         URL.revokeObjectURL(assets.dataUrl);
-    //         URL.revokeObjectURL(assets.frameworkUrl);
-    //         URL.revokeObjectURL(assets.codeUrl);
-    //     } catch (e) {
-    //         console.warn(`Failed to revoke URLs for ${buildName}:`, e);
-    //     }
-    // });
-    // unityCachedAssets.clear();
-    
+function cleanupUnityResources() {    
     // Clear the Unity instance
     window.unityInstance = null;
     
