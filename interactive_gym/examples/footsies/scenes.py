@@ -206,6 +206,107 @@ footsies_initial_challenge_scene = (
     )
 )
 
+
+footsies_low_diff_initial_challenge_scene = (
+    footsies_scene.FootsiesScene()
+    .display(
+        scene_header="Footsies",
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">INITIAL CHALLENGE</p>
+        </div>
+        """
+        + CONTROLS_SUBHEADER,
+    )
+    .scene(scene_id="footsies_low_diffinitial_challenge", experiment_config={})
+    .webgl(
+        build_name=FOOTSIES_BUILD_NAME,
+        height=1080 / 3,
+        width=1960 / 3,
+        preload_game=True,
+    )
+    .game(
+        num_episodes=10 // EPISODES_SCALE_DOWN,
+        score_fn=lambda data: int(data["winner"] == "P1"),
+    )
+    .set_opponent_sequence(
+        [
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-00",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-01",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-02",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-082992f-0.03to0.01-sp",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-00",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-01",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-02",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-13c7f7b-0.05to0.01-sp-03",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+            footsies_scene.OpponentConfig(
+                model_path="4fs-16od-082992f-0.03to0.01-sp",
+                frame_skip=14,
+                obs_delay=16,
+                inference_cadence=4,
+                softmax_temperature=1.5,
+            ),
+        ],
+        randomize=True,
+    )
+)
+
+
 footsies_initial_challenge_survey_scene = (
     static_scene.ScalesAndTextBox(
         scale_questions=[
@@ -632,6 +733,13 @@ footsies_final_challenge_intro = (
 footsies_final_challenge_scene = copy.deepcopy(
     footsies_initial_challenge_scene
 ).scene(scene_id="footsies_final_challenge_scene", experiment_config={})
+
+
+footsies_low_diff_final_challenge_scene = copy.deepcopy(
+    footsies_low_diff_initial_challenge_scene
+).scene(
+    scene_id="footsies_low_diff_final_challenge_scene", experiment_config={}
+)
 
 
 footsies_end_survey_scene = (
