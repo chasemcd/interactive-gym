@@ -22,7 +22,7 @@ stager = stager.Stager(
         scenes.footsies_initial_survey_scene,
         scenes.footsies_tutorial_scene,
         scenes.footsies_initial_challenge_intro,
-        scenes.footsies_low_diff_initial_challenge_scene,
+        scenes.footsies_initial_challenge_scene,
         scenes.footsies_initial_challenge_survey_scene,
         scene.RandomizeOrder(
             [
@@ -39,7 +39,7 @@ stager = stager.Stager(
         scenes.footsies_training_survey_scene,
         scenes.footsies_mc_survey,
         scenes.footsies_final_challenge_intro,
-        scenes.footsies_low_diff_final_challenge_scene,
+        scenes.footsies_final_challenge_scene,
         scenes.footsies_end_survey_scene,
         scenes.footsies_end_scene,
     ]
