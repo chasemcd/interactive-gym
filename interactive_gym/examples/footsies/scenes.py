@@ -26,7 +26,7 @@ from interactive_gym.examples.footsies import footsies_scene
 
 
 FOOTSIES_BUILD_NAME = "footsies_webgl_47f26fc"
-BONUS_PER_WIN = 0.30
+BONUS_PER_WIN = 0.20
 
 # Define the start scene, which is the landing page for participants.
 start_scene = (
@@ -730,9 +730,19 @@ footsies_final_challenge_intro = (
 )
 
 
-footsies_final_challenge_scene = copy.deepcopy(
-    footsies_initial_challenge_scene
-).scene(scene_id="footsies_final_challenge_scene", experiment_config={})
+footsies_final_challenge_scene = (
+    copy.deepcopy(footsies_initial_challenge_scene)
+    .scene(scene_id="footsies_final_challenge_scene", experiment_config={})
+    .display(
+        scene_header="Footsies",
+        scene_subheader="""
+        <div style="text-align: center; font-family: 'Press Start 2P', cursive; padding: 8px;">
+            <p style="color: #000; text-shadow: 2px 2px #FFF; margin: 5px;">FINAL CHALLENGE</p>
+        </div>
+        """
+        + CONTROLS_SUBHEADER,
+    )
+)
 
 
 footsies_low_diff_final_challenge_scene = copy.deepcopy(
