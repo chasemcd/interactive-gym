@@ -17,7 +17,7 @@
    content/quick_start
    content/environment_graphics
    content/client_side
-   content/server_side
    content/examples
+   .. content/server_side
 
 
