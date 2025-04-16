@@ -138,7 +138,7 @@ control_tutorial_scene = (
         run_through_pyodide=True,
         environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_controllable_tutorial_environment_initialization.py",
         on_game_step_code=on_game_step_code,
-        packages_to_install=["numpy", "cogrid", "opencv-python"],
+        packages_to_install=["numpy", "cogrid==0.0.15", "opencv-python"],
     )
 )
 
@@ -203,7 +203,7 @@ tutorial_with_bot_scene = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_environment_initialization.py",
-        packages_to_install=["numpy", "cogrid", "opencv-python"],
+        packages_to_install=["numpy", "cogrid==0.0.15", "opencv-python"],
     )
 )
 
