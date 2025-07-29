@@ -56,7 +56,7 @@ class SearchRescueIG(search_rescue.SearchRescueEnv):
                     search_rescue_grid_objects.GreenVictim,
                 ),
             ):
-                victim_color = self.OBJ_TO_COLOR[obj.name]
+                victim_color = self.OBJ_TO_COLOR[obj.object_id]
                 x, y = self.get_x_y(obj.pos, self.grid.height, self.grid.width)
                 render_objects.append(
                     Circle(
@@ -166,7 +166,7 @@ class SearchRescueIG(search_rescue.SearchRescueEnv):
 
             if agent_obj.inventory:
                 # If they're holding anything, render a small square in the bottom right of the cell
-                grid_object_name = agent_obj.inventory[0].name
+                grid_object_name = agent_obj.inventory[0].object_id
                 grid_object_color = self.OBJ_TO_COLOR[grid_object_name]
                 render_objects.append(
                     Polygon(
@@ -221,7 +221,7 @@ registry.register(
     env_class=functools.partial(SearchRescueIG, config=sr_config),
 )
 
-env = registry.make("SearchRescueIG")
+env = registry.make("SearchRescueIG", render_mode="interactive_gym")
 
 
 env
