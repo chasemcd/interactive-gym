@@ -63,7 +63,7 @@ tutorial_gym_scene = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/tutorial_cramped_room_environment_initialization.py",
-        packages_to_install=["numpy", "cogrid==0.0.9", "opencv-python"],
+        packages_to_install=["numpy", "cogrid==0.0.15", "opencv-python"],
     )
 )
 
@@ -100,7 +100,7 @@ gym_scene = (
             env = registry.make("Overcooked-CrampedRoom-v0)
             env
 """,
-        packages_to_install=["cogrid==0.0.9"],
+        packages_to_install=["cogrid==0.0.15"],
     )
 )
 

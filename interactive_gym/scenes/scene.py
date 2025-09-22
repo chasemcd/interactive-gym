@@ -83,16 +83,11 @@ class Scene:
             "terminate_scene", {**self.scene_metadata}, room=self.room
         )
 
-    # @property
-    # def scene_metadata(self) -> dict:
-    #     """
-    #     Return the metadata for the current scene that will be passed through the Flask app.
-    #     """
-    #     return {
-    #         "scene_id": self.scene_id,
-    #         "scene_type": self.__class__.__name__,
-    #         "element_ids": self.element_ids,
-    #     }
+    def on_connect(self, sio: flask_socketio.SocketIO, room: str | int):
+        """
+        A hook that is called when the client connects to the server.
+        """
+        pass
 
     @property
     def scene_metadata(self) -> dict:
@@ -113,6 +108,14 @@ class Scene:
         os.makedirs(f"data/{self.scene_id}", exist_ok=True)
         with open(f"data/{self.scene_id}/{subject_id}_metadata.json", "w") as f:
             json.dump(self.scene_metadata, f)
+
+    def on_client_callback(
+        self, data, sio: flask_socketio.SocketIO, room: str | int
+    ):
+        """
+        A hook that is called when the client sends a callback to the server.
+        """
+        pass
 
 
 def serialize_dict(data):
@@ -219,3 +222,21 @@ class RandomizeOrder(SceneWrapper):
         random.shuffle(self.scenes)
 
         return super().unpack()
+
+
+class RepeatScene(SceneWrapper):
+    def __init__(
+        self,
+        scenes: Scene | SceneWrapper | list[Scene],
+        n: int | None = None,
+        **kwargs,
+    ):
+        super().__init__(scenes, **kwargs)
+        self.n = n
+
+    def build(self) -> SceneWrapper:
+        """
+        Randomize the order before building the SceneWrapper.
+        """
+        self.scenes = self.scenes * self.n
+        return super().build()
