@@ -13,7 +13,7 @@ There are two ways to run Interactive Gym, depending on your use cases and requi
 
 1. Server based. 
 
-- This runs the environment on a server, allows for any number of human and AI players. At every step, the server will send the required information to all connected clients to update the environment client-side (e.g., the locations and any relevant data of updated objects).
+- This runs the environment on a server and allows for any number of human and AI players. At every step, the server will send the required information to all connected clients to update the environment client-side (e.g., the locations and any relevant data of updated objects).
 
 2. Browser based. 
 
