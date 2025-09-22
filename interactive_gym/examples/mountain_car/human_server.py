@@ -86,7 +86,7 @@ slime_sceme = (
         run_through_pyodide=True,
         environment_initialization_code_filepath="interactive_gym/examples/mountain_car/mountain_car_rgb_env.py",
         packages_to_install=[
-            "gymnasium==1.0.0",
+            "gymnasium==1.2.0",
             "numpy",
         ],
     )
