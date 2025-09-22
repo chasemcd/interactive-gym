@@ -1,8 +1,9 @@
-import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData, pressedKeys} from './phaser_gym_graphics.js';
-import {RemoteGame} from './pyodide_remote_game.js';
 import * as ui_utils from './ui_utils.js';
+import {startUnityScene, terminateUnityScene, shutdownUnityGame, preloadUnityGame} from './unity_utils.js';
+import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData, pressedKeys} from './phaser_gym_graphics.js';
 
-var socket = io();
+window.socket = io();
+var socket = window.socket;
 
 var latencyMeasurements = [];
 var curLatency;
@@ -484,6 +485,11 @@ function getData(elementIds) {
 function activateScene(data) {
     window.scrollTo(0, 0);
 
+    // Add scene_id to debug container
+    // $("#debugValue").show();
+    // $("#debugValue").text(`scene: ${data.scene_id}`);
+    // $("#debugContainer").show();
+
     // Add interactiveGymGlobals to the data object
     if (typeof window.interactiveGymGlobals !== 'undefined') {
         data.interactiveGymGlobals = window.interactiveGymGlobals;
@@ -499,6 +505,8 @@ function activateScene(data) {
         startEndScene(data);
     } else if (data.scene_type == "GymScene") {
         startGymScene(data);
+    } else if (data.scene_type == "UnityScene" || data.is_unity_scene) {
+        startUnityScene(data);
     } else {
         // Treat all other scenes as static scenes
         startStaticScene(data);
@@ -520,9 +528,6 @@ function startStaticScene(data) {
     $("#sceneHeader").html(data.scene_header);
     $("#sceneSubHeader").html(data.scene_subheader);
     $("#sceneBody").html(data.scene_body);
-
-
-
 };
 
 function startEndScene(data) {
@@ -592,11 +597,15 @@ function startGymScene(data) {
 };
 
 
+
+
 function terminateScene(data) {
     if (data.scene_type == "EndScene") {
         terminateEndScene(data);
     } else if (data.scene_type == "GymScene") {
         terminateGymScene(data);
+    } else if (data.scene_type == "UnityScene") {
+        terminateUnityScene(data);
     } else {
         // (data.scene_type == "StaticScene" || data.scene_type == "StartScene" || data.scene_type == "EndScene")
         // Treat all other scenes as static scenes
@@ -755,3 +764,81 @@ function redirect_subject(url) {
 
 
 const startButton = window.document.getElementById('startButton');
+
+
+socket.on("update_unity_score", function(data) {
+    console.log("Updating Unity score", data.score);
+    window.interactiveGymGlobals.unityScore = data.score;
+
+
+    let hudText = '';
+    if (data.num_episodes && data.num_episodes > 1) {
+        hudText += `Round ${window.interactiveGymGlobals.unityEpisodeCounter + 1}/${data.num_episodes}`;
+    }
+    
+    if (window.interactiveGymGlobals.unityScore !== null) {
+        if (hudText) hudText += ' | ';
+        hudText += `Score: ${window.interactiveGymGlobals.unityScore}`;
+    }
+
+    $("#hudText").html(hudText);
+
+});
+
+socket.on("unity_episode_end", function(data) {
+
+    // Update the HUD text to show the round progress and score
+    window.interactiveGymGlobals.unityEpisodeCounter++;
+    
+    let hudText = '';
+    if (data.num_episodes && data.num_episodes > 1) {
+        hudText += `Round ${window.interactiveGymGlobals.unityEpisodeCounter + 1}/${data.num_episodes}`;
+    }
+    
+    if (window.interactiveGymGlobals.unityScore !== null) {
+        if (hudText) hudText += ' | ';
+        hudText += `Score: ${window.interactiveGymGlobals.unityScore}`;
+    }
+    
+    $("#hudText").html(hudText);
+
+
+
+    if (data.all_episodes_done) {
+        // Clear the Unity game container
+        $("#gameContainer").hide();
+        shutdownUnityGame();
+        $("#gameContainer").html("");
+
+        $("#sceneSubHeader").hide();
+        $("#sceneBody").hide();
+
+        $("#hudText").hide();
+
+        // Start countdown for 3 seconds before advancing
+        let timer = 3;
+        $("#resetGame").show();
+        $("#resetGame").text(`Continuing in ${timer} seconds...`);
+
+        let interval = setInterval(function() {
+            timer--;
+            if (timer <= 0) {
+                clearInterval(interval);
+                $("#resetGame").hide();
+                socket.emit("advance_scene", {session_id: window.sessionId});
+            } else {
+                $("#resetGame").text(`Continuing in ${timer} seconds...`);
+            }
+        }, 1000);
+
+    }
+    
+
+});
+
+socket.on('preload_unity_game', (config) => {
+    console.log(`Received preload request for Unity game: ${config.build_name}`);
+    preloadUnityGame(config).catch(error => 
+        console.error(`Failed to preload ${config.build_name}:`, error)
+    );
+});

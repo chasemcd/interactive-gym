@@ -24,6 +24,7 @@ from interactive_gym.configurations import remote_config
 from interactive_gym.server import utils
 from interactive_gym.scenes import stager
 from interactive_gym.server import game_manager as gm
+from interactive_gym.scenes import unity_scene
 
 try:
     import redis
@@ -122,10 +123,10 @@ except Exception as e:
 socketio = flask_socketio.SocketIO(
     app,
     cors_allowed_origins="*",
-    # logger=app.config["DEBUG"],
+    logger=app.config["DEBUG"],
     message_queue=message_queue,
+    # engineio_logger=False,
 )
-
 
 #######################
 # Flask Configuration #
@@ -435,6 +436,55 @@ def pong(data):
     # )
 
 
+@socketio.on("unityEpisodeEnd")
+def on_unity_episode_end(data):
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+    participant_stager = STAGERS.get(subject_id, None)
+    current_scene = participant_stager.current_scene
+
+    if not isinstance(current_scene, unity_scene.UnityScene):
+        return
+
+    current_scene.on_unity_episode_end(
+        data,
+        sio=socketio,
+        room=flask.request.sid,
+    )
+
+    # (Potentially) save the data
+    scene_id = current_scene.scene_id
+    cur_episode = current_scene.episodes_completed
+    wrapped_data = {}
+    wrapped_data["scene_id"] = f"{scene_id}_{cur_episode}"
+    wrapped_data["data"] = data
+
+    # TODO(chase): Make sure the globals are propagated here
+    # so we don't have to fill it.
+    wrapped_data["interactiveGymGlobals"] = {}
+
+    data_emission(wrapped_data)
+
+
+@socketio.on("unityEpisodeStart")
+def on_unity_episode_start(data):
+
+
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+    participant_stager = STAGERS.get(subject_id, None)
+    current_scene = participant_stager.current_scene
+
+
+
+    if not isinstance(current_scene, unity_scene.UnityScene):
+        return
+
+    current_scene.on_unity_episode_start(
+        data,
+        sio=socketio,
+        room=flask.request.sid,
+    )
+
+
 @socketio.on("request_redirect")
 def on_request_redirect(data):
     waitroom_timeout = data.get("waitroom_timeout", False)
@@ -454,6 +504,20 @@ def on_request_redirect(data):
         },
         room=flask.request.sid,
     )
+
+
+@socketio.on("client_callback")
+def on_client_callback(data):
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+    participant_stager = STAGERS.get(subject_id, None)
+    if participant_stager is None:
+        logger.error(
+            f"Client callback requested for {subject_id} but they don't have a Stager."
+        )
+        return
+
+    current_scene = participant_stager.current_scene
+    current_scene.on_client_callback(data, sio=socketio, room=flask.request.sid)
 
 
 def on_exit():
@@ -577,6 +641,7 @@ def run(config):
     GENERIC_STAGER = config.stager
 
     atexit.register(on_exit)
+
     socketio.run(
         app,
         log_output=app.config["DEBUG"],

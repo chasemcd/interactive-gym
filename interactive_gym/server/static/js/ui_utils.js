@@ -13,7 +13,7 @@ export function hideHUD() {
 }
 
 export function updateHUDText(text) {
-    $('#hudText').text(text)
+    $('#hudText').html(text)
 }
 
 // Key Listeners
