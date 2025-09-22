@@ -9,7 +9,7 @@ import argparse
 from interactive_gym.server import app
 from interactive_gym.scenes import scene
 from interactive_gym.scenes import stager
-from interactive_gym.examples.cogrid.pyodide_overcooked import (
+from interactive_gym.examples.cogrid.scenes import (
     controllable_scenes,
     scenes,
 )
@@ -58,10 +58,10 @@ stager = stager.Stager(
     scenes=[
         start_scene,
         control_scene,
-        # scenes.tutorial_gym_scene,
-        # controllable_scenes.tutorial_with_bot_scene,
+        scenes.tutorial_gym_scene,
+        controllable_scenes.tutorial_with_bot_scene,
         controllable_scenes.control_tutorial_scene,
-        # controllable_scenes.end_tutorial_static_scene,
+        controllable_scenes.end_tutorial_static_scene,
         controllable_scenes.SCENES_BY_LAYOUT["cramped_room"],
         end_scene,
     ]

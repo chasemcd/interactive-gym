@@ -9,7 +9,7 @@ import argparse
 from interactive_gym.server import app
 from interactive_gym.scenes import scene
 from interactive_gym.scenes import stager
-from interactive_gym.examples.cogrid.pyodide_overcooked import (
+from interactive_gym.examples.cogrid.scenes import (
     scenes as oc_scenes,
 )
 from interactive_gym.scenes import static_scene
