@@ -272,7 +272,7 @@ base_controllable_ = (
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/env_initialization/cramped_room_controllable_environment_initialization.py",
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/cramped_room_controllable_environment_initialization.py",
         packages_to_install=["numpy", "cogrid==0.0.9", "opencv-python"],
     )
 )
@@ -427,7 +427,7 @@ def make_n_controllable_scenes(layout_name, n):
                 experiment_config={},
             )
             .pyodide(
-                environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/environments/env_initialization/{layout_name}_controllable_environment_initialization.py",
+                environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/environments/{layout_name}_controllable_environment_initialization.py",
             )
             .user_experience(
                 scene_body_filepath=f"interactive_gym/examples/cogrid/html_pages/controllable_{layout_name}.html",
