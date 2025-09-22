@@ -130,13 +130,13 @@ control_tutorial_scene = (
     )
     .user_experience(
         scene_header="Overcooked",
-        scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/control_tutorial.html",
+        scene_body_filepath="interactive_gym/examples/cogrid/html_pages/control_tutorial.html",
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
-        in_game_scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/control_tutorial_in_game_body.html",
+        in_game_scene_body_filepath="interactive_gym/examples/cogrid/html_pages/control_tutorial_in_game_body.html",
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_controllable_tutorial_environment_initialization.py",
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/html_pages/env_initialization/cramped_room_controllable_tutorial_environment_initialization.py",
         on_game_step_code=on_game_step_code,
         packages_to_install=["numpy", "cogrid==0.0.9", "opencv-python"],
     )
@@ -202,7 +202,7 @@ tutorial_with_bot_scene = (
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_environment_initialization.py",
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/cramped_room_environment_initialization.py",
         packages_to_install=["numpy", "cogrid==0.0.9", "opencv-python"],
     )
 )
@@ -239,7 +239,7 @@ base_controllable_ = (
     )
     .user_experience(
         scene_header="Overcooked",
-        scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/controllable_cramped_room.html",
+        scene_body_filepath="interactive_gym/examples/cogrid/html_pages/controllable_cramped_room.html",
         game_page_html_fn=overcooked_utils.overcooked_game_page_header_fn,
         in_game_scene_body="""
         <center>
@@ -272,7 +272,7 @@ base_controllable_ = (
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_controllable_environment_initialization.py",
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/env_initialization/cramped_room_controllable_environment_initialization.py",
         packages_to_install=["numpy", "cogrid==0.0.9", "opencv-python"],
     )
 )
@@ -307,7 +307,7 @@ base_fixed_ = (
     .scene(scene_id="base_fixed_", experiment_config={})
     .policies(policy_mapping=IBC_POLICY_MAPPING_CRAMPED_ROOM, frame_skip=5)
     .user_experience(
-        scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/fixed_cramped_room.html",
+        scene_body_filepath="interactive_gym/examples/cogrid/html_pages/fixed_cramped_room.html",
     )
 )
 base_fixed_eval_ = (
@@ -427,10 +427,10 @@ def make_n_controllable_scenes(layout_name, n):
                 experiment_config={},
             )
             .pyodide(
-                environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/{layout_name}_controllable_environment_initialization.py",
+                environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/environments/env_initialization/{layout_name}_controllable_environment_initialization.py",
             )
             .user_experience(
-                scene_body_filepath=f"interactive_gym/examples/cogrid/pyodide_overcooked/controllable_{layout_name}.html",
+                scene_body_filepath=f"interactive_gym/examples/cogrid/html_pages/controllable_{layout_name}.html",
             )
             .rendering(
                 game_width=overcooked_utils.TILE_SIZE * w,
@@ -462,10 +462,10 @@ def make_n_fixed_scenes(layout_name, n):
                 experiment_config={},
             )
             .pyodide(
-                environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/{layout_name}_controllable_environment_initialization.py",
+                environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/environments/{layout_name}_controllable_environment_initialization.py",
             )
             .user_experience(
-                scene_body_filepath=f"interactive_gym/examples/cogrid/pyodide_overcooked/fixed_{layout_name}.html",
+                scene_body_filepath=f"interactive_gym/examples/cogrid/html_pages/fixed_{layout_name}.html",
             )
             .policies(policy_mapping=POLICY_MAPPING_BY_LAYOUT[layout_name])
             .rendering(
@@ -497,10 +497,10 @@ def make_n_nospec_scenes(layout_name, n):
                 experiment_config={},
             )
             .pyodide(
-                environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/{layout_name}_controllable_environment_initialization.py",
+                environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/environments/{layout_name}_controllable_environment_initialization.py",
             )
             .user_experience(
-                scene_body_filepath=f"interactive_gym/examples/cogrid/pyodide_overcooked/nospec_{layout_name}.html",
+                scene_body_filepath=f"interactive_gym/examples/cogrid/html_pages/nospec_{layout_name}.html",
             )
             .policies(policy_mapping=POLICY_MAPPING_BY_LAYOUT[layout_name])
             .rendering(
@@ -529,10 +529,10 @@ def make_choice_scene(layout_name):
         )
         .policies(policy_mapping=POLICY_MAPPING_BY_LAYOUT[layout_name])
         .user_experience(
-            scene_body_filepath=f"interactive_gym/examples/cogrid/pyodide_overcooked/choice_{layout_name}.html",
+            scene_body_filepath=f"interactive_gym/examples/cogrid/html_pages/choice_{layout_name}.html",
         )
         .pyodide(
-            environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/{layout_name}_controllable_environment_initialization.py",
+            environment_initialization_code_filepath=f"interactive_gym/examples/cogrid/environments/{layout_name}_controllable_environment_initialization.py",
         )
         .rendering(
             game_width=overcooked_utils.TILE_SIZE * w,
