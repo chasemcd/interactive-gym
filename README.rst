@@ -7,8 +7,14 @@ Interactive Gym
 
 ----
 
+Overview 
+---------
 
-Interactive Gym is a library that provides a simple interface for creating interactive, browser-based experiments from simulation environments.
+Interactive Gym is a library that provides a generalized interface for creating interactive, browser-based experiments from simulation environments. More specifically, 
+it is meant to take Python-based Gymnasium or PettingZoo formatted environments and run them in the browser such that humans can interact with the 
+environments either alone or alongside AI or other humans. 
+
+---
 
 There are two ways to run Interactive Gym, depending on your use cases and requirements:
 
