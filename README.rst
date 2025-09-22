@@ -26,6 +26,9 @@ Interactive Gym
 ----
 
 
+NOTE! This branch contains all contents that were used to run prior experiments. It will be refactored/cleaned up to improve documentation.
+
+
 Interactive Gym is a library that provides a simple interface for creating interactive, browser-based experiments from simulation environments.
 
 There are two ways to run Interactive Gym, depending on your use cases and requirements:
