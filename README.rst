@@ -5,34 +5,22 @@ Interactive Gym
     :alt: Interactive Gym Logo
     :align: center
 
-----
-
-Overview 
----------
-
 Interactive Gym is a library that provides a generalized interface for creating interactive, browser-based experiments from simulation environments. More specifically, 
 it is meant to take Python-based Gymnasium or PettingZoo formatted environments and run them in the browser such that humans can interact with the 
 environments either alone or alongside AI or other humans. 
-
----
 
 There are two ways to run Interactive Gym, depending on your use cases and requirements:
 
 1. Server based. 
 
-This runs the environment on a server, allows for any number of human and AI players. 
-At every step, the server will send the required information to all connected clients 
-to update the environment client-side (e.g., the locations and any relevant data of updated objects).
+- This runs the environment on a server, allows for any number of human and AI players. At every step, the server will send the required information to all connected clients to update the environment client-side (e.g., the locations and any relevant data of updated objects).
 
 2. Browser based. 
 
-This runs the environment in the browser using `Pyodide <https://pyodide.org/>`_. This approach has several limitations: the environment must be pure python and 
-only a single human player is supported (although you may add any number of AI players). The benefit of this approach is that you circumvent (most) all of the issues
-associated with client server communication. Indeed, if participants do not have a stable internet connection (or are far from your sever), fast client-server communication
-can't be guaranteed and participant experience may degrade. In the browser-based approach, we also conduct model inference in the browser via ONNX.
+- This runs the environment in the browser using `Pyodide <https://pyodide.org/>`_. This approach has several limitations: the environment must be pure python and only a single human player is supported (although you may add any number of AI players). The benefit of this approach is that you circumvent (most) all of the issues associated with client server communication. Indeed, if participants do not have a stable internet connection (or are far from your sever), fast client-server communication can't be guaranteed and participant experience may degrade. In the browser-based approach, we also conduct model inference in the browser via ONNX.
 
-Usage
-------
+Getting Started
+----------------
 
 At a high level, an Interactive Gym experiment is defined by a set of scenes. 
 Each scene defines what should be displayed to participants and what interactions can 
@@ -40,7 +28,7 @@ occur.
 
 There are two core types of scenes: ``StaticScene`` and ``GymScene``. The former just
 displays static informaiton to clients and can also be used to collect some forms of data 
-(e.g., text boxes, option buttons, etc.). The latter defines an interaction with a simulation 
+(e.g., text boxes, option buttons). The latter defines an interaction with a simulation 
 environment and is where the core interactions occur. 
 
 Interactive Gym utilizes a ``Stager``, which manages participants' progression through a sequence
