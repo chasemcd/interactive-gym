@@ -14,7 +14,6 @@ import json
 
 import flask
 import flask_socketio
-import redis
 
 from interactive_gym.utils.typing import SubjectID, SceneID
 from interactive_gym.scenes import gym_scene
@@ -25,13 +24,6 @@ from interactive_gym.server import utils
 from interactive_gym.scenes import stager
 from interactive_gym.server import game_manager as gm
 from interactive_gym.scenes import unity_scene
-
-try:
-    import redis
-except Exception as e:
-    print(
-        f"Unable to import redis, got the following Exception. If you want to use the message queue, you must install redis. {e}"
-    )
 
 
 def setup_logger(name, log_file, level=logging.INFO):
@@ -108,23 +100,10 @@ app.config["SECRET_KEY"] = "secret!"
 
 app.config["DEBUG"] = os.getenv("FLASK_ENV", "production") == "development"
 
-# check if redis is available to use for message queue
-redis_host = "127.0.0.1"
-try:
-    redis.Redis(redis_host, socket_connect_timeout=1).ping()
-    message_queue = f"redis://{redis_host}:6379/0"
-except redis.exceptions.ConnectionError:
-    print("Redis is not available for message queue. Proceeding without it...")
-    message_queue = None
-except Exception as e:
-    print(f"An unexpected error occurred when trying to connect to redis: {e}")
-    message_queue = None
-
 socketio = flask_socketio.SocketIO(
     app,
     cors_allowed_origins="*",
     logger=app.config["DEBUG"],
-    message_queue=message_queue,
     # engineio_logger=False,
 )
 
