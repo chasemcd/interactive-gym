@@ -3,6 +3,8 @@ data/
 
 .claude
 .claude/*
+update_pypi.sh
+scratch.py 
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
