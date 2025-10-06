@@ -5,7 +5,6 @@
 # Initialize default values
 num_instances=1
 start_port=5701
-start_redis=0
 start_nginx=0
 public_ip=$(curl -s ifconfig.me)
 server_module_path=""
@@ -14,13 +13,10 @@ nginx_config_template="configurations/interactive-gym-nginx.conf"
 
 # Process command line options
 # Process command line options
-while getopts ":n:rbl-:" opt; do
+while getopts ":n:bl-:" opt; do
   case ${opt} in
     n )
       num_instances=$OPTARG
-      ;;
-    r )
-      start_redis=1
       ;;
     b )
       start_nginx=1
@@ -41,9 +37,8 @@ while getopts ":n:rbl-:" opt; do
       esac
       ;;
     \? )
-      echo "Usage: cmd [-n number_of_instances] [-r] [-b] [-l] [--module path_to_python_module]"
+      echo "Usage: cmd [-n number_of_instances] [-b] [-l] [--module path_to_python_module]"
       echo "  -n: Number of Flask instances to start"
-      echo "  -r: Start Redis queue service"
       echo "  -b: Start Nginx for load balancing"
       echo "  -l: Run only on localhost (127.0.0.1)"
       echo "  --module: Path to the Python app module."
@@ -53,16 +48,9 @@ while getopts ":n:rbl-:" opt; do
 done
 # Debug: Print the options
 echo "Number of instances: $num_instances"
-echo "Start Redis: $start_redis"
 echo "Start Nginx: $start_nginx"
 echo "Server Module Path: $server_module_path"
 echo "Server IP: $public_ip"
-
-# Start Redis server if requested
-if [ "$start_redis" -eq 1 ]; then
-    echo "Starting Redis server..."
-    sudo service redis-server start
-fi
 
 # Prepare and start Nginx with dynamic configuration
 if [ "$start_nginx" -eq 1 ]; then

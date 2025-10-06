@@ -2,163 +2,20 @@
 MountainCar renders an environment using libraries that aren't
 pure python. Here, we override the rgb_array rendering to 
 use pure python in a way that will allow it to be run via Pyodide.
-
 """
 
-from typing import Any
 import numpy as np
 from gymnasium.envs.classic_control.mountain_car import MountainCarEnv
-import dataclasses
+from interactive_gym.configurations.object_contexts import Polygon, Circle, Line
 
 
-@dataclasses.dataclass
-class RenderedEnvRGB:
-    name: str
-    game_image: list[list[float]]
-    object_type: str = "rendered_env_rgb"
-
-    def as_dict(self) -> dict[str, Any]:
-        return dataclasses.asdict(self)
+class InteractiveGymMountainCar(MountainCarEnv):
 
 
-@dataclasses.dataclass
-class Line:
-    """
-    Context for a line object to render it.
-
-    :param uuid: Unique identifier for the line
-    :type uuid: str
-    :param color: Color of the line
-    :type color: str
-    :param width: Width of the line
-    :type width: int
-    :param points: List of points defining the line
-    :type points: list[tuple[float, float]]
-
-    .. testcode::
-
-        line = Line(
-            uuid="line1",
-            color="#FF0000",
-            width=2,
-            points=[(0, 0), (100, 100), (200, 0)],
-            fill_below=True,
-            depth=1
-        )
-
-    """
-
-    uuid: str
-    color: str
-    width: int
-    points: list[tuple[float, float]]
-    object_type: str = "line"
-    fill_below: bool = False
-    fill_above: bool = False
-    depth: int = -1
-    permanent: bool = False
-
-    def as_dict(self) -> dict[str, Any]:
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
-class Circle:
-    """
-    Context for a circle object to render it.
-
-    :param uuid: Unique identifier for the circle
-    :type uuid: str
-    :param color: Color of the circle
-    :type color: str
-    :param x: X-coordinate of the circle's center
-    :type x: float
-    :param y: Y-coordinate of the circle's center
-    :type y: float
-    :param radius: Radius of the circle
-    :type radius: int
-    :param alpha: Alpha value for the circle's transparency
-    :type alpha: float
-    :param object_type: Type of the object
-    :type object_type: str
-    :param depth: Rendering depth of the circle. Higher values are rendered on top
-    :type depth: int
-    :param permanent: Whether the circle should persist across steps.
-
-    .. testcode::
-
-        circle = Circle(
-            uuid="circle1",
-            color="#00FF00",
-            x=150.0,
-            y=150.0,
-            radius=50,
-            alpha=0.8,
-            depth=2,
-            permanent=True
-        )
-    """
-
-    uuid: str
-    color: str
-    x: float
-    y: float
-    radius: int
-    alpha: float = 1
-    object_type: str = "circle"
-    depth: int = -1
-    permanent: bool = False
-
-    def as_dict(self) -> dict[str, Any]:
-        return dataclasses.asdict(self)
-
-
-@dataclasses.dataclass
-class Polygon:
-    """
-    Context for a polygon object to render it.
-
-    :param uuid: Unique identifier for the polygon
-    :type uuid: str
-    :param color: Color of the polygon
-    :type color: str
-    :param points: List of points defining the polygon
-    :type points: list[tuple[float, float]]
-    :param alpha: Alpha value for the polygon's transparency
-    :type alpha: float
-    :param object_type: Type of the object
-    :type object_type: str
-    :param depth: Rendering depth of the polygon. Higher values are rendered on top
-    :type depth: int
-    :param permanent: Whether the polygon should persist across steps.
-    :type permanent: bool
-
-    .. testcode::
-
-        polygon = Polygon(
-            uuid="polygon1",
-            color="#0000FF",
-            points=[(0, 0), (100, 0), (100, 100), (0, 100)],
-            alpha=0.5,
-            depth=3,
-            permanent=False
-        )
-
-    """
-
-    uuid: str
-    color: str
-    points: list[tuple[float, float]]
-    alpha: float = 1
-    object_type: str = "polygon"
-    depth: int = -1
-    permanent: bool = False
-
-    def as_dict(self) -> dict[str, Any]:
-        return dataclasses.asdict(self)
-
-
-class MountainCarRGBEnv(MountainCarEnv):
+    def step(self, actions: dict[str, int | float]):
+        assert "human" in actions, "Must be using human agent ID!"
+        action = actions["human"]
+        return super().step(action)
 
     def render(self):
         assert self.render_mode == "interactive-gym"
@@ -231,5 +88,5 @@ class MountainCarRGBEnv(MountainCarEnv):
         ]
 
 
-env = MountainCarRGBEnv(render_mode="interactive-gym")
+env = InteractiveGymMountainCar(render_mode="interactive-gym")
 env

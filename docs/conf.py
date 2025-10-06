@@ -68,11 +68,23 @@ html_theme_options = {
     "path_to_docs": "docs/",
     "use_edit_page_button": True,
     # "logo_only": True,
-    # "show_toc_level": 1,
+    "show_toc_level": 2,  # Show 2 levels of TOC in sidebar
     "navigation_with_keys": False,
+    "collapse_navigation": False,  # Keep navigation expanded
+    "navigation_depth": 4,  # Show nested structure
+}
+
+# Always show the full global TOC in the sidebar
+html_sidebars = {
+    "**": ["navbar-logo.html", "sbt-sidebar-nav.html"]
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+# Custom CSS files
+html_css_files = [
+    "custom.css",
+]

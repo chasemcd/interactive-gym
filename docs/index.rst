@@ -11,14 +11,12 @@
 
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+   :maxdepth: 2
+   :caption: Index
+   :hidden:
 
-   content/quick_start
-   content/getting_started
-   content/environment_graphics
-   content/client_side
-   content/examples
-   .. content/server_side
+   content/getting_started_index
+   content/core_concepts/index
+   content/resources_index
 
 

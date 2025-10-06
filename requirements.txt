@@ -6,4 +6,3 @@ pandas
 flatten_dict
 flask
 flask_socketio
-redis
