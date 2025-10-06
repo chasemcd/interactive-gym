@@ -9,7 +9,7 @@ import argparse
 from interactive_gym.server import app
 from interactive_gym.scenes import scene
 from interactive_gym.scenes import stager
-from interactive_gym.examples.cogrid.pyodide_overcooked import (
+from interactive_gym.examples.cogrid.scenes import (
     controllable_scenes,
     scenes,
 )
@@ -58,7 +58,7 @@ control_scene = (
 choice_scene = controllable_scenes.make_choice_scene(
     layout_name="cramped_room"
 ).user_experience(
-    scene_body_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/demo_choice_cramped_room.html",
+    scene_body_filepath="interactive_gym/examples/cogrid/html_pages/demo_choice_cramped_room.html",
 )
 
 

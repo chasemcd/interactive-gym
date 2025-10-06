@@ -1,6 +1,7 @@
 import * as ui_utils from './ui_utils.js';
 import {startUnityScene, terminateUnityScene, shutdownUnityGame, preloadUnityGame} from './unity_utils.js';
 import {graphics_start, graphics_end, addStateToBuffer, getRemoteGameData, pressedKeys} from './phaser_gym_graphics.js';
+import {RemoteGame} from './pyodide_remote_game.js';
 
 window.socket = io();
 var socket = window.socket;

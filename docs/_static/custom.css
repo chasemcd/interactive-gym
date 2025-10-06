@@ -1,0 +1,9 @@
+/* Ensure images with transparency don't get white background */
+img {
+    background-color: transparent !important;
+}
+
+/* Specific style for the logo if needed */
+img[alt="Interactive Gym Logo"] {
+    background-color: transparent !important;
+}

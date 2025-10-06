@@ -11,4 +11,14 @@ setuptools.setup(
         "gymnasium==1.0.0",
         "numpy",
     ],
+    extras_require={
+        "server": [
+            "eventlet",
+            "flask",
+            "flask-socketio",
+            "msgpack",
+            "pandas",
+            "flatten_dict",
+        ],
+    },
 )

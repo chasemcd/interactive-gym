@@ -34,6 +34,11 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.autodoc",
     "sphinx.ext.doctest",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.autosectionlabel",
+    "IPython.sphinxext.ipython_console_highlighting",
+    "IPython.sphinxext.ipython_directive",
+    "sphinx_copybutton",
 ]
 
 
@@ -51,9 +56,35 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
+
+html_theme = "sphinx_book_theme"
+
+# https://sphinx-book-theme.readthedocs.io/en/latest/customize/index.html
+html_theme_options = {
+    "repository_url": "https://github.com/chasemcd/interactive-gym",
+    "repository_branch": "main",
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "path_to_docs": "docs/",
+    "use_edit_page_button": True,
+    # "logo_only": True,
+    "show_toc_level": 2,  # Show 2 levels of TOC in sidebar
+    "navigation_with_keys": False,
+    "collapse_navigation": False,  # Keep navigation expanded
+    "navigation_depth": 4,  # Show nested structure
+}
+
+# Always show the full global TOC in the sidebar
+html_sidebars = {
+    "**": ["navbar-logo.html", "sbt-sidebar-nav.html"]
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+
+# Custom CSS files
+html_css_files = [
+    "custom.css",
+]

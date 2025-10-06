@@ -54,7 +54,7 @@ start_scene = (
 )
 
 
-slime_sceme = (
+mountain_car_scene = (
     gym_scene.GymScene()
     .scene(scene_id="mountain_car_scene", experiment_config={})
     .policies(policy_mapping=POLICY_MAPPING)
@@ -72,11 +72,11 @@ slime_sceme = (
     )
     .user_experience(
         scene_header="Mountain Car",
-        scene_body="<center><p>" "Press start to continue. " "</p></center>",
+        scene_body="<center><p>" "On this page, Python is initializing and loading packages in the background. With a decent internet connection, it should only be a few moments. If it takes longer than inspected, right click on the page and select 'Inspect -> Console' to see if an error was logged. <br> <br> When it has initialized, the button will become active and you can continue on in the experiment." "</p></center>",
         in_game_scene_body="""
         <center>
         <p>
-        Use the arrow keys to move the car to make it up the hill!
+        Use the arrow keys to move the "car" (ball) up the hill!
         </p>
         </center>
         <br><br>
@@ -85,10 +85,6 @@ slime_sceme = (
     .pyodide(
         run_through_pyodide=True,
         environment_initialization_code_filepath="interactive_gym/examples/mountain_car/mountain_car_rgb_env.py",
-        packages_to_install=[
-            "gymnasium==1.0.0",
-            "numpy",
-        ],
     )
 )
 
@@ -105,7 +101,7 @@ end_scene = (
 stager = stager.Stager(
     scenes=[
         start_scene,
-        slime_sceme,
+        mountain_car_scene,
         end_scene,
     ]
 )

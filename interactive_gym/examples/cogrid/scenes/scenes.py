@@ -153,7 +153,7 @@ tutorial_gym_scene = (
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/tutorial_cramped_room_environment_initialization.py",
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/tutorial_cramped_room_environment_initialization.py",
         packages_to_install=["numpy", "cogrid==0.0.15", "opencv-python"],
     )
 )
@@ -206,16 +206,10 @@ cramped_room_sp_0 = (
     )
     .pyodide(
         run_through_pyodide=True,
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/cramped_room_environment_initialization.py",
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/cramped_room_environment_initialization.py",
         packages_to_install=["numpy", "cogrid==0.0.15", "opencv-python"],
     )
 )
-cramped_room_ibc_1 = (
-    copy.deepcopy(cramped_room_sp_0)
-    .scene(scene_id="cramped_room_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING_CRAMPED_ROOM)
-)
-
 cramped_room_ibc_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="cramped_room_ibc_0", experiment_config={})
@@ -230,12 +224,6 @@ cramped_room_ibc_0 = (
         "</p></center>",
     )
 )
-cramped_room_sp_1 = (
-    copy.deepcopy(cramped_room_ibc_0)
-    .scene(scene_id="cramped_room_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING_CRAMPED_ROOM)
-)
-
 cramped_room_options_scene_0 = (
     static_scene.OptionBoxesWithScalesAndTextBox(
         options=["First Partner", "Second Partner"],
@@ -253,15 +241,11 @@ cramped_room_options_scene_0 = (
     .scene(scene_id="cramped_room_options_scene_0", experiment_config={})
     .display(scene_subheader="Partner Feedback")
 )
-cramped_room_options_scene_1 = copy.deepcopy(
-    cramped_room_options_scene_0
-).scene(scene_id="cramped_room_options_scene_1", experiment_config={})
-
 counter_circuit_sp_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="counter_circuit_sp_0", experiment_config={})
     .pyodide(
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/counter_circuit_environment_initialization.py"
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/counter_circuit_environment_initialization.py"
     )
     .user_experience(
         scene_header="Overcooked",
@@ -281,13 +265,6 @@ counter_circuit_sp_0 = (
     )
     .policies(policy_mapping=SP_POLICY_MAPPING_COUNTER_CIRCUIT)
 )
-counter_circuit_ibc_1 = (
-    copy.deepcopy(counter_circuit_sp_0)
-    .scene(scene_id="counter_circuit_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING_COUNTER_CIRCUIT)
-)
-
-
 counter_circuit_ibc_0 = (
     copy.deepcopy(counter_circuit_sp_0)
     .scene(scene_id="counter_circuit_ibc_0", experiment_config={})
@@ -302,26 +279,17 @@ counter_circuit_ibc_0 = (
         "</p></center>",
     )
 )
-counter_circuit_sp_1 = (
-    copy.deepcopy(counter_circuit_ibc_0)
-    .scene(scene_id="counter_circuit_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING_COUNTER_CIRCUIT)
-)
 
 
 counter_circuit_options_scene_0 = copy.deepcopy(
     cramped_room_options_scene_0
 ).scene(scene_id="counter_circuit_options_scene_0", experiment_config={})
-counter_circuit_options_scene_1 = copy.deepcopy(
-    cramped_room_options_scene_0
-).scene(scene_id="counter_circuit_options_scene_1", experiment_config={})
-
 
 forced_coordination_sp_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="forced_coordination_sp_0", experiment_config={})
     .pyodide(
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/forced_coordination_environment_initialization.py"
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/forced_coordination_environment_initialization.py"
     )
     .user_experience(
         scene_header="Overcooked",
@@ -341,12 +309,6 @@ forced_coordination_sp_0 = (
     )
     .policies(policy_mapping=SP_POLICY_MAPPING_FORCED_COORDINATION)
 )
-forced_coordination_ibc_1 = (
-    copy.deepcopy(forced_coordination_sp_0)
-    .scene(scene_id="forced_coordination_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING_FORCED_COORDINATION)
-)
-
 
 forced_coordination_ibc_0 = (
     copy.deepcopy(forced_coordination_sp_0)
@@ -362,24 +324,16 @@ forced_coordination_ibc_0 = (
         "</p></center>",
     )
 )
-forced_coordination_sp_1 = (
-    copy.deepcopy(forced_coordination_ibc_0)
-    .scene(scene_id="forced_coordination_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING_FORCED_COORDINATION)
-)
+
 
 forced_coordination_options_scene_0 = copy.deepcopy(
     cramped_room_options_scene_0
 ).scene(scene_id="forced_coordination_options_scene_0", experiment_config={})
-forced_coordination_options_scene_1 = copy.deepcopy(
-    cramped_room_options_scene_0
-).scene(scene_id="forced_coordination_options_scene_1", experiment_config={})
-
 asymmetric_advantages_sp_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="asymmetric_advantages_sp_0", experiment_config={})
     .pyodide(
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/asymmetric_advantages_environment_initialization.py"
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/asymmetric_advantages_environment_initialization.py"
     )
     .user_experience(
         scene_header="Overcooked",
@@ -399,12 +353,6 @@ asymmetric_advantages_sp_0 = (
     )
     .policies(policy_mapping=SP_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES)
 )
-asymmetric_advantages_ibc_1 = (
-    copy.deepcopy(asymmetric_advantages_sp_0)
-    .scene(scene_id="asymmetric_advantages_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES)
-)
-
 asymmetric_advantages_ibc_0 = (
     copy.deepcopy(asymmetric_advantages_sp_0)
     .scene(scene_id="asymmetric_advantages_ibc_0", experiment_config={})
@@ -419,25 +367,17 @@ asymmetric_advantages_ibc_0 = (
         "</p></center>",
     )
 )
-asymmetric_advantages_sp_1 = (
-    copy.deepcopy(asymmetric_advantages_ibc_0)
-    .scene(scene_id="asymmetric_advantages_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING_ASYMMETRIC_ADVANTAGES)
-)
+
 
 asymmetric_advantages_options_scene_0 = copy.deepcopy(
     cramped_room_options_scene_0
 ).scene(scene_id="asymmetric_advantages_options_scene_0", experiment_config={})
 
-asymmetric_advantages_options_scene_1 = copy.deepcopy(
-    cramped_room_options_scene_0
-).scene(scene_id="asymmetric_advantages_options_scene_1", experiment_config={})
-
 coordination_ring_sp_0 = (
     copy.deepcopy(cramped_room_sp_0)
     .scene(scene_id="coordination_ring_sp_0", experiment_config={})
     .pyodide(
-        environment_initialization_code_filepath="interactive_gym/examples/cogrid/pyodide_overcooked/env_initialization/coordination_ring_environment_initialization.py"
+        environment_initialization_code_filepath="interactive_gym/examples/cogrid/environments/coordination_ring_environment_initialization.py"
     )
     .user_experience(
         scene_header="Overcooked",
@@ -458,12 +398,6 @@ coordination_ring_sp_0 = (
     .policies(policy_mapping=SP_POLICY_MAPPING_COORDINATION_RING)
 )
 
-coordination_ring_ibc_1 = (
-    copy.deepcopy(coordination_ring_sp_0)
-    .scene(scene_id="coordination_ring_ibc_1", experiment_config={})
-    .policies(policy_mapping=IBC_POLICY_MAPPING_COORDINATION_RING)
-)
-
 coordination_ring_ibc_0 = (
     copy.deepcopy(coordination_ring_sp_0)
     .policies(policy_mapping=IBC_POLICY_MAPPING_COORDINATION_RING)
@@ -479,39 +413,21 @@ coordination_ring_ibc_0 = (
     )
 )
 
-coordination_ring_sp_1 = (
-    copy.deepcopy(coordination_ring_ibc_0)
-    .scene(scene_id="coordination_ring_sp_1", experiment_config={})
-    .policies(policy_mapping=SP_POLICY_MAPPING_COORDINATION_RING)
-)
+
 coordination_ring_options_scene_0 = copy.deepcopy(
     cramped_room_options_scene_0
 ).scene(scene_id="coordination_ring_options_scene_0", experiment_config={})
 
 
-coordination_ring_options_scene_1 = copy.deepcopy(
-    cramped_room_options_scene_0
-).scene(scene_id="coordination_ring_options_scene_1", experiment_config={})
-
 
 cramped_room_0 = scene.SceneWrapper(
     scenes=[cramped_room_sp_0, cramped_room_ibc_0, cramped_room_options_scene_0]
-)
-cramped_room_1 = scene.SceneWrapper(
-    scenes=[cramped_room_ibc_1, cramped_room_sp_1, cramped_room_options_scene_1]
 )
 counter_circuit_0 = scene.SceneWrapper(
     scenes=[
         counter_circuit_sp_0,
         counter_circuit_ibc_0,
         counter_circuit_options_scene_0,
-    ]
-)
-counter_circuit_1 = scene.SceneWrapper(
-    scenes=[
-        counter_circuit_ibc_1,
-        counter_circuit_sp_1,
-        counter_circuit_options_scene_1,
     ]
 )
 forced_coordination_0 = scene.SceneWrapper(
@@ -521,13 +437,6 @@ forced_coordination_0 = scene.SceneWrapper(
         forced_coordination_options_scene_0,
     ]
 )
-forced_coordination_1 = scene.SceneWrapper(
-    scenes=[
-        forced_coordination_ibc_1,
-        forced_coordination_sp_1,
-        forced_coordination_options_scene_1,
-    ]
-)
 asymmetric_advantages_0 = scene.SceneWrapper(
     scenes=[
         asymmetric_advantages_sp_0,
@@ -535,25 +444,11 @@ asymmetric_advantages_0 = scene.SceneWrapper(
         asymmetric_advantages_options_scene_0,
     ]
 )
-asymmetric_advantages_1 = scene.SceneWrapper(
-    scenes=[
-        asymmetric_advantages_ibc_1,
-        asymmetric_advantages_sp_1,
-        asymmetric_advantages_options_scene_1,
-    ]
-)
 coordination_ring_0 = scene.SceneWrapper(
     scenes=[
         coordination_ring_sp_0,
         coordination_ring_ibc_0,
         coordination_ring_options_scene_0,
-    ]
-)
-coordination_ring_1 = scene.SceneWrapper(
-    scenes=[
-        coordination_ring_ibc_1,
-        coordination_ring_sp_1,
-        coordination_ring_options_scene_1,
     ]
 )
 
@@ -576,5 +471,4 @@ end_scene = (
     .display(
         scene_header="Thank you for participating!",
     )
-    # .redirect(url="https://www.google.com")
 )

@@ -8,10 +8,6 @@ fi
 # Assign the first argument to server_module_path
 server_module_path="$1"
 
-# Stop the Redis server
-echo "Stopping Redis server..."
-sudo service redis-server stop
-
 # Stop Nginx
 echo "Stopping Nginx..."
 sudo systemctl stop nginx

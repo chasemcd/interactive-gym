@@ -9,7 +9,7 @@ import argparse
 from interactive_gym.server import app
 from interactive_gym.scenes import scene
 from interactive_gym.scenes import stager
-from interactive_gym.examples.cogrid.pyodide_overcooked import (
+from interactive_gym.examples.cogrid.scenes import (
     scenes as oc_scenes,
 )
 
@@ -22,15 +22,10 @@ stager = stager.Stager(
         scene.RandomizeOrder(
             scenes=[
                 oc_scenes.cramped_room_0,
-                oc_scenes.cramped_room_1,
                 oc_scenes.counter_circuit_0,
-                oc_scenes.counter_circuit_1,
                 oc_scenes.forced_coordination_0,
-                oc_scenes.forced_coordination_1,
                 oc_scenes.asymmetric_advantages_0,
-                oc_scenes.asymmetric_advantages_1,
                 oc_scenes.coordination_ring_0,
-                oc_scenes.coordination_ring_1,
             ],
         ),
         oc_scenes.feedback_scene,
