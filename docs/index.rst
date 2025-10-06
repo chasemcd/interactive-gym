@@ -15,6 +15,7 @@
    :caption: Contents:
 
    content/quick_start
+   content/getting_started
    content/environment_graphics
    content/client_side
    content/examples

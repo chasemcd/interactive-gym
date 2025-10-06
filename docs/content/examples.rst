@@ -1,27 +1,37 @@
 Examples
 =========
 
-Two examples are provided: CoGrid Overcooked and Slime Volleyball. Interactive experiments with humans and AI or human-human pairs can be run, respectively, via the following commands.
 
-CoGrid Overcooked
-------------------
 
-.. code-block:: bash
+.. include:: _examples/cogrid_overcooked.rst
 
-    python -m examples.cogrid_overcooked.human_ai_server
-    python -m examples.cogrid_overcooked.human_human_server
-    python -m examples.cogrid_overcooked.human_ai_pyodide
+.. include:: _examples/slime_volleyball.rst
+
+.. include:: _examples/footsies.rst
 
 
 
-Slime Volleyball
-------------------
+.. Two examples are provided: CoGrid Overcooked and Slime Volleyball. Interactive experiments with humans and AI or human-human pairs can be run, respectively, via the following commands.
 
-.. code-block:: bash
+.. CoGrid Overcooked
+.. ------------------
 
-    python -m examples.slime_volleyball.human_ai_server
-    python -m examples.slime_volleyball.human_human_server
+.. .. code-block:: bash
 
-Instructions for installation can be found in the respective README.md files in the ``examples/`` directory.
+..     python -m examples.cogrid_overcooked.human_ai_server
+..     python -m examples.cogrid_overcooked.human_human_server
+..     python -m examples.cogrid_overcooked.human_ai_pyodide
 
-Example AI policies as ONNX files are also included in the ``policies/`` directory.
+
+
+.. Slime Volleyball
+.. ------------------
+
+.. .. code-block:: bash
+
+..     python -m examples.slime_volleyball.human_ai_server
+..     python -m examples.slime_volleyball.human_human_server
+
+.. Instructions for installation can be found in the respective README.md files in the ``examples/`` directory.
+
+.. Example AI policies as ONNX files are also included in the ``policies/`` directory.
