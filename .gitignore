@@ -1,6 +1,11 @@
 data/
 .DS_Store
 
+.claude
+.claude/*
+update_pypi.sh
+scratch.py 
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
