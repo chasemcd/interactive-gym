@@ -14,8 +14,6 @@ First, install Interactive Gym with all necessary dependencies:
 Quick Start
 -----------
 
-Build your first experiment in under 10 minutes:
-
 :doc:`quick_start`
     Step-by-step walkthrough creating a Mountain Car experiment with custom rendering.
 
