@@ -3,6 +3,20 @@ Overcooked: Human-Human (Server-Side)
 
 Multi-player coordination experiment where two human players collaborate to prepare and deliver dishes. The environment runs server-side with synchronized gameplay and matchmaking.
 
+.. raw:: html
+
+   <div style="background-color: #f0f0f0; border: 2px solid #ff0000; padding: 10px; margin: 10px 0;">
+   <h3 style="color: #ff0000;">⚠️ Warning</h3>
+
+.. warning::
+    Server-side multi-player experiments are currently being refactored to be more robust. They are currently out of date. For the current status on multi-human
+    experiments, please see `Issue #14 <https://github.com/chasemcd/interactive-gym/issues/14>`_.
+.. raw:: html
+
+   </div>
+
+
+
 Overview
 --------
 
