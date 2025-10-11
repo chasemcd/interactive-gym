@@ -115,6 +115,7 @@ class GymScene(scene.Scene):
 
         # pyodide
         self.run_through_pyodide: bool = False
+        self.pyodide_multiplayer: bool = False  # Enable multiplayer Pyodide coordination
         self.environment_initialization_code: str = ""
         self.on_game_step_code: str = ""
         self.packages_to_install: list[str] = [GymScene.DEFAULT_IG_PACKAGE]
@@ -418,6 +419,7 @@ class GymScene(scene.Scene):
     def pyodide(
         self,
         run_through_pyodide: bool = NotProvided,
+        multiplayer: bool = NotProvided,
         environment_initialization_code: str = NotProvided,
         environment_initialization_code_filepath: str = NotProvided,
         on_game_step_code: str = NotProvided,
@@ -431,6 +433,8 @@ class GymScene(scene.Scene):
 
         :param run_through_pyodide: Whether to run the environment through Pyodide, defaults to NotProvided
         :type run_through_pyodide: bool, optional
+        :param multiplayer: Enable multiplayer Pyodide coordination (requires run_through_pyodide=True), defaults to NotProvided
+        :type multiplayer: bool, optional
         :param environment_initialization_code: Python code to initialize the environment in Pyodide, defaults to NotProvided
         :type environment_initialization_code: str, optional
         :param environment_initialization_code_filepath: Path to a file containing Python code to initialize the environment, defaults to NotProvided
@@ -445,6 +449,10 @@ class GymScene(scene.Scene):
         if run_through_pyodide is not NotProvided:
             assert isinstance(run_through_pyodide, bool)
             self.run_through_pyodide = run_through_pyodide
+
+        if multiplayer is not NotProvided:
+            assert isinstance(multiplayer, bool)
+            self.pyodide_multiplayer = multiplayer
 
         if environment_initialization_code is not NotProvided:
             self.environment_initialization_code = (

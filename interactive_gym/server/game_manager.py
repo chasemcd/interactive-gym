@@ -31,7 +31,7 @@ from interactive_gym.configurations import (
     configuration_constants,
     remote_config,
 )
-from interactive_gym.server import remote_game, utils
+from interactive_gym.server import remote_game, utils, pyodide_game_coordinator
 from interactive_gym.scenes import stager, gym_scene, scene
 import flask_socketio
 
@@ -47,11 +47,13 @@ class GameManager:
         scene: gym_scene.GymScene,
         experiment_config: remote_config.RemoteConfig,
         sio: flask_socketio.SocketIO,
+        pyodide_coordinator: pyodide_game_coordinator.PyodideGameCoordinator | None = None,
     ):
         assert isinstance(scene, gym_scene.GymScene)
         self.scene = scene
         self.experiment_config = experiment_config
         self.sio = sio
+        self.pyodide_coordinator = pyodide_coordinator
 
         # Data structure to save subjects by their socket id
         self.subject = utils.ThreadSafeDict()
@@ -114,6 +116,15 @@ class GameManager:
             # Reset events make sure that we only reset once every player has triggered the event
             self.reset_events[game_id] = utils.ThreadSafeDict()
 
+            # If this is a multiplayer Pyodide game, create coordinator state
+            if self.scene.pyodide_multiplayer and self.pyodide_coordinator:
+                num_players = len(game.policy_mapping)  # Number of agents in the game
+                self.pyodide_coordinator.create_game(game_id, num_players)
+                logger.info(
+                    f"Created multiplayer Pyodide game state for {game_id} "
+                    f"with {num_players} players"
+                )
+
         except Exception as e:
             logger.error(f"Error in `_create_game`: {e}")
             self.sio.emit(
@@ -168,14 +179,26 @@ class GameManager:
             flask_socketio.join_room(game.game_id)
 
             available_human_agent_ids = game.get_available_human_agent_ids()
+            player_id = None
             if not available_human_agent_ids:
                 logger.warning(
                     f"No available human agent IDs for game {game.game_id}. Adding as a spectator."
                 )
             else:
-                game.add_player(
-                    random.choice(available_human_agent_ids), subject_id
+                player_id = random.choice(available_human_agent_ids)
+                game.add_player(player_id, subject_id)
+
+            # If multiplayer Pyodide, add player to coordinator
+            if self.scene.pyodide_multiplayer and self.pyodide_coordinator and player_id is not None:
+                self.pyodide_coordinator.add_player(
+                    game_id=game.game_id,
+                    player_id=player_id,
+                    socket_id=flask.request.sid
                 )
+                logger.info(
+                    f"Added player {player_id} to Pyodide coordinator for game {game.game_id}"
+                )
+
             if self.scene.game_page_html_fn is not None:
                 self.sio.emit(
                     "update_game_page_text",

@@ -24,6 +24,7 @@ from interactive_gym.server import utils
 from interactive_gym.scenes import stager
 from interactive_gym.server import game_manager as gm
 from interactive_gym.scenes import unity_scene
+from interactive_gym.server import pyodide_game_coordinator
 
 
 def setup_logger(name, log_file, level=logging.INFO):
@@ -67,6 +68,9 @@ SUBJECTS = utils.ThreadSafeDict()
 
 # Game managers handle all the game logic, connection, and waiting room for a given scene
 GAME_MANAGERS: dict[SceneID, gm.GameManager] = utils.ThreadSafeDict()
+
+# Pyodide multiplayer game coordinator
+PYODIDE_COORDINATOR: pyodide_game_coordinator.PyodideGameCoordinator | None = None
 
 # Mapping of users to locks associated with the ID. Enforces user-level serialization
 USER_LOCKS = utils.ThreadSafeDict()
@@ -199,7 +203,10 @@ def advance_scene(data):
             f"Instantiating game manager for scene {current_scene.scene_id}"
         )
         game_manager = gm.GameManager(
-            scene=current_scene, experiment_config=CONFIG, sio=socketio
+            scene=current_scene,
+            experiment_config=CONFIG,
+            sio=socketio,
+            pyodide_coordinator=PYODIDE_COORDINATOR
         )
         GAME_MANAGERS[current_scene.scene_id] = game_manager
 
@@ -614,10 +621,329 @@ def receive_remote_game_data(data):
     #     json.dump(current_scene_metadata, f)
 
 
+#####################################
+# Pyodide Multiplayer Event Handlers
+#####################################
+
+
+@socketio.on("pyodide_player_action")
+def on_pyodide_player_action(data):
+    """
+    Receive action from a player in a Pyodide multiplayer game.
+
+    The coordinator collects actions from all players and broadcasts
+    when all actions are received for the current frame.
+
+    Args:
+        data: {
+            'game_id': str,
+            'player_id': str | int,
+            'action': Any (int, dict, etc.),
+            'frame_number': int,
+            'timestamp': float
+        }
+    """
+    global PYODIDE_COORDINATOR
+
+    if PYODIDE_COORDINATOR is None:
+        logger.error("Pyodide coordinator not initialized")
+        return
+
+    game_id = data.get("game_id")
+    player_id = data.get("player_id")
+    action = data.get("action")
+    frame_number = data.get("frame_number")
+
+    logger.debug(
+        f"Received action from player {player_id} in game {game_id} "
+        f"for frame {frame_number}: {action}"
+    )
+
+    PYODIDE_COORDINATOR.receive_action(
+        game_id=game_id,
+        player_id=player_id,
+        action=action,
+        frame_number=frame_number
+    )
+
+
+@socketio.on("pyodide_state_hash")
+def on_pyodide_state_hash(data):
+    """
+    Receive state hash from a player for verification.
+
+    The coordinator collects hashes from all players and verifies
+    they match (detecting desyncs).
+
+    Args:
+        data: {
+            'game_id': str,
+            'player_id': str | int,
+            'hash': str (SHA256 hex),
+            'frame_number': int
+        }
+    """
+    global PYODIDE_COORDINATOR
+
+    if PYODIDE_COORDINATOR is None:
+        logger.error("Pyodide coordinator not initialized")
+        return
+
+    game_id = data.get("game_id")
+    player_id = data.get("player_id")
+    state_hash = data.get("hash")
+    frame_number = data.get("frame_number")
+
+    logger.debug(
+        f"Received state hash from player {player_id} in game {game_id} "
+        f"for frame {frame_number}: {state_hash[:8]}..."
+    )
+
+    PYODIDE_COORDINATOR.receive_state_hash(
+        game_id=game_id,
+        player_id=player_id,
+        state_hash=state_hash,
+        frame_number=frame_number
+    )
+
+
+@socketio.on("pyodide_send_full_state")
+def on_pyodide_send_full_state(data):
+    """
+    Receive full state from host for resync after desync.
+
+    Host sends serialized game state which is broadcast to
+    non-host clients to restore synchronization.
+
+    Args:
+        data: {
+            'game_id': str,
+            'state': dict (serialized game state from host)
+        }
+    """
+    global PYODIDE_COORDINATOR
+
+    if PYODIDE_COORDINATOR is None:
+        logger.error("Pyodide coordinator not initialized")
+        return
+
+    game_id = data.get("game_id")
+    full_state = data.get("state")
+
+    logger.info(f"Received full state from host for game {game_id}")
+
+    PYODIDE_COORDINATOR.receive_full_state(
+        game_id=game_id,
+        full_state=full_state
+    )
+
+
+@socketio.on("pyodide_log_data")
+def on_pyodide_log_data(data):
+    """
+    Route data logging from Pyodide multiplayer games.
+
+    Only accepts data from host player to prevent duplicates.
+    Non-host player data is silently rejected.
+
+    This accumulates frame-by-frame data which will be saved when
+    the game/episode ends (via logFrameData in client).
+
+    Args:
+        data: {
+            'game_id': str,
+            'player_id': str | int,
+            'data': dict (game data to log),
+            'frame_number': int
+        }
+    """
+    global PYODIDE_COORDINATOR
+
+    if PYODIDE_COORDINATOR is None:
+        logger.error("Pyodide coordinator not initialized")
+        return
+
+    if not CONFIG.save_experiment_data:
+        return
+
+    game_id = data.get("game_id")
+    player_id = data.get("player_id")
+    game_data = data.get("data")
+    frame_number = data.get("frame_number")
+
+    # Only accept data from host player
+    filtered_data = PYODIDE_COORDINATOR.log_data(
+        game_id=game_id,
+        player_id=player_id,
+        data=game_data
+    )
+
+    if filtered_data is None:
+        # Non-host player tried to log (expected, silently ignore)
+        return
+
+    logger.debug(
+        f"Logging frame {frame_number} data from host player {player_id} "
+        f"in game {game_id}"
+    )
+
+    # Store accumulated data in the coordinator's game state
+    # This will be retrieved and saved at episode end
+    game_state = PYODIDE_COORDINATOR.games.get(game_id)
+    if game_state:
+        game_state.accumulated_frame_data.append(filtered_data)
+
+
+@socketio.on("pyodide_save_episode_data")
+def on_pyodide_save_episode_data(data):
+    """
+    Save accumulated episode data from Pyodide multiplayer game.
+
+    Called by host when episode completes. Saves all accumulated
+    frame data to CSV file.
+
+    Args:
+        data: {
+            'game_id': str,
+            'player_id': str | int,
+            'scene_id': str,
+            'subject_id': str,
+            'interactiveGymGlobals': dict
+        }
+    """
+    global PYODIDE_COORDINATOR
+
+    if PYODIDE_COORDINATOR is None:
+        logger.error("Pyodide coordinator not initialized")
+        return
+
+    if not CONFIG.save_experiment_data:
+        return
+
+    game_id = data.get("game_id")
+    player_id = data.get("player_id")
+    scene_id = data.get("scene_id")
+    subject_id = data.get("subject_id")
+    interactive_gym_globals = data.get("interactiveGymGlobals", {})
+
+    # Verify this is the host player
+    game_state = PYODIDE_COORDINATOR.games.get(game_id)
+    if not game_state or player_id != game_state.host_player_id:
+        logger.warning(
+            f"Non-host player {player_id} tried to save episode data "
+            f"for game {game_id}"
+        )
+        return
+
+    if not game_state.accumulated_frame_data:
+        logger.warning(
+            f"No accumulated data to save for game {game_id}, scene {scene_id}"
+        )
+        return
+
+    logger.info(
+        f"Saving episode data for game {game_id}, scene {scene_id}, "
+        f"subject {subject_id}: {len(game_state.accumulated_frame_data)} frames"
+    )
+
+    # Convert accumulated frame data to DataFrame format
+    # Each frame has: observations, actions, rewards, terminateds, truncateds, infos
+    flattened_data = flatten_dict.flatten(
+        {i: frame for i, frame in enumerate(game_state.accumulated_frame_data)},
+        reducer="dot"
+    )
+
+    # Find maximum length among all values
+    max_length = max(
+        len(value) if isinstance(value, list) else 1
+        for value in flattened_data.values()
+    )
+
+    # Pad shorter lists with None and convert non-list values to lists
+    padded_data = {}
+    for key, value in flattened_data.items():
+        if not isinstance(value, list):
+            padded_data[key] = [value] + [None] * (max_length - 1)
+        else:
+            padded_data[key] = value + [None] * (max_length - len(value))
+
+    # Convert to DataFrame
+    df = pd.DataFrame(padded_data)
+
+    # Create directory for CSV files if it doesn't exist
+    os.makedirs(f"data/{scene_id}/", exist_ok=True)
+
+    # Generate filenames
+    filename = f"data/{scene_id}/{subject_id}.csv"
+    globals_filename = f"data/{scene_id}/{subject_id}_globals.json"
+
+    # Save as CSV
+    logger.info(f"Saving {filename}")
+    df.to_csv(filename, index=False)
+
+    # Save globals
+    with open(globals_filename, "w") as f:
+        json.dump(interactive_gym_globals, f)
+
+    # Clear accumulated data
+    game_state.accumulated_frame_data.clear()
+
+    logger.info(
+        f"Successfully saved {len(df)} rows to {filename} for game {game_id}"
+    )
+
+
+@socketio.on("disconnect")
+def on_pyodide_disconnect():
+    """
+    Handle player disconnection from Pyodide multiplayer game.
+
+    If host disconnects, elect new host and trigger resync.
+    If all players disconnect, remove game.
+    """
+    global PYODIDE_COORDINATOR
+
+    if PYODIDE_COORDINATOR is None:
+        return
+
+    subject_id = get_subject_id_from_session_id(flask.request.sid)
+
+    if subject_id is None:
+        return
+
+    participant_stager = STAGERS.get(subject_id, None)
+    if participant_stager is None:
+        return
+
+    current_scene = participant_stager.current_scene
+
+    # Check if this is a Pyodide multiplayer scene
+    # TODO(chase): Add proper detection for multiplayer Pyodide scenes
+    # For now, we'll attempt to remove the player from any active games
+
+    # Iterate through all games to find this player
+    for game_id, game_state in list(PYODIDE_COORDINATOR.games.items()):
+        for player_id, socket_id in game_state.players.items():
+            if socket_id == flask.request.sid:
+                logger.info(
+                    f"Player {player_id} (subject {subject_id}) disconnected "
+                    f"from Pyodide game {game_id}"
+                )
+                PYODIDE_COORDINATOR.remove_player(
+                    game_id=game_id,
+                    player_id=player_id
+                )
+                return
+
+
 def run(config):
-    global app, CONFIG, logger, GENERIC_STAGER
+    global app, CONFIG, logger, GENERIC_STAGER, PYODIDE_COORDINATOR
     CONFIG = config
     GENERIC_STAGER = config.stager
+
+    # Initialize Pyodide coordinator
+    PYODIDE_COORDINATOR = pyodide_game_coordinator.PyodideGameCoordinator(socketio)
+    logger.info("Initialized Pyodide multiplayer coordinator")
 
     atexit.register(on_exit)
 
