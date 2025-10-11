@@ -27,6 +27,7 @@ stager = stager.Stager(
                 oc_scenes.asymmetric_advantages_0,
                 oc_scenes.coordination_ring_0,
             ],
+            keep_n=1,  # Only select one of the five layouts
         ),
         oc_scenes.feedback_scene,
         oc_scenes.end_scene,

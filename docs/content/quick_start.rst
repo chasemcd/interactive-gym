@@ -1,7 +1,7 @@
 Quick Start
 ===========
 
-This guide will walk you through building your first Interactive Gym experiment in under 10 minutes. We'll create a Mountain Car experiment where participants control a car trying to reach a flag on a hill.
+This guide will walk you through building your first Interactive Gym experiment. We'll create a Mountain Car experiment where participants control a car trying to reach a flag on a hill.
 
 What You'll Build
 -----------------
